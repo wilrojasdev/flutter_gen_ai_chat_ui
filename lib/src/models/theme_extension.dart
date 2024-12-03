@@ -82,24 +82,24 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
   );
 
   static CustomThemeExtension light = CustomThemeExtension(
-    messageBubbleColor: Color(0xFFEEEEEE),
-    userBubbleColor: Color(0xFFBBDEFB),
-    messageTextColor: Color(0xFF212121),
+    messageBubbleColor: const Color(0xFFEEEEEE),
+    userBubbleColor: const Color(0xFFBBDEFB),
+    messageTextColor: const Color(0xFF212121),
     inputBackgroundColor: Colors.white,
-    inputBorderColor: Color(0xFFE0E0E0),
-    hintTextColor: Color(0xFF757575),
+    inputBorderColor: const Color(0xFFE0E0E0),
+    hintTextColor: const Color(0xFF757575),
     chatBackground: Colors.white,
     backToBottomButtonColor: Colors.blue,
   );
 
   static CustomThemeExtension dark = CustomThemeExtension(
-    messageBubbleColor: Color(0xFF424242),
-    userBubbleColor: Color(0xFF0D47A1),
+    messageBubbleColor: const Color(0xFF424242),
+    userBubbleColor: const Color(0xFF0D47A1),
     messageTextColor: Colors.white,
-    inputBackgroundColor: Color(0xFF212121),
-    inputBorderColor: Color(0xFF616161),
-    hintTextColor: Color(0xFFBDBDBD),
+    inputBackgroundColor: const Color(0xFF212121),
+    inputBorderColor: const Color(0xFF616161),
+    hintTextColor: const Color(0xFFBDBDBD),
     chatBackground: Colors.black,
-    backToBottomButtonColor: Color(0xFF1976D2),
+    backToBottomButtonColor: const Color(0xFF1976D2),
   );
 }

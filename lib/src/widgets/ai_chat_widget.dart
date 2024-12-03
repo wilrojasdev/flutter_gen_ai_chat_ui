@@ -344,8 +344,9 @@ class AiChatWidgetState extends State<AiChatWidget>
           ),
         ),
       ),
-      chatFooterBuilder:
-          _isLoading ? (widget.loadingIndicator ?? LoadingWidget()) : null,
+      chatFooterBuilder: _isLoading
+          ? (widget.loadingIndicator ?? const LoadingWidget())
+          : null,
       scrollPhysics: const BouncingScrollPhysics(),
       scrollController: _scrollController,
       showDateSeparator: isTablet,
