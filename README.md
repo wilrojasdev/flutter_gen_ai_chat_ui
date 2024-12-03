@@ -9,10 +9,10 @@ A modern, customizable chat UI package for Flutter applications, optimized for A
 <table>
   <tr>
     <td align="center">
-      <img src="screenshots/detailed_dark.png" alt="Detailed Dark" width="300px">
+      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed_dark.png" alt="Detailed Dark" width="300px">
     </td>
     <td align="center">
-      <img src="screenshots/detailed.gif" alt="Detailed Example" width="300px">
+      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed.gif" alt="Detailed Example" width="300px">
     </td>
   </tr>
 </table>
