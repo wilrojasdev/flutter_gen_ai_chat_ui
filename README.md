@@ -5,7 +5,7 @@
 
 A modern, customizable chat UI package for Flutter applications, optimized for AI interactions.
 
-<!-- Images placed in a table for even spacing -->
+
 <table>
   <tr>
     <td align="center">
@@ -248,12 +248,6 @@ LoadingWidget.showAsBottomSheet(
    - Verify parent widget constraints
    - Check maxWidth configuration
 
-## API Documentation
-
-Detailed API documentation is available at:
-[API Reference](https://pub.dev/documentation/flutter_gen_ai_chat_ui/latest/)
-
-For implementation examples and live demos, visit our [Example App](https://example.com).
 
 ## Contributing
 
