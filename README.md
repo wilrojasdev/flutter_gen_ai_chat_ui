@@ -43,15 +43,18 @@ A modern, customizable chat UI package for Flutter applications, optimized for A
 - 👋 Welcome message support
 - ⭐️ Example questions functionality
 - 🌐 RTL support
-- ⚡️ Performance optimized
-- 🎯 Keyboard shortcuts support
-- 🔒 Privacy-focused design
-- 🎭 Customizable avatar support
-- 📊 Message status indicators
-- 🔍 Search functionality
-- 📱 Adaptive layouts
-- 🖼️ Image message support
-- 📎 File attachment support
+---
+
+### Future Features
+- [ ] Performance optimized
+- [ ] Keyboard shortcuts support
+- [ ] Privacy-focused design
+- [ ] Customizable avatar support
+- [ ] Message status indicators
+- [ ] Search functionality
+- [ ] Adaptive layouts
+- [ ] Image message support
+- [ ] File attachment support
 
 ## Installation
 
