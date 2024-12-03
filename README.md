@@ -5,13 +5,19 @@
 
 A modern, customizable chat UI package for Flutter applications, optimized for AI interactions.
 
-<p align="center">
-  <img src="screenshots/detailed_example.gif" width="300" alt="Preview" style="border-radius: 50px; margin: 10px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-  <img src="screenshots/detailed_dark.png" width="300" alt="Detailed dark" style="border-radius: 50px; margin: 10px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-  <img src="screenshots/simple_chat.gif" width="300" alt="Simple light" style="border-radius: 50px; margin: 10px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0,0,0,0.1);" />
-</p>
+<!-- Images placed in a table for even spacing -->
+<table>
+  <tr>
+    <td align="center">
+      <img src="screenshots/detailed_dark.png" alt="Detailed Dark" width="300px">
+    </td>
+    <td align="center">
+      <img src="screenshots/detailed.gif" alt="Detailed Example" width="300px">
+    </td>
+  </tr>
+</table>
 
-## 📚 Table of Contents
+## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -25,8 +31,10 @@ A modern, customizable chat UI package for Flutter applications, optimized for A
 - [Platform Support](#platform-support)
 - [Performance](#performance)
 - [API Documentation](#api-documentation)
+- [Contributing](#contributing)
+- [License](#license)
 
-## ✨ Features
+## Features
 
 - 🎨 Light/Dark mode support
 - 💫 Animated message bubbles
@@ -45,7 +53,7 @@ A modern, customizable chat UI package for Flutter applications, optimized for A
 - 🖼️ Image message support
 - 📎 File attachment support
 
-## 📦 Installation
+## Installation
 
 Add this to your package's `pubspec.yaml` file:
 
@@ -54,7 +62,7 @@ dependencies:
   flutter_gen_ai_chat_ui: ^1.0.0
 ```
 
-## 📦 Dependencies
+## Dependencies
 
 This package uses the following pub.dev packages:
 
@@ -63,7 +71,7 @@ This package uses the following pub.dev packages:
 - [shimmer](https://pub.dev/packages/shimmer) ^2.0.0 - Loading animations
 - [google_fonts](https://pub.dev/packages/google_fonts) ^6.2.1 - Typography
 
-## 🚀 Quick Start
+## Quick Start
 
 Here's a basic example of how to implement the chat UI:
 
@@ -106,7 +114,7 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
 }
 ```
 
-## 🔧 Advanced Usage
+## Advanced Usage
 
 For more advanced usage, you can customize various aspects of the chat UI:
 
@@ -142,7 +150,7 @@ AiChatWidget(
 ),
 ```
 
-## 🎨 Customization
+## Customization
 
 ### Theme Customization
 
@@ -170,7 +178,7 @@ The `ChatMessagesController` allows you to:
 - Handle example questions
 - Manage welcome message visibility
 
-## 📋 Examples
+## Examples
 
 The package includes two example implementations:
 
@@ -247,11 +255,11 @@ Detailed API documentation is available at:
 
 For implementation examples and live demos, visit our [Example App](https://example.com).
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📄 License
+## License
 
 This package is licensed under the MIT License - see the LICENSE file for details.
 
