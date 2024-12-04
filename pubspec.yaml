@@ -1,6 +1,6 @@
 name: flutter_gen_ai_chat_ui
 description: A modern, customizable chat UI package for Flutter applications, optimized for AI interactions with support for dark mode, animations, and responsive design.
-version: 1.0.3
+version: 1.0.4
 homepage: https://dilacode.com
 repository: https://github.com/hooshyar/flutter_gen_ai_chat_ui
 issue_tracker: https://github.com/hooshyar/flutter_gen_ai_chat_ui/issues
