@@ -9,22 +9,26 @@ import 'package:flutter_gen_ai_chat_ui/src/widgets/animated_text.dart';
 
 class AiChatWidget extends StatefulWidget {
   final AiChatConfig config;
+  final ChatUser currentUser;
+  final ChatUser aiUser;
   final ChatMessagesController controller;
   final Widget? loadingIndicator;
   final bool enableAnimation;
-  final Function(String message)? onMessageSubmitted;
-  final Function(List<ChatMessage> messages)? onMessagesUpdated;
+  final Function(ChatMessage message) onSendMessage;
   final Widget Function()? welcomeMessageBuilder;
+  final bool isLoading;
 
   const AiChatWidget({
     Key? key,
     required this.config,
+    required this.currentUser,
+    required this.aiUser,
     required this.controller,
+    required this.onSendMessage,
     this.loadingIndicator,
     this.enableAnimation = true,
-    this.onMessageSubmitted,
-    this.onMessagesUpdated,
     this.welcomeMessageBuilder,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -34,17 +38,12 @@ class AiChatWidget extends StatefulWidget {
 class AiChatWidgetState extends State<AiChatWidget>
     with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
-  bool _isLoading = false;
   bool _showScrollToBottom = false;
-  late final ChatUser _user;
-  late final ChatUser _aiUser;
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
-    _user = ChatUser(id: '1', firstName: widget.config.userName ?? 'User');
-    _aiUser = ChatUser(id: '2', firstName: widget.config.aiName ?? 'AI');
     _scrollController.addListener(_scrollListener);
 
     _animationController = AnimationController(
@@ -73,20 +72,12 @@ class AiChatWidgetState extends State<AiChatWidget>
   }
 
   Future<void> _handleSend(ChatMessage message) async {
-    setState(() => _isLoading = true);
-    _animationController.reverse();
-
-    try {
-      await widget.controller.handleMessage(message, _aiUser);
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    widget.onSendMessage(message);
   }
 
   void handleExampleQuestionTap(String question) {
-    widget.controller.handleExampleQuestion(question, _user, _aiUser);
+    widget.controller
+        .handleExampleQuestion(question, widget.currentUser, widget.aiUser);
   }
 
   @override
@@ -104,7 +95,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                 widget.welcomeMessageBuilder!(),
               Expanded(
                 child: DashChat(
-                  currentUser: _user,
+                  currentUser: widget.currentUser,
                   onSend: _handleSend,
                   messages: widget.controller.messages,
                   inputOptions:
@@ -301,7 +292,7 @@ class AiChatWidgetState extends State<AiChatWidget>
         final bool isLatestMessage = widget.controller.messages.isNotEmpty &&
             widget.controller.messages.first.createdAt.millisecondsSinceEpoch ==
                 message.createdAt.millisecondsSinceEpoch;
-        final bool isUser = message.user.id == _user.id;
+        final bool isUser = message.user.id == widget.currentUser.id;
 
         return AnimatedBubble(
           key: ValueKey(message.createdAt.millisecondsSinceEpoch),
@@ -330,6 +321,12 @@ class AiChatWidgetState extends State<AiChatWidget>
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
+    Widget defaultLoadingIndicator = const SizedBox(
+      height: 40,
+      width: 40,
+      child: CircularProgressIndicator(),
+    );
+
     return MessageListOptions(
       dateSeparatorBuilder: (date) => Padding(
         padding: EdgeInsets.symmetric(
@@ -344,12 +341,17 @@ class AiChatWidgetState extends State<AiChatWidget>
           ),
         ),
       ),
-      chatFooterBuilder: _isLoading
+      chatFooterBuilder: widget.isLoading
           ? (widget.loadingIndicator ?? const LoadingWidget())
           : null,
       scrollPhysics: const BouncingScrollPhysics(),
       scrollController: _scrollController,
       showDateSeparator: isTablet,
+      // Update pagination options to use correct parameters
+      onLoadEarlier: widget.config.enablePagination
+          ? () => widget.controller.loadMore()
+          : null,
+      loadEarlierBuilder: LoadingWidget(),
     );
   }
 

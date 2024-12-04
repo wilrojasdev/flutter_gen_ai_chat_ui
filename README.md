@@ -43,6 +43,10 @@ A modern, customizable chat UI package for Flutter applications, optimized for A
 - 👋 Welcome message support
 - ⭐️ Example questions functionality
 - 🌐 RTL support
+- 📜 Message pagination support
+- 🔄 Built-in HTTP integration support
+- 💾 Initial messages support
+- 🎨 Fully customizable DashChat options
 ---
 
 ### Future Features
@@ -62,7 +66,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.0.2
+  flutter_gen_ai_chat_ui: ^1.0.3
 ```
 
 ## Dependencies
@@ -152,6 +156,17 @@ AiChatWidget(
   welcomeMessageBuilder: () => YourCustomWelcomeWidget(),
 ),
 ```
+
+### Pagination with External Data Sources
+
+The chat UI supports pagination for loading historical messages from any data source (Firestore, SQLite, API, etc.).
+Here's how to implement it:
+
+1. Initialize the controller with pagination support:
+
+### Implementing Pagination with HTTP API
+
+Here's how to implement pagination with your backend API:
 
 ## Customization
 

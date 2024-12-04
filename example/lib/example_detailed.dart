@@ -11,42 +11,134 @@ class ExampleDetailed extends StatefulWidget {
 }
 
 class _ExampleDetailedState extends State<ExampleDetailed> {
+  static const int _pageSize = 20;
   late final ChatMessagesController messagesController;
   late final List<ChatExample> exampleQuestions;
+  late final ChatUser _currentUser;
+  late final ChatUser _aiUser;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _currentUser = ChatUser(id: '1', firstName: 'User');
+    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+
+    // Create initial messages with different dates
+    final initialMessages = [
+      ChatMessage(
+        text: "Welcome back! Your last session was about Flutter development.",
+        user: _aiUser,
+        createdAt: DateTime.now().subtract(const Duration(days: 7)),
+      ),
+      ChatMessage(
+        text: "Can you help me with state management?",
+        user: _currentUser,
+        createdAt: DateTime.now().subtract(const Duration(days: 7)),
+      ),
+      ChatMessage(
+        text: "Here's a summary of different state management solutions...",
+        user: _aiUser,
+        createdAt: DateTime.now().subtract(const Duration(days: 7)),
+      ),
+      // Add more messages as needed
+    ];
+
     messagesController = ChatMessagesController(
-      onSendMessage: (message) async {
-        await Future.delayed(const Duration(seconds: 1));
-        return "Response to: $message";
-      },
+      initialMessages: initialMessages,
+      onLoadMoreMessages: _loadMoreMessages,
     );
     exampleQuestions = _createExampleQuestions();
+  }
+
+  Future<List<ChatMessage>> _loadMoreMessages(ChatMessage? lastMessage) async {
+    // Simulate API pagination
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Simulate fetching messages from an API with cursor-based pagination
+      final lastMessageDate = lastMessage?.createdAt ?? DateTime.now();
+
+      // Simulate API response with older messages
+      return [
+        ChatMessage(
+          text: "This is an older message from API",
+          user: _aiUser,
+          createdAt: lastMessageDate.subtract(const Duration(days: 1)),
+        ),
+        ChatMessage(
+          text: "Another historical message",
+          user: _currentUser,
+          createdAt:
+              lastMessageDate.subtract(const Duration(days: 1, hours: 2)),
+        ),
+        ChatMessage(
+          text: "Some more history...",
+          user: _aiUser,
+          createdAt: lastMessageDate.subtract(const Duration(days: 2)),
+        ),
+      ];
+
+      // In a real implementation, you would do something like:
+      // final response = await http.get(
+      //   Uri.parse('your-api-url/messages').replace(
+      //     queryParameters: {
+      //       'cursor': lastMessage?.createdAt.toIso8601String(),
+      //       'limit': '$_pageSize',
+      //     },
+      //   ),
+      // );
+      // return (jsonDecode(response.body) as List)
+      //     .map((json) => ChatMessage.fromJson(json))
+      //     .toList();
+    } catch (e) {
+      debugPrint('Error loading more messages: $e');
+      return [];
+    }
+  }
+
+  Future<void> _handleSendMessage(ChatMessage message) async {
+    // Fixed typo from ChatMesseage to ChatMessage
+    setState(() => _isLoading = true);
+    messagesController.addMessage(message);
+
+    try {
+      // Simulate AI response
+      await Future.delayed(const Duration(seconds: 1));
+      final response = "Response to: ${message.text}";
+
+      final aiMessage = ChatMessage(
+        text: response,
+        user: _aiUser,
+        createdAt: DateTime.now(),
+      );
+
+      messagesController.addMessage(aiMessage);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   List<ChatExample> _createExampleQuestions() {
     return [
       ChatExample(
         question: 'What is the weather like today?',
-        onTap: (controller) {
-          controller.handleExampleQuestion(
-            'What is the weather like today?',
-            ChatUser(id: '1', firstName: 'User'),
-            ChatUser(id: '2', firstName: 'AI Assistant'),
-          );
-        },
+        onTap: (controller) => controller.handleExampleQuestion(
+          'What is the weather like today?',
+          _currentUser,
+          _aiUser,
+        ),
       ),
       ChatExample(
         question: 'Tell me a joke.',
-        onTap: (controller) {
-          controller.handleExampleQuestion(
-            'Tell me a joke.',
-            ChatUser(id: '1', firstName: 'User'),
-            ChatUser(id: '2', firstName: 'AI Assistant'),
-          );
-        },
+        onTap: (controller) => controller.handleExampleQuestion(
+          'Tell me a joke.',
+          _currentUser,
+          _aiUser,
+        ),
       ),
     ];
   }
@@ -130,6 +222,43 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
           final isTablet = size.width > 600;
           final isDesktop = size.width > 1200;
 
+          // Correct input options using available parameters
+          final inputOptions = InputOptions(
+            sendOnEnter: true,
+            alwaysShowSend: true, // Changed from showSendButton
+            inputTextStyle: const TextStyle(fontSize: 16),
+            inputDecoration: InputDecoration(
+              hintText: 'Type a message...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          );
+
+          final messageOptions = MessageOptions(
+            showTime: true,
+            avatarBuilder: (user, onPressAvatar, onLongPressAvatar) =>
+                CircleAvatar(
+              child: Text(user.firstName?[0] ?? ''),
+            ),
+            // Remove showAvatar and showUserAvatar as they don't exist
+            messagePadding: const EdgeInsets.all(12),
+            containerColor: Colors.blue.shade100,
+            textColor: Colors.black,
+          );
+
+          final messageListOptions = MessageListOptions(
+            showDateSeparator: true,
+            separatorFrequency: SeparatorFrequency.days,
+            scrollPhysics: const BouncingScrollPhysics(),
+            onLoadEarlier: () => messagesController.loadMore(),
+            loadEarlierBuilder: const SizedBox(
+              height: 40,
+              width: 40,
+              child: CircularProgressIndicator(),
+            ),
+          );
+
           return Theme(
             data: themeProvider.theme,
             child: Scaffold(
@@ -162,10 +291,30 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
                     enableAnimation: true,
                     showTimestamp: true,
                     exampleQuestions: exampleQuestions,
+                    inputOptions: inputOptions,
+                    messageOptions: messageOptions,
+                    messageListOptions: messageListOptions,
+                    quickReplyOptions: const QuickReplyOptions(),
+                    readOnly: false,
+                    typingUsers: [], // Add typing users if needed
+                    enablePagination: true,
+                    paginationLoadingIndicatorOffset: 100,
+                    loadMoreIndicator: (bool isLoading) => const SizedBox(
+                      height: 40,
+                      width: 40,
+                      child: CircularProgressIndicator(),
+                    ),
                   ),
+                  currentUser: _currentUser,
+                  aiUser: _aiUser,
                   controller: messagesController,
+                  onSendMessage: _handleSendMessage,
+                  isLoading: _isLoading,
                   welcomeMessageBuilder: () => _buildWelcomeMessage(
-                      context, exampleQuestions, messagesController),
+                    context,
+                    exampleQuestions,
+                    messagesController,
+                  ),
                 ),
               ),
             ),
