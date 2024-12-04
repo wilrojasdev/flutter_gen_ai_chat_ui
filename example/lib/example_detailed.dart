@@ -10,8 +10,9 @@ class ExampleDetailed extends StatefulWidget {
   State<ExampleDetailed> createState() => _ExampleDetailedState();
 }
 
+// Advanced example showcasing all major features including themes, pagination, and customization
 class _ExampleDetailedState extends State<ExampleDetailed> {
-  static const int _pageSize = 20;
+  static const int _pageSize = 20; // Number of messages to load per page
   late final ChatMessagesController messagesController;
   late final List<ChatExample> exampleQuestions;
   late final ChatUser _currentUser;
@@ -21,10 +22,11 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
   @override
   void initState() {
     super.initState();
+    // Initialize chat participants
     _currentUser = ChatUser(id: '1', firstName: 'User');
     _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
 
-    // Create initial messages with different dates
+    // Create sample historical messages
     final initialMessages = [
       ChatMessage(
         text: "Welcome back! Your last session was about Flutter development.",
@@ -44,23 +46,33 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
       // Add more messages as needed
     ];
 
+    // Initialize controller with pagination support
     messagesController = ChatMessagesController(
       initialMessages: initialMessages,
-      onLoadMoreMessages: _loadMoreMessages,
+      onLoadMoreMessages: _loadMoreMessages, // Enable pagination
     );
     exampleQuestions = _createExampleQuestions();
   }
 
+  // Simulated API pagination - Replace with actual backend integration
   Future<List<ChatMessage>> _loadMoreMessages(ChatMessage? lastMessage) async {
-    // Simulate API pagination
     try {
       // Simulate network delay
       await Future.delayed(const Duration(seconds: 1));
 
-      // Simulate fetching messages from an API with cursor-based pagination
+      // Simulate cursor-based pagination using message dates
       final lastMessageDate = lastMessage?.createdAt ?? DateTime.now();
 
-      // Simulate API response with older messages
+      // Return mock historical messages
+      // In production, replace with actual API call:
+      // final response = await http.get(
+      //   Uri.parse('your-api-url/messages').replace(
+      //     queryParameters: {
+      //       'cursor': lastMessage?.createdAt.toIso8601String(),
+      //       'limit': '$_pageSize',
+      //     },
+      //   ),
+      // );
       return [
         ChatMessage(
           text: "This is an older message from API",
@@ -79,19 +91,6 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
           createdAt: lastMessageDate.subtract(const Duration(days: 2)),
         ),
       ];
-
-      // In a real implementation, you would do something like:
-      // final response = await http.get(
-      //   Uri.parse('your-api-url/messages').replace(
-      //     queryParameters: {
-      //       'cursor': lastMessage?.createdAt.toIso8601String(),
-      //       'limit': '$_pageSize',
-      //     },
-      //   ),
-      // );
-      // return (jsonDecode(response.body) as List)
-      //     .map((json) => ChatMessage.fromJson(json))
-      //     .toList();
     } catch (e) {
       debugPrint('Error loading more messages: $e');
       return [];
@@ -222,10 +221,10 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
           final isTablet = size.width > 600;
           final isDesktop = size.width > 1200;
 
-          // Correct input options using available parameters
+          // Configure DashChat input customization
           final inputOptions = InputOptions(
             sendOnEnter: true,
-            alwaysShowSend: true, // Changed from showSendButton
+            alwaysShowSend: true,
             inputTextStyle: const TextStyle(fontSize: 16),
             inputDecoration: InputDecoration(
               hintText: 'Type a message...',
@@ -235,18 +234,19 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
             ),
           );
 
+          // Configure message appearance
           final messageOptions = MessageOptions(
             showTime: true,
             avatarBuilder: (user, onPressAvatar, onLongPressAvatar) =>
                 CircleAvatar(
               child: Text(user.firstName?[0] ?? ''),
             ),
-            // Remove showAvatar and showUserAvatar as they don't exist
             messagePadding: const EdgeInsets.all(12),
             containerColor: Colors.blue.shade100,
             textColor: Colors.black,
           );
 
+          // Configure message list and pagination
           final messageListOptions = MessageListOptions(
             showDateSeparator: true,
             separatorFrequency: SeparatorFrequency.days,
@@ -278,25 +278,24 @@ class _ExampleDetailedState extends State<ExampleDetailed> {
               body: Center(
                 child: AiChatWidget(
                   config: AiChatConfig(
+                    // Basic configuration
                     userName: 'User',
                     aiName: 'AI Assistant',
-                    hintText: LocaleHelper.isRTL(context)
-                        ? 'نامەیەک بنێرە...'
-                        : 'Type a message...',
-                    maxWidth: isDesktop
-                        ? 900
-                        : isTablet
-                            ? 700
-                            : null,
+
+                    // Responsive layout
+                    maxWidth: isDesktop ? 900 : (isTablet ? 700 : null),
+
+                    // Features configuration
                     enableAnimation: true,
                     showTimestamp: true,
                     exampleQuestions: exampleQuestions,
+
+                    // DashChat customization
                     inputOptions: inputOptions,
                     messageOptions: messageOptions,
                     messageListOptions: messageListOptions,
-                    quickReplyOptions: const QuickReplyOptions(),
-                    readOnly: false,
-                    typingUsers: [], // Add typing users if needed
+
+                    // Pagination setup
                     enablePagination: true,
                     paginationLoadingIndicatorOffset: 100,
                     loadMoreIndicator: (bool isLoading) => const SizedBox(

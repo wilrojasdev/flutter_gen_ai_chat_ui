@@ -9,6 +9,7 @@ class SimpleChatScreen extends StatefulWidget {
   State<SimpleChatScreen> createState() => _SimpleChatScreenState();
 }
 
+// A basic example demonstrating core features of the chat UI package
 class _SimpleChatScreenState extends State<SimpleChatScreen> {
   late final ChatMessagesController _controller;
   late final ChatUser _currentUser;
@@ -18,10 +19,12 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   @override
   void initState() {
     super.initState();
+
+    // Initialize chat participants
     _currentUser = ChatUser(id: '1', firstName: 'User');
     _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
 
-    // Example of initializing chat with existing messages
+    // Optional: Pre-populate chat with initial messages
     final initialMessages = [
       ChatMessage(
         text: "Hello! How can I help you today?",
@@ -36,29 +39,32 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
       // Add more messages as needed
     ];
 
+    // Initialize controller with optional initial messages
     _controller = ChatMessagesController(initialMessages: initialMessages);
   }
 
+  // Handle new messages and AI responses
   Future<void> _handleSendMessage(ChatMessage message) async {
+    // Show loading indicator while processing
     setState(() => _isLoading = true);
+
+    // Add user message to chat immediately
     _controller.addMessage(message);
 
     try {
-      // Simulate AI response - Replace with actual AI integration
+      // Simulate AI processing time - Replace with actual AI integration
       await Future.delayed(const Duration(seconds: 1));
-      final response = "This is a demo response to: ${message.text}";
 
+      // Create and add AI response
       final aiMessage = ChatMessage(
-        text: response,
+        text: "This is a demo response to: ${message.text}",
         user: _aiUser,
         createdAt: DateTime.now(),
       );
-
       _controller.addMessage(aiMessage);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      // Hide loading indicator
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -71,6 +77,7 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
         surfaceTintColor: Colors.transparent,
       ),
       body: AiChatWidget(
+        // Basic configuration with minimal customization
         config: const AiChatConfig(
           hintText: 'Type a message...',
           enableAnimation: true,

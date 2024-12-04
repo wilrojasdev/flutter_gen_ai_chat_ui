@@ -241,7 +241,6 @@ LoadingWidget.showAsBottomSheet(
 | Cmd/Ctrl + Enter | Send message |
 | Esc | Clear input |
 | Up Arrow | Edit last message |
-| Cmd/Ctrl + K | Search |
 
 ## Performance
 
