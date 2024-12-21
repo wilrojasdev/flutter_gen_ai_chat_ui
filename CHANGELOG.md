@@ -1,32 +1,21 @@
 # Changelog
 
+## 1.1.1
+
+* Enhanced dark mode support with improved color schemes
+* Added customizable send button and input field styling
+* Fixed input text color visibility in dark mode
+* Improved loading widget shimmer effect colors
+* Updated example apps with better documentation
+* Removed typing indicator from streaming example
+* Added markdown support with better dark mode compatibility
+
 ## 1.1.0
 
-### Added
-- AI Integration Assistant section in README for easier package integration
-- Improved dark theme with better contrast and reduced eye strain
-- Enhanced loading widget animations and styling
-- Refined welcome message and example questions UI
-
-### Changed
-- Updated dark theme colors for better OLED display support
-- Improved shimmer effect in dark mode
-- Enhanced shadow effects and visual hierarchy
-- Refined typography and spacing throughout the UI
-
-### Fixed
-- Dark mode contrast issues
-- Loading widget animation smoothness
-- Shadow and elevation consistency in dark mode
-
-## 1.0.5
-
-Initial release with features:
-- Customizable themes with dark mode support
-- Message animations
-- Responsive layout
-- Loading states
-- Welcome message widget
-- Example questions widget
-- Message pagination support
-- RTL support
+* Initial release with core features
+* Dark and light mode support
+* Smooth message animations
+* Word-by-word text streaming
+* Loading indicators with shimmer effect
+* Markdown support
+* Example apps included
