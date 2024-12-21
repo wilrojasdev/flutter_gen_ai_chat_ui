@@ -163,3 +163,7 @@ Future<void> handleSendMessage(ChatMessage message) async {
     controller.updateMessage(currentText);
   }
 }
+```
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^1.1.1  # Latest version

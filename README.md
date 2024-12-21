@@ -75,7 +75,7 @@ The AI will provide:
 
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.0.5
+  flutter_gen_ai_chat_ui: ^1.1.1
 ```
 
 ### 2. Import the package
