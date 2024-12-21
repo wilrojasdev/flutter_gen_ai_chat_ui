@@ -90,9 +90,9 @@ class AiChatWidgetState extends State<AiChatWidget>
           padding: widget.config.padding,
           child: Column(
             children: [
-              if (widget.controller.showWelcomeMessage &&
-                  widget.welcomeMessageBuilder != null)
-                widget.welcomeMessageBuilder!(),
+              if (widget.controller.showWelcomeMessage)
+                widget.welcomeMessageBuilder?.call() ??
+                    _buildWelcomeMessage(context),
               Expanded(
                 child: DashChat(
                   currentUser: widget.currentUser,
@@ -122,22 +122,32 @@ class AiChatWidgetState extends State<AiChatWidget>
   Widget _buildWelcomeMessage(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final customTheme = theme.extension<CustomThemeExtension>() ??
+        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
 
     return FadeTransition(
       opacity: _animationController,
       child: Container(
         margin: const EdgeInsets.all(16.0),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.grey[850] : Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: isDarkMode ? const Color(0xFF242424) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: isDarkMode ? Colors.black26 : Colors.black12,
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: isDarkMode
+                  ? Colors.black.withOpacity(0.2)
+                  : Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              spreadRadius: -4,
+              offset: const Offset(0, 6),
             ),
           ],
+          border: Border.all(
+            color:
+                isDarkMode ? const Color(0xFF3D3D3D) : const Color(0xFFE0E0E0),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,20 +155,23 @@ class AiChatWidgetState extends State<AiChatWidget>
             Text(
               'Welcome! How can I assist you today?',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+                color: customTheme.messageTextColor,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               'Here are some questions you can ask:',
               style: TextStyle(
                 fontSize: 16,
-                color: isDarkMode ? Colors.white70 : Colors.black87,
+                fontWeight: FontWeight.w400,
+                color: customTheme.messageTextColor.withOpacity(0.8),
+                letterSpacing: 0.1,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             _buildExampleQuestion(
                 'What is the weather like today?', isDarkMode),
             _buildExampleQuestion('Tell me a joke.', isDarkMode),
@@ -170,21 +183,50 @@ class AiChatWidgetState extends State<AiChatWidget>
   }
 
   Widget _buildExampleQuestion(String question, bool isDarkMode) {
+    final theme = Theme.of(context);
+    final customTheme = theme.extension<CustomThemeExtension>() ??
+        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+
     return GestureDetector(
       onTap: () => handleExampleQuestionTap(question),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4.0),
-        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+        margin: const EdgeInsets.symmetric(vertical: 6.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.blueGrey[700] : Colors.blue[50],
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          question,
-          style: TextStyle(
-            color: isDarkMode ? Colors.blue[200] : Colors.blue[700],
-            fontSize: 16,
+          color: isDarkMode
+              ? customTheme.userBubbleColor.withOpacity(0.15)
+              : customTheme.userBubbleColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDarkMode
+                ? customTheme.userBubbleColor.withOpacity(0.3)
+                : customTheme.userBubbleColor.withOpacity(0.2),
+            width: 1,
           ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                question,
+                style: TextStyle(
+                  color: isDarkMode
+                      ? customTheme.userBubbleColor.withOpacity(0.9)
+                      : customTheme.userBubbleColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: isDarkMode
+                  ? customTheme.userBubbleColor.withOpacity(0.7)
+                  : customTheme.userBubbleColor.withOpacity(0.6),
+            ),
+          ],
         ),
       ),
     );
@@ -214,7 +256,7 @@ class AiChatWidgetState extends State<AiChatWidget>
           FontHelper.getAppropriateFont(
             text: LocaleHelper.isRTL(context) ? 'ئ' : 'a',
             baseStyle: TextStyle(
-              color: customTheme.messageTextColor,
+              color: customTheme.inputTextColor,
               fontSize: 16,
             ),
           ),
@@ -247,15 +289,25 @@ class AiChatWidgetState extends State<AiChatWidget>
               borderSide: BorderSide(color: customTheme.inputBorderColor),
             ),
           ),
-      sendButtonBuilder: (onSend) {
-        return IconButton(
-          icon: Icon(
-            Icons.send_rounded,
-            color: customTheme.messageTextColor.withOpacity(0.7),
-          ),
-          onPressed: onSend,
-        );
-      },
+      sendButtonBuilder: widget.config.sendButtonBuilder ??
+          (onSend) {
+            return Container(
+              margin:
+                  widget.config.sendButtonPadding ?? const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: customTheme.sendButtonColor,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  widget.config.sendButtonIcon ?? Icons.send_rounded,
+                  color: customTheme.sendButtonIconColor,
+                  size: widget.config.sendButtonIconSize ?? 24,
+                ),
+                onPressed: onSend,
+              ),
+            );
+          },
     );
   }
 
@@ -270,11 +322,12 @@ class AiChatWidgetState extends State<AiChatWidget>
       containerColor: customTheme.messageBubbleColor,
       currentUserContainerColor: customTheme.userBubbleColor,
       currentUserTextColor: customTheme.messageTextColor,
-      currentUserTimeTextColor: Colors.grey[600]!,
+      currentUserTimeTextColor: theme.brightness == Brightness.dark
+          ? Colors.grey[400]!
+          : Colors.grey[600]!,
       messagePadding: EdgeInsets.only(
         left: isTablet ? 20 : 16,
-        right:
-            isTablet ? 20 : 16, // Reduced right padding since button is outside
+        right: isTablet ? 20 : 16,
         top: isTablet ? 20 : 16,
         bottom: isTablet ? 20 : 16,
       ),
@@ -283,7 +336,9 @@ class AiChatWidgetState extends State<AiChatWidget>
       textColor: customTheme.messageTextColor,
       timeFontSize: 11,
       timePadding: const EdgeInsets.only(top: 4),
-      timeTextColor: Colors.grey[600]!,
+      timeTextColor: theme.brightness == Brightness.dark
+          ? Colors.grey[400]!
+          : Colors.grey[600]!,
       messageTextBuilder: (message, previousMessage, nextMessage) {
         if (widget.config.messageBuilder != null) {
           return widget.config.messageBuilder!(message);
@@ -301,14 +356,25 @@ class AiChatWidgetState extends State<AiChatWidget>
           child: MouseRegion(
             cursor: SystemMouseCursors.text,
             child: AnimatedTextMessage(
-              key: ValueKey(message.createdAt.millisecondsSinceEpoch),
+              key: ValueKey(
+                  '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
               text: message.text,
               animate: widget.config.enableAnimation && isLatestMessage,
               isUser: isUser,
+              isStreaming: isLatestMessage && !isUser && widget.isLoading,
               style: TextStyle(
-                color: customTheme.messageTextColor,
+                color: isUser
+                    ? (widget.config.messageOptions?.currentUserTextColor
+                            as Color?) ??
+                        customTheme.messageTextColor
+                    : (widget.config.messageOptions?.textColor as Color?) ??
+                        customTheme.messageTextColor,
                 fontSize: isTablet ? 16 : 15,
                 height: 1.4,
+              ),
+              textBuilder: (text, style) => SelectableText(
+                text,
+                style: style,
               ),
             ),
           ),
@@ -320,12 +386,6 @@ class AiChatWidgetState extends State<AiChatWidget>
   MessageListOptions _buildMessageListOptions() {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
-
-    Widget defaultLoadingIndicator = const SizedBox(
-      height: 40,
-      width: 40,
-      child: CircularProgressIndicator(),
-    );
 
     return MessageListOptions(
       dateSeparatorBuilder: (date) => Padding(
@@ -351,7 +411,7 @@ class AiChatWidgetState extends State<AiChatWidget>
       onLoadEarlier: widget.config.enablePagination
           ? () => widget.controller.loadMore()
           : null,
-      loadEarlierBuilder: LoadingWidget(),
+      loadEarlierBuilder: const LoadingWidget(),
     );
   }
 

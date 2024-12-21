@@ -31,6 +31,17 @@ class ChatMessagesController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateMessage(ChatMessage message) {
+    final index = _messages.indexWhere((msg) =>
+        msg.customProperties?['id'] == message.customProperties?['id']);
+    if (index != -1) {
+      _messages[index] = message;
+    } else {
+      _messages.insert(0, message);
+    }
+    notifyListeners();
+  }
+
   void setMessages(List<ChatMessage> messages) {
     _messages = messages;
     notifyListeners();

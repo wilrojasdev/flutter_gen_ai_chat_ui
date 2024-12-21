@@ -1,0 +1,2 @@
+# Files that should not be published
+example/lib/example_detailed.dart 

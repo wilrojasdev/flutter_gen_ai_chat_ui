@@ -23,33 +23,62 @@ class ThemeProvider extends ChangeNotifier {
         messageTextColor: Colors.black87,
         inputBackgroundColor: const Color(0xFFF5F5F5),
         inputBorderColor: const Color(0xFFE0E0E0),
+        inputTextColor: Colors.black87,
         hintTextColor: Colors.grey[400]!,
         backToBottomButtonColor: Colors.grey[800]!,
+        sendButtonColor: Colors.grey[800]!,
+        sendButtonIconColor: Colors.white,
       ),
     ],
   );
 
   static final darkTheme = ThemeData(
     brightness: Brightness.dark,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF1A1A1A),
+    appBarTheme: AppBarTheme(
+      backgroundColor: const Color(0xFF1A1A1A),
       foregroundColor: Colors.white,
       elevation: 0,
-      iconTheme: IconThemeData(color: Colors.white),
+      surfaceTintColor: Colors.transparent,
+      shadowColor: Colors.black26,
+      iconTheme: const IconThemeData(color: Colors.white),
     ),
     scaffoldBackgroundColor: const Color(0xFF1A1A1A),
     extensions: [
       CustomThemeExtension(
         chatBackground: const Color(0xFF1A1A1A),
-        messageBubbleColor: const Color(0xFF2D2D2D),
-        userBubbleColor: const Color(0xFF1E3A5F),
-        messageTextColor: Colors.white,
-        inputBackgroundColor: const Color(0xFF2D2D2D),
-        inputBorderColor: const Color(0xFF404040),
-        hintTextColor: Colors.grey[600]!,
-        backToBottomButtonColor: Colors.grey[300]!,
+        messageBubbleColor: const Color(0xFF2A2A2A),
+        userBubbleColor: const Color(0xFF0D47A1),
+        messageTextColor: const Color(0xFFEEEEEE),
+        inputBackgroundColor: const Color(0xFF242424),
+        inputBorderColor: const Color(0xFF3D3D3D),
+        inputTextColor: const Color(0xFFE5E5E5),
+        hintTextColor: const Color(0xFF9E9E9E),
+        backToBottomButtonColor: const Color(0xFF64B5F6),
+        sendButtonColor: const Color(0xFF64B5F6),
+        sendButtonIconColor: Colors.white,
       ),
     ],
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF0D47A1),
+        foregroundColor: Colors.white,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+        ),
+      ),
+    ),
+    cardTheme: CardTheme(
+      color: const Color(0xFF242424),
+      elevation: 4,
+      shadowColor: Colors.black38,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
   );
 
   void toggleTheme() {
@@ -65,8 +94,11 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
   final Color messageTextColor;
   final Color inputBackgroundColor;
   final Color inputBorderColor;
+  final Color inputTextColor;
   final Color hintTextColor;
   final Color backToBottomButtonColor;
+  final Color sendButtonColor;
+  final Color sendButtonIconColor;
 
   CustomThemeExtension({
     required this.chatBackground,
@@ -75,8 +107,11 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
     required this.messageTextColor,
     required this.inputBackgroundColor,
     required this.inputBorderColor,
+    required this.inputTextColor,
     required this.hintTextColor,
     required this.backToBottomButtonColor,
+    required this.sendButtonColor,
+    required this.sendButtonIconColor,
   });
 
   @override
@@ -87,8 +122,11 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
     Color? messageTextColor,
     Color? inputBackgroundColor,
     Color? inputBorderColor,
+    Color? inputTextColor,
     Color? hintTextColor,
     Color? backToBottomButtonColor,
+    Color? sendButtonColor,
+    Color? sendButtonIconColor,
   }) {
     return CustomThemeExtension(
       chatBackground: chatBackground ?? this.chatBackground,
@@ -97,9 +135,12 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
       messageTextColor: messageTextColor ?? this.messageTextColor,
       inputBackgroundColor: inputBackgroundColor ?? this.inputBackgroundColor,
       inputBorderColor: inputBorderColor ?? this.inputBorderColor,
+      inputTextColor: inputTextColor ?? this.inputTextColor,
       hintTextColor: hintTextColor ?? this.hintTextColor,
       backToBottomButtonColor:
           backToBottomButtonColor ?? this.backToBottomButtonColor,
+      sendButtonColor: sendButtonColor ?? this.sendButtonColor,
+      sendButtonIconColor: sendButtonIconColor ?? this.sendButtonIconColor,
     );
   }
 
@@ -108,7 +149,9 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
     ThemeExtension<CustomThemeExtension>? other,
     double t,
   ) {
-    if (other is! CustomThemeExtension) return this;
+    if (other is! CustomThemeExtension) {
+      return this;
+    }
     return CustomThemeExtension(
       chatBackground: Color.lerp(chatBackground, other.chatBackground, t)!,
       messageBubbleColor:
@@ -120,9 +163,13 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
           Color.lerp(inputBackgroundColor, other.inputBackgroundColor, t)!,
       inputBorderColor:
           Color.lerp(inputBorderColor, other.inputBorderColor, t)!,
+      inputTextColor: Color.lerp(inputTextColor, other.inputTextColor, t)!,
       hintTextColor: Color.lerp(hintTextColor, other.hintTextColor, t)!,
       backToBottomButtonColor: Color.lerp(
           backToBottomButtonColor, other.backToBottomButtonColor, t)!,
+      sendButtonColor: Color.lerp(sendButtonColor, other.sendButtonColor, t)!,
+      sendButtonIconColor:
+          Color.lerp(sendButtonIconColor, other.sendButtonIconColor, t)!,
     );
   }
 }

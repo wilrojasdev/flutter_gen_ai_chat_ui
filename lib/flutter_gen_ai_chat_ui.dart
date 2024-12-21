@@ -8,5 +8,7 @@ export 'src/providers/chat_provider.dart';
 export 'src/providers/theme_provider.dart' hide CustomThemeExtension;
 export 'src/utils/locale_helper.dart';
 export 'src/utils/font_helper.dart';
-export 'src/models/theme_extension.dart' show CustomThemeExtension;
+export 'src/models/theme_extension.dart';
 export 'src/widgets/loading_widget.dart' show LoadingWidget;
+export 'src/widgets/animated_bubble.dart';
+export 'src/widgets/animated_text.dart';

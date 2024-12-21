@@ -27,12 +27,15 @@ class AiChatConfig {
   final InputDecoration? inputDecoration;
   final Widget Function(ChatMessage message)? messageBuilder;
   final Widget Function(ScrollController)? scrollToBottomBuilder;
+  final Widget Function(Function() onSend)? sendButtonBuilder;
+  final IconData? sendButtonIcon;
+  final double? sendButtonIconSize;
+  final EdgeInsets? sendButtonPadding;
 
   // Pagination configuration
   final bool enablePagination;
   final double paginationLoadingIndicatorOffset;
-  final Widget Function(bool isLoading)?
-      loadMoreIndicator; // Changed to match dash_chat_2's API
+  final Widget Function(bool isLoading)? loadMoreIndicator;
 
   const AiChatConfig({
     this.userName,
@@ -56,6 +59,10 @@ class AiChatConfig {
     this.inputDecoration,
     this.messageBuilder,
     this.scrollToBottomBuilder,
+    this.sendButtonBuilder,
+    this.sendButtonIcon,
+    this.sendButtonIconSize,
+    this.sendButtonPadding,
     // Pagination options
     this.enablePagination = false,
     this.paginationLoadingIndicatorOffset = 100,
@@ -64,7 +71,6 @@ class AiChatConfig {
 
   // Create a copy with method for easy modification
   AiChatConfig copyWith({
-    // Add all properties here
     String? userName,
     String? aiName,
     String? hintText,
@@ -84,10 +90,13 @@ class AiChatConfig {
     InputDecoration? inputDecoration,
     Widget Function(ChatMessage message)? messageBuilder,
     Widget Function(ScrollController)? scrollToBottomBuilder,
+    Widget Function(Function() onSend)? sendButtonBuilder,
+    IconData? sendButtonIcon,
+    double? sendButtonIconSize,
+    EdgeInsets? sendButtonPadding,
     bool? enablePagination,
     double? paginationLoadingIndicatorOffset,
-    Widget Function(bool isLoading)?
-        loadMoreIndicator, // Changed to match dash_chat_2's API
+    Widget Function(bool isLoading)? loadMoreIndicator,
   }) {
     return AiChatConfig(
       userName: userName ?? this.userName,
@@ -111,6 +120,10 @@ class AiChatConfig {
       messageBuilder: messageBuilder ?? this.messageBuilder,
       scrollToBottomBuilder:
           scrollToBottomBuilder ?? this.scrollToBottomBuilder,
+      sendButtonBuilder: sendButtonBuilder ?? this.sendButtonBuilder,
+      sendButtonIcon: sendButtonIcon ?? this.sendButtonIcon,
+      sendButtonIconSize: sendButtonIconSize ?? this.sendButtonIconSize,
+      sendButtonPadding: sendButtonPadding ?? this.sendButtonPadding,
       enablePagination: enablePagination ?? this.enablePagination,
       paginationLoadingIndicatorOffset: paginationLoadingIndicatorOffset ??
           this.paginationLoadingIndicatorOffset,

@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart';
-import 'dart:math' as math;
 import '../utils/font_helper.dart';
 
 class AnimatedTextMessage extends StatefulWidget {
   final String text;
   final TextStyle? style;
-  final bool animate; // Add this flag
-  final bool isUser; // Add this property
+  final bool animate;
+  final bool isUser;
+  final bool isStreaming;
+  final Widget Function(String text, TextStyle? style)? textBuilder;
 
   const AnimatedTextMessage({
     Key? key,
     required this.text,
     this.style,
-    this.animate = false, // Default to false
-    required this.isUser, // Add this parameter
+    this.animate = false,
+    required this.isUser,
+    this.isStreaming = false,
+    this.textBuilder,
   }) : super(key: key);
 
   @override
@@ -22,51 +25,37 @@ class AnimatedTextMessage extends StatefulWidget {
 }
 
 class _AnimatedTextMessageState extends State<AnimatedTextMessage>
-    with TickerProviderStateMixin {
-  List<String> _words = [];
-  List<Animation<double>> _fadeAnimations = [];
-  late AnimationController _controller;
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _words = widget.text.split(' ');
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(
-          milliseconds: math.min(_words.length * 120, 800)), // Faster animation
+      duration: const Duration(milliseconds: 300),
     );
-
-    // Fix animation intervals
-    _fadeAnimations = _words.asMap().entries.map((entry) {
-      final double startTime = entry.key / _words.length;
-      final double endTime = math.min((entry.key + 1) / _words.length, 1.0);
-
-      return Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: Interval(
-            startTime,
-            endTime,
-            curve: Curves.easeOut,
-          ),
-        ),
-      );
-    }).toList();
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
 
     if (widget.animate) {
       _controller.forward();
     } else {
-      _controller.value = 1.0; // Instantly show text if not animating
+      _controller.value = 1.0;
     }
   }
 
   @override
   void didUpdateWidget(AnimatedTextMessage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.text != oldWidget.text) {
-      _controller.reset();
-      _controller.forward();
+    if (widget.text != oldWidget.text && widget.animate) {
+      _controller.forward(from: 0.0);
     }
   }
 
@@ -81,52 +70,133 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
     final customTheme = Theme.of(context).extension<CustomThemeExtension>() ??
         ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
 
+    final textStyle = FontHelper.getAppropriateFont(
+      text: widget.text,
+      baseStyle: widget.style ??
+          TextStyle(
+            color: customTheme.messageTextColor,
+            fontSize: 15,
+            height: 1.4,
+          ),
+    );
+
+    Widget buildText(String text, TextStyle? style) {
+      if (widget.textBuilder != null) {
+        return widget.textBuilder!(text, style);
+      }
+      return Text(text, style: style);
+    }
+
     return Directionality(
       textDirection: _detectTextDirection(widget.text),
-      child: Wrap(
-        alignment: WrapAlignment.start,
-        children: _words.asMap().entries.map((entry) {
-          int idx = entry.key;
-          String word = entry.value;
-          return FadeTransition(
-            opacity: _fadeAnimations[idx],
-            child: SelectableText(
-              '$word ',
-              style: FontHelper.getAppropriateFont(
-                text: word,
-                baseStyle: widget.style?.copyWith(
-                  color: customTheme.messageTextColor,
-                  fontSize: widget.style?.fontSize ?? 15,
-                ),
-              ),
-              // Add these properties for better selection experience
-              enableInteractiveSelection: true,
-              showCursor: true,
-              cursorColor: customTheme.messageTextColor.withOpacity(0.5),
-              toolbarOptions: const ToolbarOptions(
-                copy: true,
-                selectAll: true,
-                cut: false,
-                paste: false,
-              ),
+      child: widget.isStreaming
+          ? StreamingText(
+              text: widget.text,
+              style: textStyle,
+              textBuilder: widget.textBuilder,
+            )
+          : FadeTransition(
+              opacity: _fadeAnimation,
+              child: buildText(widget.text, textStyle),
             ),
-          );
-        }).toList(),
-      ),
     );
   }
 
   TextDirection _detectTextDirection(String text) {
     if (text.isEmpty) return TextDirection.ltr;
-    // Use Unicode ranges to detect Arabic/Persian/Kurdish text
     final RegExp arabicRegex = RegExp(
         r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
     return arabicRegex.hasMatch(text) ? TextDirection.rtl : TextDirection.ltr;
   }
+}
 
-  bool _isArabic(String text) {
-    final RegExp arabicRegex = RegExp(
-        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
-    return arabicRegex.hasMatch(text);
+class StreamingText extends StatefulWidget {
+  final String text;
+  final TextStyle? style;
+  final Widget Function(String text, TextStyle? style)? textBuilder;
+
+  const StreamingText({
+    Key? key,
+    required this.text,
+    this.style,
+    this.textBuilder,
+  }) : super(key: key);
+
+  @override
+  State<StreamingText> createState() => _StreamingTextState();
+}
+
+class _StreamingTextState extends State<StreamingText>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  String _previousText = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _previousText = widget.text;
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ));
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(StreamingText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.text != oldWidget.text) {
+      _previousText = oldWidget.text;
+      _controller.forward(from: 0.0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget buildText(String text, TextStyle? style) {
+    if (widget.textBuilder != null) {
+      return widget.textBuilder!(text, style);
+    }
+    return Text(text, style: style);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final newText = widget.text.substring(_previousText.length);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_previousText.isNotEmpty)
+              Flexible(child: buildText(_previousText, widget.style)),
+            if (newText.isNotEmpty)
+              Flexible(
+                child: buildText(
+                  newText,
+                  widget.style?.copyWith(
+                    color:
+                        widget.style?.color?.withOpacity(_fadeAnimation.value),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -1,107 +1,121 @@
-# Flutter Gen AI Chat UI
+# Flutter ChatGPT UI
 
 [![pub package](https://img.shields.io/pub/v/flutter_gen_ai_chat_ui.svg)](https://pub.dev/packages/flutter_gen_ai_chat_ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A modern, customizable chat UI package for Flutter applications, optimized for AI interactions.
-
+Build ChatGPT-style chat interfaces in Flutter. Simple to use, easy to customize.
 
 <table>
   <tr>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed_dark.png" alt="Detailed Dark" width="300px">
+      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed_dark.png" alt="Dark Mode" width="300px">
+      <br>
+      <em>Dark Mode</em>
     </td>
     <td align="center">
-      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed.gif" alt="Detailed Example" width="300px">
+      <img src="https://raw.githubusercontent.com/hooshyar/flutter_gen_ai_chat_ui/main/screenshots/detailed.gif" alt="Chat Demo" width="300px">
+      <br>
+      <em>Chat Demo</em>
     </td>
   </tr>
 </table>
 
-## Table of Contents
+## 🤖 Quick Integration with AI Help
 
-- [Features](#features)
-- [Installation](#installation)
-- [Dependencies](#dependencies)
-- [Quick Start](#quick-start)
-- [Advanced Usage](#advanced-usage)
-- [Customization](#customization)
-- [Examples](#examples)
-- [Keyboard Shortcuts](#keyboard-shortcuts)
-- [Troubleshooting](#troubleshooting)
-- [Platform Support](#platform-support)
-- [Performance](#performance)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
+Need help integrating this package with your specific use case? Copy this prompt into ChatGPT:
 
-## Features
+```
+Help me integrate flutter_gen_ai_chat_ui with my Flutter app.
 
-- 🎨 Light/Dark mode support
-- 💫 Animated message bubbles
-- 📱 Responsive design (Mobile/Tablet/Desktop)
-- 🔄 Built-in loading indicators
-- 👋 Welcome message support
-- ⭐️ Example questions functionality
-- 🌐 RTL support
-- 📜 Message pagination support
-- 🔄 Built-in HTTP integration support
-- 💾 Initial messages support
-- 🎨 Fully customizable DashChat options
----
+My app details:
+1. App type: [e.g., AI chatbot, customer support, education app]
+2. Backend: [e.g., OpenAI API, custom API, Firebase]
+3. Features needed: [e.g., streaming responses, markdown support, dark mode]
+4. Current state management: [e.g., Provider, Bloc, GetX]
 
-### Future Features
-- [ ] Performance optimized
-- [ ] Keyboard shortcuts support
-- [ ] Privacy-focused design
-- [ ] Customizable avatar support
-- [ ] Message status indicators
-- [ ] Search functionality
-- [ ] Adaptive layouts
-- [ ] Image message support
-- [ ] File attachment support
-
-## Installation
-
-Add this to your package's `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^1.0.3
+Please show me:
+1. How to integrate the chat UI
+2. How to connect it with my backend
+3. How to customize the theme to match my app
+4. Best practices for my specific use case
 ```
 
-## Dependencies
+The AI will provide:
+- ✅ Complete integration code
+- ✅ Backend connection setup
+- ✅ Theme customization examples
+- ✅ Performance optimization tips
+- ✅ Use case specific recommendations
 
-This package uses the following pub.dev packages:
+## Key Features
 
-- [provider](https://pub.dev/packages/provider) ^6.0.0 - State management
-- [dash_chat_2](https://pub.dev/packages/dash_chat_2) ^0.0.15 - Core chat UI components
-- [shimmer](https://pub.dev/packages/shimmer) ^2.0.0 - Loading animations
-- [google_fonts](https://pub.dev/packages/google_fonts) ^6.2.1 - Typography
+### Core Features
+- 🎨 Dark and light mode support
+- 💫 Smooth message animations
+- 🔄 Word-by-word text streaming (like ChatGPT)
+- ✨ Loading indicators with shimmer effect
+- 📱 Responsive layout for all screen sizes
+
+### Message Features
+- 📝 Markdown support with syntax highlighting
+- 🎯 Selectable text in messages
+- 🔗 Clickable links
+- 📜 Message pagination
+- 🌐 RTL language support
+
+### UI Components
+- 👋 Customizable welcome message
+- ⭐️ Example questions widget
+- 💬 Custom message bubbles
+- 🎮 Custom input field and send button
 
 ## Quick Start
 
-Here's a basic example of how to implement the chat UI:
+### 1. Add the dependency
+
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^1.0.5
+```
+
+### 2. Import the package
 
 ```dart
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
+```
 
-class SimpleChatScreen extends StatefulWidget {
+### 3. Basic Implementation
+
+Here's a simple chat screen:
+
+```dart
+class ChatScreen extends StatefulWidget {
   @override
-  State<SimpleChatScreen> createState() => _SimpleChatScreenState();
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _SimpleChatScreenState extends State<SimpleChatScreen> {
-  late final ChatMessagesController _controller;
+class _ChatScreenState extends State<ChatScreen> {
+  late final _controller = ChatMessagesController();
+  late final _currentUser = ChatUser(id: '1', firstName: 'User');
+  late final _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = ChatMessagesController(
-      onSendMessage: (message) async {
-        // Handle message sending here
-        return "Response to: $message";
-      },
-    );
+  Future<void> _handleSendMessage(ChatMessage message) async {
+    setState(() => _isLoading = true);
+    _controller.addMessage(message);
+
+    try {
+      // Add your AI response logic here
+      final response = ChatMessage(
+        text: "Hello! I received: ${message.text}",
+        user: _aiUser,
+        createdAt: DateTime.now(),
+      );
+      _controller.addMessage(response);
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -110,167 +124,108 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
       appBar: AppBar(title: Text('AI Chat')),
       body: AiChatWidget(
         config: AiChatConfig(
-          userName: 'User',
-          aiName: 'AI Assistant',
           hintText: 'Type a message...',
+          enableAnimation: true,
         ),
         controller: _controller,
+        currentUser: _currentUser,
+        aiUser: _aiUser,
+        onSendMessage: _handleSendMessage,
+        isLoading: _isLoading,
       ),
     );
   }
 }
 ```
 
-## Advanced Usage
+## Customization Examples
 
-For more advanced usage, you can customize various aspects of the chat UI:
+### 1. Dark Mode Support
 
 ```dart
-AiChatWidget(
-  config: AiChatConfig(
-    userName: 'User',
-    aiName: 'AI Assistant',
-    hintText: 'Type a message...',
-    enableAnimation: true,
-    showTimestamp: true,
-    maxWidth: 900, // For desktop/tablet layouts
-    exampleQuestions: [
-      ChatExample(
-        question: 'What is the weather like today?',
-        onTap: (controller) {
-          controller.handleExampleQuestion(
-            'What is the weather like today?',
-            ChatUser(id: '1', firstName: 'User'),
-            ChatUser(id: '2', firstName: 'AI Assistant'),
-          );
-        },
+Theme(
+  data: Theme.of(context).copyWith(
+    extensions: [
+      CustomThemeExtension(
+        // Message colors
+        messageBubbleColor: isDark ? Color(0xFF262626) : Colors.white,
+        userBubbleColor: isDark ? Color(0xFF1A4B8F) : Color(0xFFE3F2FD),
+        messageTextColor: isDark ? Color(0xFFE5E5E5) : Colors.grey[800]!,
+        
+        // Input field colors
+        inputBackgroundColor: isDark ? Color(0xFF262626) : Colors.white,
+        inputBorderColor: isDark ? Color(0xFF404040) : Colors.grey[300]!,
+        
+        // Background and accent colors
+        chatBackground: isDark ? Color(0xFF171717) : Colors.grey[50]!,
+        sendButtonIconColor: isDark ? Color(0xFF60A5FA) : Colors.blue,
       ),
     ],
-    // Customize input decoration
-    inputDecoration: InputDecoration(
-      // Your custom decoration
-    ),
   ),
-  controller: _controller,
-  // Custom welcome message
-  welcomeMessageBuilder: () => YourCustomWelcomeWidget(),
-),
-```
-
-### Pagination with External Data Sources
-
-The chat UI supports pagination for loading historical messages from any data source (Firestore, SQLite, API, etc.).
-Here's how to implement it:
-
-1. Initialize the controller with pagination support:
-
-### Implementing Pagination with HTTP API
-
-Here's how to implement pagination with your backend API:
-
-## Customization
-
-### Theme Customization
-
-The package supports custom theming through `CustomThemeExtension`:
-
-```dart
-CustomThemeExtension(
-  chatBackground: Colors.white,
-  messageBubbleColor: Colors.grey[200]!,
-  userBubbleColor: Colors.blue[100]!,
-  messageTextColor: Colors.black87,
-  inputBackgroundColor: Colors.grey[100]!,
-  inputBorderColor: Colors.grey[300]!,
-  hintTextColor: Colors.grey[400]!,
-  backToBottomButtonColor: Colors.grey[800]!,
+  child: AiChatWidget(...),
 )
 ```
 
-### Controller
+### 2. Streaming Responses
 
-The `ChatMessagesController` allows you to:
+```dart
+Future<void> handleStreamingResponse(ChatMessage message) async {
+  final response = ChatMessage(
+    text: "",
+    user: aiUser,
+    createdAt: DateTime.now(),
+  );
+  controller.addMessage(response);
 
-- Handle message sending
-- Clear chat history
-- Handle example questions
-- Manage welcome message visibility
+  // Simulate streaming response
+  final words = "Hello! How can I help you today?".split(' ');
+  String currentText = '';
+  
+  for (var word in words) {
+    await Future.delayed(Duration(milliseconds: 50));
+    currentText += (currentText.isEmpty ? '' : ' ') + word;
+    controller.messages.removeWhere((m) => 
+      m.createdAt == response.createdAt && m.user.id == aiUser.id
+    );
+    controller.addMessage(ChatMessage(
+      text: currentText,
+      user: aiUser,
+      createdAt: response.createdAt,
+    ));
+  }
+}
+```
+
+### 3. Markdown Messages
+
+```dart
+AiChatConfig(
+  messageBuilder: (message) => MarkdownBody(
+    data: message.text,
+    styleSheet: MarkdownStyleSheet(
+      p: TextStyle(color: Colors.white),
+      code: TextStyle(backgroundColor: Colors.grey[800]),
+      h1: TextStyle(color: Colors.white, fontSize: 24),
+    ),
+  ),
+)
+```
 
 ## Examples
 
-The package includes two example implementations:
+Check out our [example](example) folder for complete implementations:
 
-### Simple Example
+1. **Streaming Example**: Word-by-word text streaming like ChatGPT
+2. **Custom Styling**: Dark/light mode with beautiful UI
+3. **Markdown Support**: Rich text formatting in messages
 
-Basic chat implementation with minimal configuration. Perfect for quick implementation.
+## Need Help?
 
-### Detailed Example
-
-Advanced features demonstration including custom theming, welcome message, example questions, loading states, and responsive layout.
-
-## ⏳ Loading Widget
-
-The package includes a customizable loading widget that can be used independently:
-
-```dart
-// Show loading dialog
-LoadingWidget.show(
-  context,
-  texts: ['Loading...', 'Please wait...'],
-  interval: Duration(seconds: 2),
-  textStyle: TextStyle(fontSize: 16),
-);
-
-// Show as bottom sheet
-LoadingWidget.showAsBottomSheet(
-  context,
-  texts: ['Processing...', 'Almost done...'],
-);
-```
-
-## Platform Support
-
-| Android | iOS | Web | macOS | Windows | Linux |
-|---------|-----|-----|-------|---------|-------|
-| ✅      | ✅   | ✅   | ✅     | ✅      | ✅     |
-
-## Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| Cmd/Ctrl + Enter | Send message |
-| Esc | Clear input |
-| Up Arrow | Edit last message |
-
-## Performance
-
-- Optimized message rendering
-- Lazy loading for large chat histories
-- Efficient memory management
-- Background thread processing
-
-## Troubleshooting
-
-### Common Issues
-
-1. Messages not appearing
-   - Check onSendMessage callback implementation
-   - Verify controller initialization
-
-2. Theme not applying
-   - Ensure ThemeData is properly configured
-   - Check CustomThemeExtension setup
-
-3. Layout issues
-   - Verify parent widget constraints
-   - Check maxWidth configuration
-
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+- 📘 Check our [example](example) folder
+- 🐛 File issues on our [GitHub repository](https://github.com/hooshyar/flutter_gen_ai_chat_ui)
+- 💡 Contribute to the project
 
 ## License
 
-This package is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.
 

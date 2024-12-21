@@ -7,82 +7,32 @@ import '../providers/theme_provider.dart';
 class LoadingWidget extends StatefulWidget {
   final List<String>? texts;
   final Duration? interval;
-  final TextStyle? textStyle; // Add this line
+  final TextStyle? textStyle;
+  final bool show;
+  final Color? baseColor;
+  final Color? highlightColor;
+  final Duration? shimmerDuration;
 
   const LoadingWidget({
     super.key,
     this.texts,
     this.interval,
-    this.textStyle, // Add this line
+    this.textStyle,
+    this.show = true,
+    this.baseColor,
+    this.highlightColor,
+    this.shimmerDuration,
   });
-
-  /// Shows a loading dialog with custom texts and interval
-  static Future<void> show(
-    BuildContext context, {
-    List<String>? texts,
-    Duration? interval,
-    bool barrierDismissible = true,
-    TextStyle? textStyle, // Add this line
-  }) {
-    return showDialog(
-      context: context,
-      barrierDismissible: barrierDismissible,
-      builder: (context) => Stack(
-        children: [
-          Center(
-            child: LoadingWidget(
-              texts: texts,
-              interval: interval,
-              textStyle: textStyle,
-            ),
-          ),
-          Positioned(
-            right: 8,
-            top: 8,
-            child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white70),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Shows a loading overlay as a modal bottom sheet
-  static Future<void> showAsBottomSheet(
-    BuildContext context, {
-    List<String>? texts,
-    Duration? interval,
-    TextStyle? textStyle, // Add this line
-  }) {
-    return showModalBottomSheet(
-      context: context,
-      builder: (context) => SizedBox(
-        height: 100,
-        child: Center(
-          child: LoadingWidget(
-            texts: texts,
-            interval: interval,
-            textStyle: textStyle, // Add this line
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   _LoadingWidgetState createState() => _LoadingWidgetState();
 }
 
-class _LoadingWidgetState extends State<LoadingWidget>
-    with SingleTickerProviderStateMixin {
+class _LoadingWidgetState extends State<LoadingWidget> {
   late final List<String> loadingTexts;
   late final Duration intervalDuration;
   int currentIndex = 0;
-  late Timer timer;
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+  Timer? timer;
 
   @override
   void initState() {
@@ -95,27 +45,21 @@ class _LoadingWidgetState extends State<LoadingWidget>
           'Just a moment...',
           'Fetching data...'
         ];
-    intervalDuration = widget.interval ?? const Duration(seconds: 5);
-
-    _controller = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
-    );
-    _fadeAnimation = Tween(begin: 0.0, end: 1.0).animate(_controller);
-    _controller.forward();
+    intervalDuration = widget.interval ?? const Duration(seconds: 2);
 
     timer = Timer.periodic(intervalDuration, (Timer t) {
-      setState(() {
-        currentIndex = (currentIndex + 1) % loadingTexts.length;
-        _controller.forward(from: 0.0);
-      });
+      if (mounted) {
+        setState(() {
+          currentIndex = (currentIndex + 1) % loadingTexts.length;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    timer.cancel();
-    _controller.dispose();
+    timer?.cancel();
+    timer = null;
     super.dispose();
   }
 
@@ -127,53 +71,69 @@ class _LoadingWidgetState extends State<LoadingWidget>
 
     final defaultStyle = TextStyle(
       fontSize: 15,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.2,
       color: customTheme.messageTextColor,
     );
 
-    return Material(
-      color: Colors.transparent,
-      child: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-            child: Shimmer.fromColors(
-              baseColor: isDark ? Colors.grey[800]! : Colors.grey[300]!,
-              highlightColor: isDark ? Colors.grey[700]! : Colors.grey[100]!,
-              child: Text(
-                loadingTexts[currentIndex],
-                style: FontHelper.getAppropriateFont(
-                  text: loadingTexts[currentIndex],
-                  baseStyle: widget.textStyle ?? defaultStyle,
+    // Default shimmer colors based on theme
+    final defaultBaseColor = isDark
+        ? customTheme.messageBubbleColor.withOpacity(0.7)
+        : const Color(0xFFE0E0E0);
+    final defaultHighlightColor = isDark
+        ? customTheme.inputBackgroundColor.withOpacity(0.5)
+        : const Color(0xFFF5F5F5);
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 2000),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        final offsetAnimation = Tween<Offset>(
+          begin: const Offset(0, -0.2),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        ));
+
+        final fadeAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOut,
+          reverseCurve: Curves.easeIn,
+        );
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: FadeTransition(
+            opacity: fadeAnimation,
+            child: child,
+          ),
+        );
+      },
+      child: widget.show
+          ? Material(
+              key: ValueKey<bool>(widget.show),
+              color: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 12.0, horizontal: 20.0),
+                child: Shimmer.fromColors(
+                  period: widget.shimmerDuration ??
+                      const Duration(milliseconds: 3000),
+                  baseColor: widget.baseColor ?? defaultBaseColor,
+                  highlightColor:
+                      widget.highlightColor ?? defaultHighlightColor,
+                  child: Text(
+                    loadingTexts[currentIndex],
+                    style: FontHelper.getAppropriateFont(
+                      text: loadingTexts[currentIndex],
+                      baseStyle: widget.textStyle ?? defaultStyle,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildShimmerText() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Text(
-          loadingTexts[currentIndex],
-          style: FontHelper.getAppropriateFont(
-            text: loadingTexts[currentIndex],
-            baseStyle: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.grey[800],
-            ),
-          ),
-        ),
-      ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 }

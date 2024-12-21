@@ -9,6 +9,8 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
   final Color hintTextColor;
   final Color chatBackground;
   final Color backToBottomButtonColor;
+  final Color sendButtonColor;
+  final Color sendButtonIconColor;
 
   CustomThemeExtension({
     required this.messageBubbleColor,
@@ -19,6 +21,8 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
     required this.hintTextColor,
     required this.chatBackground,
     required this.backToBottomButtonColor,
+    required this.sendButtonColor,
+    required this.sendButtonIconColor,
   });
 
   @override
@@ -31,6 +35,8 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
     Color? hintTextColor,
     Color? chatBackground,
     Color? backToBottomButtonColor,
+    Color? sendButtonColor,
+    Color? sendButtonIconColor,
   }) {
     return CustomThemeExtension(
       messageBubbleColor: messageBubbleColor ?? this.messageBubbleColor,
@@ -42,6 +48,8 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
       chatBackground: chatBackground ?? this.chatBackground,
       backToBottomButtonColor:
           backToBottomButtonColor ?? this.backToBottomButtonColor,
+      sendButtonColor: sendButtonColor ?? this.sendButtonColor,
+      sendButtonIconColor: sendButtonIconColor ?? this.sendButtonIconColor,
     );
   }
 
@@ -67,39 +75,48 @@ class CustomThemeExtension extends ThemeExtension<CustomThemeExtension> {
       chatBackground: Color.lerp(chatBackground, other.chatBackground, t)!,
       backToBottomButtonColor: Color.lerp(
           backToBottomButtonColor, other.backToBottomButtonColor, t)!,
+      sendButtonColor: Color.lerp(sendButtonColor, other.sendButtonColor, t)!,
+      sendButtonIconColor:
+          Color.lerp(sendButtonIconColor, other.sendButtonIconColor, t)!,
     );
   }
 
   static final CustomThemeExtension defaultTheme = CustomThemeExtension(
-    messageBubbleColor: const Color(0xFFEEEEEE),
-    userBubbleColor: const Color(0xFFBBDEFB),
-    messageTextColor: const Color(0xFF212121),
-    inputBackgroundColor: Colors.white,
-    inputBorderColor: const Color(0xFFE0E0E0),
-    hintTextColor: const Color(0xFF757575),
-    chatBackground: Colors.white,
-    backToBottomButtonColor: Colors.blue,
+    messageBubbleColor: const Color(0xFF2C2C2E),
+    userBubbleColor: const Color(0xFF0A84FF).withOpacity(0.2),
+    messageTextColor: Colors.white.withOpacity(0.95),
+    inputBackgroundColor: const Color(0xFF1C1C1E),
+    inputBorderColor: const Color(0xFF3C3C3E),
+    hintTextColor: Colors.white.withOpacity(0.6),
+    chatBackground: const Color(0xFF000000),
+    backToBottomButtonColor: const Color(0xFF0A84FF),
+    sendButtonColor: Colors.transparent,
+    sendButtonIconColor: const Color(0xFF0A84FF),
   );
 
   static CustomThemeExtension light = CustomThemeExtension(
-    messageBubbleColor: const Color(0xFFEEEEEE),
-    userBubbleColor: const Color(0xFFBBDEFB),
-    messageTextColor: const Color(0xFF212121),
+    messageBubbleColor: const Color(0xFFF7F7F8),
+    userBubbleColor: const Color(0xFFEEEEF0),
+    messageTextColor: const Color(0xFF111111),
     inputBackgroundColor: Colors.white,
-    inputBorderColor: const Color(0xFFE0E0E0),
-    hintTextColor: const Color(0xFF757575),
+    inputBorderColor: const Color(0xFFE5E5E7),
+    hintTextColor: const Color(0xFF6B6C7B),
     chatBackground: Colors.white,
-    backToBottomButtonColor: Colors.blue,
+    backToBottomButtonColor: const Color(0xFF10A37F),
+    sendButtonColor: Colors.transparent,
+    sendButtonIconColor: const Color(0xFF10A37F),
   );
 
   static CustomThemeExtension dark = CustomThemeExtension(
-    messageBubbleColor: const Color(0xFF424242),
-    userBubbleColor: const Color(0xFF0D47A1),
-    messageTextColor: Colors.white,
-    inputBackgroundColor: const Color(0xFF212121),
-    inputBorderColor: const Color(0xFF616161),
-    hintTextColor: const Color(0xFFBDBDBD),
-    chatBackground: Colors.black,
-    backToBottomButtonColor: const Color(0xFF1976D2),
+    messageBubbleColor: const Color(0xFF2A2B32),
+    userBubbleColor: const Color(0xFF343541),
+    messageTextColor: const Color(0xFFECECF1),
+    inputBackgroundColor: const Color(0xFF343541),
+    inputBorderColor: const Color(0xFF40414F),
+    hintTextColor: const Color(0xFF8E8EA0),
+    chatBackground: const Color(0xFF1F1F28),
+    backToBottomButtonColor: const Color(0xFF10A37F),
+    sendButtonColor: Colors.transparent,
+    sendButtonIconColor: const Color(0xFF10A37F),
   );
 }
