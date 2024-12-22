@@ -174,17 +174,13 @@ class _StreamingExampleState extends State<StreamingExample>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final customTheme = theme.extension<CustomThemeExtension>();
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Streaming Example',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         elevation: 0,
@@ -199,11 +195,11 @@ class _StreamingExampleState extends State<StreamingExample>
           showTimestamp: true,
           exampleQuestions: _exampleQuestions,
           messageOptions: MessageOptions(
-            containerColor: theme.colorScheme.surface,
+            containerColor: Theme.of(context).colorScheme.surface,
             currentUserContainerColor:
-                theme.colorScheme.primary.withOpacity(0.1),
-            textColor: theme.colorScheme.onSurface,
-            currentUserTextColor: theme.colorScheme.onSurface,
+                Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            textColor: Theme.of(context).colorScheme.onSurface,
+            currentUserTextColor: Theme.of(context).colorScheme.onSurface,
             messagePadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
@@ -212,8 +208,9 @@ class _StreamingExampleState extends State<StreamingExample>
             showOtherUsersAvatar: false,
             showTime: true,
             currentUserTimeTextColor:
-                theme.colorScheme.onSurface.withOpacity(0.7),
-            timeTextColor: theme.colorScheme.onSurface.withOpacity(0.7),
+                Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            timeTextColor:
+                Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             messageTextBuilder: (message, previousMessage, nextMessage) {
               final bool isUser = message.user.id == _currentUser.id;
               final bool isStreaming =
@@ -234,7 +231,7 @@ class _StreamingExampleState extends State<StreamingExample>
                     isUser: isUser,
                     isStreaming: isStreaming,
                     style: TextStyle(
-                      color: theme.colorScheme.onSurface,
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 15,
                       height: 1.4,
                     ),
@@ -245,8 +242,9 @@ class _StreamingExampleState extends State<StreamingExample>
           ),
         ),
         loadingIndicator: LoadingWidget(
-          show: _isLoading || _isStreaming,
+          texts: const ['Loading...', 'Please wait...', 'Almost there...'],
           interval: const Duration(seconds: 2),
+          textStyle: Theme.of(context).textTheme.bodyLarge,
         ),
         currentUser: _currentUser,
         aiUser: _aiUser,

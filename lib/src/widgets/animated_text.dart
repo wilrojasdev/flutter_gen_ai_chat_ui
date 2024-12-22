@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart';
-import '../utils/font_helper.dart';
+import 'package:flutter_gen_ai_chat_ui/src/utils/font_helper.dart';
 
 class AnimatedTextMessage extends StatefulWidget {
-  final String text;
-  final TextStyle? style;
-  final bool animate;
-  final bool isUser;
-  final bool isStreaming;
-  final Widget Function(String text, TextStyle? style)? textBuilder;
-
   const AnimatedTextMessage({
-    Key? key,
+    super.key,
     required this.text,
     this.style,
     this.animate = false,
     required this.isUser,
     this.isStreaming = false,
     this.textBuilder,
-  }) : super(key: key);
+  });
+  final String text;
+  final TextStyle? style;
+  final bool animate;
+  final bool isUser;
+  final bool isStreaming;
+  final Widget Function(String text, TextStyle? style)? textBuilder;
 
   @override
   State<AnimatedTextMessage> createState() => _AnimatedTextMessageState();
@@ -37,12 +36,14 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
       duration: const Duration(milliseconds: 300),
     );
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
 
     if (widget.animate) {
       _controller.forward();
@@ -52,10 +53,10 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
   }
 
   @override
-  void didUpdateWidget(AnimatedTextMessage oldWidget) {
+  void didUpdateWidget(final AnimatedTextMessage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.text != oldWidget.text && widget.animate) {
-      _controller.forward(from: 0.0);
+      _controller.forward(from: 0);
     }
   }
 
@@ -66,7 +67,7 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     final customTheme = Theme.of(context).extension<CustomThemeExtension>() ??
         ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
 
@@ -80,7 +81,7 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
           ),
     );
 
-    Widget buildText(String text, TextStyle? style) {
+    Widget buildText(final String text, final TextStyle? style) {
       if (widget.textBuilder != null) {
         return widget.textBuilder!(text, style);
       }
@@ -102,25 +103,25 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
     );
   }
 
-  TextDirection _detectTextDirection(String text) {
+  TextDirection _detectTextDirection(final String text) {
     if (text.isEmpty) return TextDirection.ltr;
-    final RegExp arabicRegex = RegExp(
-        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
+    final arabicRegex = RegExp(
+      r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]',
+    );
     return arabicRegex.hasMatch(text) ? TextDirection.rtl : TextDirection.ltr;
   }
 }
 
 class StreamingText extends StatefulWidget {
-  final String text;
-  final TextStyle? style;
-  final Widget Function(String text, TextStyle? style)? textBuilder;
-
   const StreamingText({
-    Key? key,
+    super.key,
     required this.text,
     this.style,
     this.textBuilder,
-  }) : super(key: key);
+  });
+  final String text;
+  final TextStyle? style;
+  final Widget Function(String text, TextStyle? style)? textBuilder;
 
   @override
   State<StreamingText> createState() => _StreamingTextState();
@@ -141,21 +142,23 @@ class _StreamingTextState extends State<StreamingText>
       duration: const Duration(milliseconds: 300),
     );
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
     _controller.forward();
   }
 
   @override
-  void didUpdateWidget(StreamingText oldWidget) {
+  void didUpdateWidget(final StreamingText oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.text != oldWidget.text) {
       _previousText = oldWidget.text;
-      _controller.forward(from: 0.0);
+      _controller.forward(from: 0);
     }
   }
 
@@ -165,7 +168,7 @@ class _StreamingTextState extends State<StreamingText>
     super.dispose();
   }
 
-  Widget buildText(String text, TextStyle? style) {
+  Widget buildText(final String text, final TextStyle? style) {
     if (widget.textBuilder != null) {
       return widget.textBuilder!(text, style);
     }
@@ -173,30 +176,28 @@ class _StreamingTextState extends State<StreamingText>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final newText = widget.text.substring(_previousText.length);
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_previousText.isNotEmpty)
-              Flexible(child: buildText(_previousText, widget.style)),
-            if (newText.isNotEmpty)
-              Flexible(
-                child: buildText(
-                  newText,
-                  widget.style?.copyWith(
-                    color:
-                        widget.style?.color?.withOpacity(_fadeAnimation.value),
+  Widget build(final BuildContext context) => AnimatedBuilder(
+        animation: _controller,
+        builder: (final context, final child) {
+          final newText = widget.text.substring(_previousText.length);
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (_previousText.isNotEmpty)
+                Flexible(child: buildText(_previousText, widget.style)),
+              if (newText.isNotEmpty)
+                Flexible(
+                  child: buildText(
+                    newText,
+                    widget.style?.copyWith(
+                      color: widget.style?.color
+                          ?.withOpacity(_fadeAnimation.value),
+                    ),
                   ),
                 ),
-              ),
-          ],
-        );
-      },
-    );
-  }
+            ],
+          );
+        },
+      );
 }

@@ -1,25 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart'
-    hide CustomThemeExtension;
-import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart'
-    show CustomThemeExtension;
-import 'package:flutter_gen_ai_chat_ui/src/widgets/animated_bubble.dart';
-import 'package:flutter_gen_ai_chat_ui/src/widgets/animated_text.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 
+/// A customizable chat widget for AI conversations.
 class AiChatWidget extends StatefulWidget {
-  final AiChatConfig config;
-  final ChatUser currentUser;
-  final ChatUser aiUser;
-  final ChatMessagesController controller;
-  final Widget? loadingIndicator;
-  final bool enableAnimation;
-  final Function(ChatMessage message) onSendMessage;
-  final Widget Function()? welcomeMessageBuilder;
-  final bool isLoading;
-
   const AiChatWidget({
-    Key? key,
+    super.key,
     required this.config,
     required this.currentUser,
     required this.aiUser,
@@ -29,7 +15,16 @@ class AiChatWidget extends StatefulWidget {
     this.enableAnimation = true,
     this.welcomeMessageBuilder,
     this.isLoading = false,
-  }) : super(key: key);
+  });
+  final AiChatConfig config;
+  final ChatUser currentUser;
+  final ChatUser aiUser;
+  final ChatMessagesController controller;
+  final Widget? loadingIndicator;
+  final bool enableAnimation;
+  final void Function(ChatMessage message) onSendMessage;
+  final Widget Function()? welcomeMessageBuilder;
+  final bool isLoading;
 
   @override
   State<AiChatWidget> createState() => AiChatWidgetState();
@@ -64,28 +59,26 @@ class AiChatWidgetState extends State<AiChatWidget>
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
-        0,
+        _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
     }
   }
 
-  Future<void> _handleSend(ChatMessage message) async {
+  Future<void> _handleSend(final ChatMessage message) async {
     widget.onSendMessage(message);
   }
 
-  void handleExampleQuestionTap(String question) {
+  void handleExampleQuestionTap(final String question) {
     widget.controller
         .handleExampleQuestion(question, widget.currentUser, widget.aiUser);
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: widget.controller,
-      builder: (context, child) {
-        return Container(
+  Widget build(final BuildContext context) => ListenableBuilder(
+        listenable: widget.controller,
+        builder: (final context, final child) => Container(
           width: widget.config.maxWidth ?? double.infinity,
           padding: widget.config.padding,
           child: Column(
@@ -114,12 +107,10 @@ class AiChatWidgetState extends State<AiChatWidget>
               ),
             ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
 
-  Widget _buildWelcomeMessage(BuildContext context) {
+  Widget _buildWelcomeMessage(final BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final customTheme = theme.extension<CustomThemeExtension>() ??
@@ -128,8 +119,8 @@ class AiChatWidgetState extends State<AiChatWidget>
     return FadeTransition(
       opacity: _animationController,
       child: Container(
-        margin: const EdgeInsets.all(16.0),
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         decoration: BoxDecoration(
           color: isDarkMode ? const Color(0xFF242424) : Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -146,7 +137,6 @@ class AiChatWidgetState extends State<AiChatWidget>
           border: Border.all(
             color:
                 isDarkMode ? const Color(0xFF3D3D3D) : const Color(0xFFE0E0E0),
-            width: 1,
           ),
         ),
         child: Column(
@@ -173,7 +163,9 @@ class AiChatWidgetState extends State<AiChatWidget>
             ),
             const SizedBox(height: 16),
             _buildExampleQuestion(
-                'What is the weather like today?', isDarkMode),
+              'What is the weather like today?',
+              isDarkMode,
+            ),
             _buildExampleQuestion('Tell me a joke.', isDarkMode),
             _buildExampleQuestion('How do I reset my password?', isDarkMode),
           ],
@@ -182,7 +174,7 @@ class AiChatWidgetState extends State<AiChatWidget>
     );
   }
 
-  Widget _buildExampleQuestion(String question, bool isDarkMode) {
+  Widget _buildExampleQuestion(final String question, final bool isDarkMode) {
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>() ??
         ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
@@ -190,8 +182,8 @@ class AiChatWidgetState extends State<AiChatWidget>
     return GestureDetector(
       onTap: () => handleExampleQuestionTap(question),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6.0),
-        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
           color: isDarkMode
               ? customTheme.userBubbleColor.withOpacity(0.15)
@@ -201,7 +193,6 @@ class AiChatWidgetState extends State<AiChatWidget>
             color: isDarkMode
                 ? customTheme.userBubbleColor.withOpacity(0.3)
                 : customTheme.userBubbleColor.withOpacity(0.2),
-            width: 1,
           ),
         ),
         child: Row(
@@ -233,16 +224,14 @@ class AiChatWidgetState extends State<AiChatWidget>
   }
 
   // Helper methods to build various options
-  ScrollToBottomOptions _buildScrollOptions() {
-    return ScrollToBottomOptions(
-      disabled: !_showScrollToBottom,
-      onScrollToBottomPress: _scrollToBottom,
-      scrollToBottomBuilder: widget.config.scrollToBottomBuilder ??
-          (scrollController) => _defaultScrollToBottomBuilder(),
-    );
-  }
+  ScrollToBottomOptions _buildScrollOptions() => ScrollToBottomOptions(
+        disabled: !_showScrollToBottom,
+        onScrollToBottomPress: _scrollToBottom,
+        scrollToBottomBuilder: widget.config.scrollToBottomBuilder ??
+            (final scrollController) => _defaultScrollToBottomBuilder(),
+      );
 
-  InputOptions _buildInputOptions(BuildContext context) {
+  InputOptions _buildInputOptions(final BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
@@ -290,28 +279,26 @@ class AiChatWidgetState extends State<AiChatWidget>
             ),
           ),
       sendButtonBuilder: widget.config.sendButtonBuilder ??
-          (onSend) {
-            return Container(
-              margin:
-                  widget.config.sendButtonPadding ?? const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: customTheme.sendButtonColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: IconButton(
-                icon: Icon(
-                  widget.config.sendButtonIcon ?? Icons.send_rounded,
-                  color: customTheme.sendButtonIconColor,
-                  size: widget.config.sendButtonIconSize ?? 24,
+          (final onSend) => Container(
+                margin:
+                    widget.config.sendButtonPadding ?? const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: customTheme.sendButtonColor,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                onPressed: onSend,
+                child: IconButton(
+                  icon: Icon(
+                    widget.config.sendButtonIcon ?? Icons.send_rounded,
+                    color: customTheme.sendButtonIconColor,
+                    size: widget.config.sendButtonIconSize ?? 24,
+                  ),
+                  onPressed: onSend,
+                ),
               ),
-            );
-          },
     );
   }
 
-  MessageOptions _buildMessageOptions(BuildContext context) {
+  MessageOptions _buildMessageOptions(final BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
@@ -339,15 +326,16 @@ class AiChatWidgetState extends State<AiChatWidget>
       timeTextColor: theme.brightness == Brightness.dark
           ? Colors.grey[400]!
           : Colors.grey[600]!,
-      messageTextBuilder: (message, previousMessage, nextMessage) {
+      messageTextBuilder:
+          (final message, final previousMessage, final nextMessage) {
         if (widget.config.messageBuilder != null) {
           return widget.config.messageBuilder!(message);
         }
 
-        final bool isLatestMessage = widget.controller.messages.isNotEmpty &&
+        final isLatestMessage = widget.controller.messages.isNotEmpty &&
             widget.controller.messages.first.createdAt.millisecondsSinceEpoch ==
                 message.createdAt.millisecondsSinceEpoch;
-        final bool isUser = message.user.id == widget.currentUser.id;
+        final isUser = message.user.id == widget.currentUser.id;
 
         return AnimatedBubble(
           key: ValueKey(message.createdAt.millisecondsSinceEpoch),
@@ -357,7 +345,9 @@ class AiChatWidgetState extends State<AiChatWidget>
             cursor: SystemMouseCursors.text,
             child: AnimatedTextMessage(
               key: ValueKey(
-                  '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
+                '${message.createdAt.millisecondsSinceEpoch}_'
+                '${message.text.length}',
+              ),
               text: message.text,
               animate: widget.config.enableAnimation && isLatestMessage,
               isUser: isUser,
@@ -367,12 +357,12 @@ class AiChatWidgetState extends State<AiChatWidget>
                     ? (widget.config.messageOptions?.currentUserTextColor
                             as Color?) ??
                         customTheme.messageTextColor
-                    : (widget.config.messageOptions?.textColor as Color?) ??
+                    : widget.config.messageOptions?.textColor ??
                         customTheme.messageTextColor,
                 fontSize: isTablet ? 16 : 15,
                 height: 1.4,
               ),
-              textBuilder: (text, style) => SelectableText(
+              textBuilder: (final text, final style) => SelectableText(
                 text,
                 style: style,
               ),
@@ -388,7 +378,7 @@ class AiChatWidgetState extends State<AiChatWidget>
     final isTablet = size.width > 600;
 
     return MessageListOptions(
-      dateSeparatorBuilder: (date) => Padding(
+      dateSeparatorBuilder: (final date) => Padding(
         padding: EdgeInsets.symmetric(
           vertical: isTablet ? 24 : 20,
         ),

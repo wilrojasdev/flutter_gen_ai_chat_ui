@@ -74,7 +74,7 @@ ${message.text}
 Need help? Here are some things you can try:
 1. Use **bold** for emphasis
 2. Create lists with - or numbers
-3. Write code with \`backticks\`
+3. Write code with `backticks`
 ''',
         user: _aiUser,
         createdAt: DateTime.now(),

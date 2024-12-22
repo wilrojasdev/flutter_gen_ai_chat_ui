@@ -134,13 +134,11 @@ Would you like to know more about any specific aspect?""",
       create: (_) => ThemeProvider(),
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
+          final theme = Theme.of(context);
           final isDarkMode = themeProvider.isDark;
           final size = MediaQuery.of(context).size;
           final isTablet = size.width > 600;
           final isDesktop = size.width > 1200;
-
-          final theme = Theme.of(context);
-          final customTheme = theme.extension<CustomThemeExtension>();
 
           // Define colors based on theme
           final aiMessageColor = isDarkMode

@@ -1,169 +1,107 @@
 # Flutter Gen AI Chat UI Examples
 
-This project contains example implementations of the Flutter Gen AI Chat UI package.
+This directory contains several examples demonstrating different features and use cases of the `flutter_gen_ai_chat_ui` package.
 
-## Examples Included
+## Getting Started
 
-### Streaming Example
-Demonstrates streaming chat functionality:
-- Word-by-word text streaming
-- Smooth animations
-- Loading indicators
-- Basic theme support
+1. Install dependencies:
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^1.1.2  # Latest version
+```
 
-### Custom Styling Example
-Showcases advanced theming capabilities:
-- Dark/Light mode toggle
-- Custom color schemes
-- Animated transitions
-- Custom input field styling
-- Custom send button
-- Example questions
-- Loading states with shimmer effect
-- Responsive layout
-
-### Markdown Example
-Demonstrates markdown support in messages:
-- Headers (h1, h2, h3)
-- Bold and italic text
-- Code blocks with syntax highlighting
-- Lists (ordered and unordered)
-- Links with custom styling
-- Dark/Light mode compatible markdown
-
-## Basic Implementation
-
-Here's a basic example of how to implement the chat UI:
-
+2. Import the package:
 ```dart
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
-
-class SimpleChatScreen extends StatefulWidget {
-  @override
-  State<SimpleChatScreen> createState() => _SimpleChatScreenState();
-}
-
-class _SimpleChatScreenState extends State<SimpleChatScreen> {
-  late final ChatMessagesController _controller;
-  late final ChatUser _currentUser;
-  late final ChatUser _aiUser;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentUser = ChatUser(id: '1', firstName: 'User');
-    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
-    _controller = ChatMessagesController();
-  }
-
-  Future<void> _handleSendMessage(ChatMessage message) async {
-    setState(() => _isLoading = true);
-    _controller.addMessage(message);
-
-    try {
-      // Add your AI response logic here
-      final response = ChatMessage(
-        text: "Response to: ${message.text}",
-        user: _aiUser,
-        createdAt: DateTime.now(),
-      );
-      _controller.addMessage(response);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('AI Chat')),
-      body: AiChatWidget(
-        config: AiChatConfig(
-          hintText: 'Type a message...',
-          enableAnimation: true,
-        ),
-        controller: _controller,
-        currentUser: _currentUser,
-        aiUser: _aiUser,
-        onSendMessage: _handleSendMessage,
-        isLoading: _isLoading,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-}
 ```
 
-## 🎨 Customization
+## Examples
 
-Each example demonstrates different aspects of customization:
+### 1. Simple Chat Screen (`simple_chat_screen.dart`)
+Basic implementation with minimal configuration.
 
-### Theme Customization
 ```dart
-Theme(
-  data: theme.copyWith(
-    extensions: [
-      CustomThemeExtension(
-        chatBackground: isDark ? Color(0xFF171717) : Colors.grey[50]!,
-        messageBubbleColor: isDark ? Color(0xFF262626) : Colors.white,
-        userBubbleColor: isDark ? Color(0xFF1A4B8F) : Color(0xFFE3F2FD),
-        messageTextColor: isDark ? Color(0xFFE5E5E5) : Colors.grey[800]!,
-        inputBackgroundColor: isDark ? Color(0xFF262626) : Colors.white,
-        inputBorderColor: isDark ? Color(0xFF404040) : Colors.grey[300]!,
-        inputTextColor: isDark ? Colors.white : Colors.grey[800]!,
-        hintTextColor: isDark ? Color(0xFF9CA3AF) : Colors.grey[600]!,
-      ),
-    ],
-  ),
-  child: AiChatWidget(...),
-)
-```
-
-### Markdown Support
-```dart
-AiChatConfig(
-  messageBuilder: (message) {
-    final isUser = message.user.id == currentUser.id;
-    return MarkdownBody(
-      data: message.text,
-      styleSheet: MarkdownStyleSheet(
-        // Custom markdown styles
-      ),
-    );
+AiChatWidget(
+  config: AiChatConfig(),
+  currentUser: ChatUser(id: '1', firstName: 'User'),
+  aiUser: ChatUser(id: '2', firstName: 'AI'),
+  controller: ChatMessagesController(),
+  onSendMessage: (message) {
+    // Handle message
   },
 )
 ```
 
-### Streaming Text
-```dart
-Future<void> handleSendMessage(ChatMessage message) async {
-  // Create initial empty message
-  final response = ChatMessage(
-    text: "",
-    user: aiUser,
-    createdAt: DateTime.now(),
-  );
-  controller.addMessage(response);
+### 2. Custom Styling (`custom_styling_example.dart`)
+Demonstrates theme customization and dark mode support.
 
-  // Stream the response word by word
-  final words = responseText.split(' ');
-  String currentText = '';
-  
-  for (var word in words) {
-    await Future.delayed(Duration(milliseconds: 50));
-    currentText += (currentText.isEmpty ? '' : ' ') + word;
-    // Update the message
-    controller.updateMessage(currentText);
-  }
-}
-```
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^1.1.1  # Latest version
+### 3. Detailed Example (`detailed_example.dart`)
+Shows advanced features including:
+- Custom message bubbles
+- Loading animations
+- Pagination
+- Example questions
+- Responsive design
+
+### 4. Streaming Example (`streaming_example.dart`)
+Demonstrates word-by-word text streaming.
+
+### 5. Markdown Example (`markdown_example.dart`)
+Shows markdown rendering capabilities.
+
+### 6. Pagination Example (`pagination_example.dart`)
+Demonstrates loading historical messages.
+
+## Platform-Specific Features
+
+### Android
+- Material Design 3 theming
+- Adaptive colors
+- Native ripple effects
+
+### iOS
+- Cupertino-style animations
+- Native scrolling behavior
+- Adaptive typography
+
+### Web
+- Responsive layout
+- Keyboard shortcuts
+- Touch and mouse input support
+
+### Desktop (Windows, macOS, Linux)
+- Window resizing support
+- Keyboard navigation
+- Native scrollbar styling
+
+## Running the Examples
+
+1. Clone the repository
+2. Navigate to the example directory
+3. Run `flutter pub get`
+4. Run `flutter run`
+
+## Customization
+
+The examples demonstrate various customization options:
+
+- Theme customization
+- Message bubble styling
+- Input field configuration
+- Loading animations
+- RTL support
+- Dark mode
+- Typography
+- Animations
+
+## Contributing
+
+Feel free to contribute to these examples by:
+1. Creating new examples
+2. Improving existing ones
+3. Adding documentation
+4. Fixing bugs
+
+## License
+
+This example project is licensed under the same terms as the main package.

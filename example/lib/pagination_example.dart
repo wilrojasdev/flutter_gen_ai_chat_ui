@@ -92,7 +92,7 @@ class _PaginationExampleState extends State<PaginationExample> {
           hintText: 'Type a message...',
           enablePagination: true,
           paginationLoadingIndicatorOffset: 100,
-          loadMoreIndicator: (isLoading) => isLoading
+          loadMoreIndicator: ({bool isLoading = false}) => isLoading
               ? const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Center(child: CircularProgressIndicator()),

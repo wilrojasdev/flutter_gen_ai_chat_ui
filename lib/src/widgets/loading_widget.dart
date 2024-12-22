@@ -1,139 +1,95 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:async';
-import '../utils/font_helper.dart';
-import '../providers/theme_provider.dart';
 
+/// A loading widget that displays a shimmer effect with customizable text.
 class LoadingWidget extends StatefulWidget {
-  final List<String>? texts;
-  final Duration? interval;
-  final TextStyle? textStyle;
-  final bool show;
-  final Color? baseColor;
-  final Color? highlightColor;
-  final Duration? shimmerDuration;
-
+  /// Creates a loading widget with optional text cycling.
   const LoadingWidget({
     super.key,
-    this.texts,
-    this.interval,
+    this.texts = const ['Loading...'],
+    this.interval = const Duration(seconds: 2),
     this.textStyle,
-    this.show = true,
-    this.baseColor,
-    this.highlightColor,
-    this.shimmerDuration,
   });
 
+  /// The list of texts to cycle through.
+  final List<String> texts;
+
+  /// The interval between text changes.
+  final Duration interval;
+
+  /// The text style for the loading text.
+  final TextStyle? textStyle;
+
   @override
-  _LoadingWidgetState createState() => _LoadingWidgetState();
+  State<LoadingWidget> createState() => _LoadingWidgetState();
 }
 
 class _LoadingWidgetState extends State<LoadingWidget> {
-  late final List<String> loadingTexts;
-  late final Duration intervalDuration;
-  int currentIndex = 0;
-  Timer? timer;
+  late Timer _timer;
+  int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    loadingTexts = widget.texts ??
-        [
-          'Loading...',
-          'Please wait...',
-          'Almost there...',
-          'Just a moment...',
-          'Fetching data...'
-        ];
-    intervalDuration = widget.interval ?? const Duration(seconds: 2);
-
-    timer = Timer.periodic(intervalDuration, (Timer t) {
-      if (mounted) {
-        setState(() {
-          currentIndex = (currentIndex + 1) % loadingTexts.length;
-        });
-      }
-    });
+    _startTimer();
   }
 
   @override
   void dispose() {
-    timer?.cancel();
-    timer = null;
+    _timer.cancel();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final customTheme = Theme.of(context).extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    final defaultStyle = TextStyle(
-      fontSize: 15,
-      fontWeight: FontWeight.w600,
-      letterSpacing: 0.2,
-      color: customTheme.messageTextColor,
-    );
-
-    // Default shimmer colors based on theme
-    final defaultBaseColor = isDark
-        ? customTheme.messageBubbleColor.withOpacity(0.7)
-        : const Color(0xFFE0E0E0);
-    final defaultHighlightColor = isDark
-        ? customTheme.inputBackgroundColor.withOpacity(0.5)
-        : const Color(0xFFF5F5F5);
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 2000),
-      transitionBuilder: (Widget child, Animation<double> animation) {
-        final offsetAnimation = Tween<Offset>(
-          begin: const Offset(0, -0.2),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
-        ));
-
-        final fadeAnimation = CurvedAnimation(
-          parent: animation,
-          curve: Curves.easeOut,
-          reverseCurve: Curves.easeIn,
-        );
-
-        return SlideTransition(
-          position: offsetAnimation,
-          child: FadeTransition(
-            opacity: fadeAnimation,
-            child: child,
-          ),
-        );
-      },
-      child: widget.show
-          ? Material(
-              key: ValueKey<bool>(widget.show),
-              color: Colors.transparent,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 12.0, horizontal: 20.0),
-                child: Shimmer.fromColors(
-                  period: widget.shimmerDuration ??
-                      const Duration(milliseconds: 3000),
-                  baseColor: widget.baseColor ?? defaultBaseColor,
-                  highlightColor:
-                      widget.highlightColor ?? defaultHighlightColor,
-                  child: Text(
-                    loadingTexts[currentIndex],
-                    style: FontHelper.getAppropriateFont(
-                      text: loadingTexts[currentIndex],
-                      baseStyle: widget.textStyle ?? defaultStyle,
-                    ),
-                  ),
-                ),
-              ),
-            )
-          : const SizedBox.shrink(),
-    );
+  void _startTimer() {
+    _timer = Timer.periodic(widget.interval, (final t) {
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % widget.texts.length;
+      });
+    });
   }
+
+  @override
+  Widget build(final BuildContext context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLoadingIndicator(),
+            const SizedBox(height: 16),
+            _buildLoadingText(),
+          ],
+        ),
+      );
+
+  Widget _buildLoadingIndicator() => Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(50),
+          ),
+        ),
+      );
+
+  Widget _buildLoadingText() => AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        transitionBuilder: (final child, final animation) => FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
+        child: Text(
+          widget.texts[_currentIndex],
+          key: ValueKey<String>(widget.texts[_currentIndex]),
+          style: widget.textStyle ??
+              const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+        ),
+      );
 }

@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 class AnimatedBubble extends StatefulWidget {
+  const AnimatedBubble({
+    super.key,
+    required this.child,
+    required this.isUser,
+    this.animate = false,
+    this.duration = const Duration(milliseconds: 300),
+    this.curve = Curves.easeInOut,
+  });
   final Widget child;
   final bool animate;
-  final bool isUser; // Add this parameter
-
-  const AnimatedBubble({
-    Key? key,
-    required this.child,
-    required this.isUser, // Make it required
-    this.animate = false,
-  }) : super(key: key);
+  final bool isUser;
+  final Duration duration;
+  final Curve curve;
 
   @override
   State<AnimatedBubble> createState() => _AnimatedBubbleState();
@@ -27,7 +30,7 @@ class _AnimatedBubbleState extends State<AnimatedBubble>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: widget.duration,
       vsync: this,
     );
   }
@@ -42,25 +45,29 @@ class _AnimatedBubbleState extends State<AnimatedBubble>
   }
 
   void _initializeAnimations() {
-    bool isRTL = Directionality.of(context) == TextDirection.rtl;
-    double startOffset =
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
+    final startOffset =
         widget.isUser ? (isRTL ? -0.3 : 0.3) : (isRTL ? 0.3 : -0.3);
 
     _slideAnimation = Tween<Offset>(
-      begin: Offset(startOffset, 0.0),
+      begin: Offset(startOffset, 0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutQuart,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve,
+      ),
+    );
 
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: widget.curve,
+      ),
+    );
 
     if (widget.animate) {
       _controller.forward();
@@ -76,13 +83,11 @@ class _AnimatedBubbleState extends State<AnimatedBubble>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: widget.child,
-      ),
-    );
-  }
+  Widget build(final BuildContext context) => SlideTransition(
+        position: _slideAnimation,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: widget.child,
+        ),
+      );
 }

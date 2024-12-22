@@ -1,39 +1,61 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/foundation.dart';
 
+/// Controller for managing chat messages and their states.
+///
+/// This controller handles message operations such as adding, updating,
+/// and loading more messages. It also manages the welcome message state
+/// and loading states for pagination.
 class ChatMessagesController extends ChangeNotifier {
+  /// Creates a new chat messages controller.
+  ///
+  /// [initialMessages] - Optional list of messages to initialize the chat with.
+  /// [onLoadMoreMessages] - Optional callback to load more messages when
+  ///  scrolling up.
+  ChatMessagesController({
+    final List<ChatMessage>? initialMessages,
+    this.onLoadMoreMessages,
+  }) {
+    if (initialMessages != null && initialMessages.isNotEmpty) {
+      _messages = List.from(initialMessages.reversed);
+      _showWelcomeMessage = false;
+    }
+  }
   List<ChatMessage> _messages = [];
   bool _showWelcomeMessage = true;
 
   bool _isLoadingMore = false;
+
+  /// Whether more messages are currently being loaded.
   bool get isLoadingMore => _isLoadingMore;
 
+  /// Callback function to load more messages when scrolling up.
   final Future<List<ChatMessage>> Function(ChatMessage? lastMessage)?
       onLoadMoreMessages;
 
+  /// List of all chat messages, ordered from newest to oldest.
   List<ChatMessage> get messages => _messages;
+
+  /// Whether to show the welcome message.
   bool get showWelcomeMessage => _showWelcomeMessage;
 
-  ChatMessagesController({
-    List<ChatMessage>? initialMessages,
-    this.onLoadMoreMessages,
-  }) {
-    if (initialMessages != null && initialMessages.isNotEmpty) {
-      _messages = List.from(initialMessages
-          .reversed); // Reverse to show latest messages at bottom
-      _showWelcomeMessage = false;
-    }
-  }
-
-  void addMessage(ChatMessage message) {
+  /// Adds a new message to the chat.
+  ///
+  /// The message is inserted at the beginning of the list (newest first).
+  void addMessage(final ChatMessage message) {
     _messages.insert(0, message);
     _showWelcomeMessage = false;
     notifyListeners();
   }
 
-  void updateMessage(ChatMessage message) {
-    final index = _messages.indexWhere((msg) =>
-        msg.customProperties?['id'] == message.customProperties?['id']);
+  /// Updates an existing message or adds it if not found.
+  ///
+  /// Useful for updating streaming messages or editing existing ones.
+  void updateMessage(final ChatMessage message) {
+    final index = _messages.indexWhere(
+      (final msg) =>
+          msg.customProperties?['id'] == message.customProperties?['id'],
+    );
     if (index != -1) {
       _messages[index] = message;
     } else {
@@ -42,17 +64,22 @@ class ChatMessagesController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setMessages(List<ChatMessage> messages) {
+  /// Replaces all existing messages with a new list.
+  void setMessages(final List<ChatMessage> messages) {
     _messages = messages;
     notifyListeners();
   }
 
+  /// Clears all messages and shows the welcome message.
   void clearMessages() {
     _messages.clear();
     _showWelcomeMessage = true;
     notifyListeners();
   }
 
+  /// Loads more messages using the [onLoadMoreMessages] callback.
+  ///
+  /// Returns early if already loading or if no callback is provided.
   Future<void> loadMore() async {
     if (_isLoadingMore || onLoadMoreMessages == null) return;
 
@@ -73,17 +100,21 @@ class ChatMessagesController extends ChangeNotifier {
     }
   }
 
-  void handleExampleQuestion(String question, ChatUser user, ChatUser aiUser) {
-    final message = ChatMessage(
+  /// Handles an example question by creating and adding appropriate messages.
+  void handleExampleQuestion(
+    final String question,
+    final ChatUser currentUser,
+    final ChatUser aiUser,
+  ) {
+    final userMessage = ChatMessage(
       text: question,
-      user: user,
+      user: currentUser,
       createdAt: DateTime.now(),
     );
-    addMessage(message);
+    addMessage(userMessage);
 
-    // Create AI response message
     final aiMessage = ChatMessage(
-      text: "This is a demo response to example question: $question",
+      text: 'I will help you with: $question',
       user: aiUser,
       createdAt: DateTime.now(),
     );

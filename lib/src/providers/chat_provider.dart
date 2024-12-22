@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:flutter/material.dart';
 
 class ChatProvider with ChangeNotifier {
+  ChatProvider() {
+    _createNewSession();
+  }
   final List<ChatMessage> _messages = [];
   final ChatUser _user = ChatUser(id: '1', firstName: 'User');
   final ChatUser _aiUser = ChatUser(id: '2', firstName: 'AI');
@@ -12,30 +15,25 @@ class ChatProvider with ChangeNotifier {
   bool get showWelcomeMessage => _showWelcomeMessage;
   String get currentSessionId => _currentSessionId;
 
-  ChatProvider() {
-    _createNewSession();
-  }
-
   void _createNewSession() {
     _currentSessionId = DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   ChatMessage _createMessage({
-    required ChatUser user,
-    required String text,
-    String? sessionId,
-  }) {
-    return ChatMessage(
-      user: user,
-      text: text,
-      createdAt: DateTime.now(),
-      customProperties: {
-        'sessionId': sessionId ?? _currentSessionId,
-      },
-    );
-  }
+    required final ChatUser user,
+    required final String text,
+    final String? sessionId,
+  }) =>
+      ChatMessage(
+        user: user,
+        text: text,
+        createdAt: DateTime.now(),
+        customProperties: {
+          'sessionId': sessionId ?? _currentSessionId,
+        },
+      );
 
-  void handleExampleQuestionTap(String question) {
+  void handleExampleQuestionTap(final String question) {
     final message = _createMessage(
       user: _user,
       text: question,
@@ -46,7 +44,9 @@ class ChatProvider with ChangeNotifier {
   }
 
   Future<void> handleSend(
-      ChatMessage message, Future<String> Function(String) onAiResponse) async {
+    final ChatMessage message,
+    final Future<String> Function(String) onAiResponse,
+  ) async {
     final userMessage = _createMessage(
       user: _user,
       text: message.text,
@@ -65,13 +65,15 @@ class ChatProvider with ChangeNotifier {
         ),
       );
       notifyListeners();
-    } catch (e) {
+    } on Exception {
       // Handle error
     }
   }
 
   Future<void> handleExampleQuestionTapWithResponse(
-      String question, Future<String> Function(String) onAiResponse) async {
+    final String question,
+    final Future<String> Function(String) onAiResponse,
+  ) async {
     final userMessage = _createMessage(
       user: _user,
       text: question,
@@ -90,16 +92,14 @@ class ChatProvider with ChangeNotifier {
         ),
       );
       notifyListeners();
-    } catch (e) {
+    } on Exception {
       // Handle error
     }
   }
 
-  List<ChatMessage> getMessagesForSession(String sessionId) {
-    return _messages
-        .where((msg) => msg.customProperties?['sessionId'] == sessionId)
-        .toList();
-  }
+  List<ChatMessage> getMessagesForSession(final String sessionId) => _messages
+      .where((final msg) => msg.customProperties?['sessionId'] == sessionId)
+      .toList();
 
   void startNewSession() {
     _createNewSession();

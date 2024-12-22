@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart'
-    hide CustomThemeExtension;
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart';
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 
 class CustomStylingExample extends StatefulWidget {
   const CustomStylingExample({super.key});
@@ -239,20 +238,9 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
             onSendMessage: _handleSendMessage,
             isLoading: _isLoading,
             loadingIndicator: LoadingWidget(
-              show: _isLoading,
+              texts: const ['Loading...', 'Please wait...', 'Almost there...'],
               interval: const Duration(seconds: 2),
-              baseColor: _isDarkMode
-                  ? const Color(0xFF404040)
-                  : const Color(0xFFE0E0E0),
-              highlightColor: _isDarkMode
-                  ? const Color(0xFF505050)
-                  : const Color(0xFFF5F5F5),
-              textStyle: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.3,
-                color: _isDarkMode ? Colors.white : Colors.grey[800],
-              ),
+              textStyle: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
         ),
