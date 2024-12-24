@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 
 class DetailedExample extends StatefulWidget {
   const DetailedExample({super.key});
@@ -134,159 +132,168 @@ Would you like to know more about any specific aspect?""",
       create: (_) => ThemeProvider(),
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, _) {
-          final theme = Theme.of(context);
-          final isDarkMode = themeProvider.isDark;
-          final size = MediaQuery.of(context).size;
-          final isTablet = size.width > 600;
-          final isDesktop = size.width > 1200;
-
-          // Define colors based on theme
-          final aiMessageColor = isDarkMode
-              ? const Color(0xFF2C2C2E) // Dark gray in dark mode
-              : const Color(0xFFE8F1FF); // Light blue in light mode
-          final userMessageColor = isDarkMode
-              ? theme.colorScheme.primary.withOpacity(0.3)
-              : theme.colorScheme.primary.withOpacity(0.1);
-          final textColor = isDarkMode
-              ? Colors.white.withOpacity(0.95)
-              : Colors.black.withOpacity(0.95);
-          final secondaryTextColor =
-              isDarkMode ? Colors.white70 : Colors.black87;
+          final theme = Theme.of(context).copyWith(
+            extensions: [
+              CustomThemeExtension(
+                chatBackground: Theme.of(context).scaffoldBackgroundColor,
+                messageBubbleColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.surface
+                        : const Color(0xFFF7F7F8),
+                userBubbleColor: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.primary
+                    : const Color(0xFF10A37F),
+                messageTextColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.onSurface
+                        : const Color(0xFF353740),
+                inputBackgroundColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.surface
+                        : Colors.white,
+                inputBorderColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.outline
+                        : const Color(0xFFD9D9E3),
+                inputTextColor: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.onSurface
+                    : const Color(0xFF353740),
+                hintTextColor: const Color(0xFF8E8EA0),
+                backToBottomButtonColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.primary
+                        : const Color(0xFF10A37F),
+                sendButtonColor: Colors.transparent,
+                sendButtonIconColor:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.primary
+                        : const Color(0xFF10A37F),
+              ),
+            ],
+          );
 
           return Theme(
-            data: themeProvider.theme,
+            data: Theme.of(context),
             child: Scaffold(
-              appBar: AppBar(
-                title: Text(
-                  'AI Assistant',
-                  style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-                elevation: 0,
-                scrolledUnderElevation: 1,
-                surfaceTintColor: Colors.transparent,
-                backgroundColor:
-                    isDarkMode ? const Color(0xFF1C1C1E) : Colors.white,
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                      color: secondaryTextColor,
-                    ),
-                    onPressed: () => themeProvider.toggleTheme(),
-                    tooltip: isDarkMode ? 'Light mode' : 'Dark mode',
-                  ),
-                ],
-              ),
-              body: Center(
+              body: Theme(
+                data: theme,
                 child: AiChatWidget(
-                  config: AiChatConfig(
-                    userName: 'User',
-                    aiName: 'AI Assistant',
-                    maxWidth: isDesktop ? 900 : (isTablet ? 700 : null),
-                    enableAnimation: true,
-                    showTimestamp: true,
-                    exampleQuestions: exampleQuestions,
-                    enablePagination: true,
-                    paginationLoadingIndicatorOffset: 100,
-                    inputOptions: InputOptions(
-                      sendOnEnter: true,
-                      alwaysShowSend: true,
-                      inputTextStyle: GoogleFonts.inter(
-                        fontSize: 16,
-                        color: textColor,
-                      ),
-                      sendButtonBuilder: (onSend) => IconButton(
-                        icon: Icon(
-                          Icons.send_rounded,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                        onPressed: onSend,
-                      ),
-                      inputDecoration: InputDecoration(
-                        hintText: 'Type your message...',
-                        hintStyle: TextStyle(
-                          color: secondaryTextColor.withOpacity(0.7),
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: isDarkMode
-                                ? Colors.grey[800]!
-                                : Colors.grey[300]!,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: isDarkMode
-                                ? Colors.grey[800]!
-                                : Colors.grey[300]!,
-                          ),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                            color: theme.colorScheme.primary,
-                            width: 2,
-                          ),
-                        ),
-                        filled: isDarkMode,
-                        fillColor: isDarkMode ? const Color(0xFF2C2C2E) : null,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                    messageOptions: MessageOptions(
-                      showTime: true,
-                      containerColor: aiMessageColor,
-                      currentUserContainerColor: userMessageColor,
-                      textColor: textColor,
-                      currentUserTextColor: textColor,
-                      showCurrentUserAvatar: false,
-                      showOtherUsersAvatar: true,
-                      spaceWhenAvatarIsHidden: 16,
-                      marginDifferentAuthor: const EdgeInsets.only(top: 16),
-                      marginSameAuthor: const EdgeInsets.only(top: 8),
-                      messagePadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      borderRadius: 20,
-                      avatarBuilder: (user, _, __) => Padding(
-                        padding: const EdgeInsets.only(right: 5, left: 5),
-                        child: CircleAvatar(
-                          radius: 16,
-                          backgroundColor: user.id == _currentUser.id
-                              ? theme.colorScheme.primary
-                              : isDarkMode
-                                  ? const Color(0xFF4A4A4C)
-                                  : theme.colorScheme.secondary,
-                          child: Text(
-                            user.firstName?[0] ?? '',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: user.id == _currentUser.id || !isDarkMode
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ),
-                      ),
-                      timeFormat: DateFormat('HH:mm'),
-                    ),
-                  ),
                   currentUser: _currentUser,
                   aiUser: _aiUser,
                   controller: messagesController,
                   onSendMessage: _handleSendMessage,
                   isLoading: _isLoading,
-                  loadingIndicator: const LoadingWidget(),
+                  loadingIndicator: LoadingWidget(
+                    texts: const [
+                      'AI is thinking...',
+                      'Processing your message...',
+                      'Generating response...',
+                      'Almost there...',
+                    ],
+                    interval: const Duration(seconds: 2),
+                    textStyle: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0.1,
+                    ),
+                    shimmerBaseColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withOpacity(0.5),
+                    shimmerHighlightColor:
+                        Theme.of(context).colorScheme.surface,
+                  ),
+                  config: AiChatConfig(
+                    hintText: 'Send a message',
+                    messageOptions: MessageOptions(
+                      containerColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.surface
+                              : const Color(0xFFF7F7F8),
+                      currentUserContainerColor:
+                          Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.primary
+                              : const Color(0xFF10A37F),
+                      textColor: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.onSurface
+                          : const Color(0xFF353740),
+                      currentUserTextColor: Colors.white,
+                      messagePadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      showCurrentUserAvatar: false,
+                      showOtherUsersAvatar: true,
+                      showTime: true,
+                      timeTextColor: const Color(0xFF8E8EA0),
+                      currentUserTimeTextColor: const Color(0xFF8E8EA0),
+                      borderRadius: 12,
+                    ),
+                    enableAnimation: true,
+                    showTimestamp: true,
+                    inputDecoration: InputDecoration(
+                      hintText: 'Send a message',
+                      hintStyle: const TextStyle(
+                        color: Color(0xFF8E8EA0),
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.surface
+                          : Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.outline
+                              : const Color(0xFFD9D9E3),
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.outline
+                              : const Color(0xFFD9D9E3),
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.primary
+                              : const Color(0xFF10A37F),
+                          width: 1.5,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    sendButtonIcon: Icons.send_rounded,
+                    sendButtonIconSize: 24,
+                    sendButtonPadding: const EdgeInsets.all(8),
+                    sendButtonBuilder: (onSend) => Container(
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.send_rounded,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.primary
+                              : const Color(0xFF10A37F),
+                          size: 24,
+                        ),
+                        onPressed: onSend,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

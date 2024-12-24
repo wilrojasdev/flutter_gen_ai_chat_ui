@@ -84,9 +84,6 @@ class _PaginationExampleState extends State<PaginationExample> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pagination Example'),
-      ),
       body: AiChatWidget(
         config: AiChatConfig(
           hintText: 'Type a message...',

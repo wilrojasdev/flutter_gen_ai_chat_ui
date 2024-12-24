@@ -8,7 +8,7 @@ class ThemeProvider extends ChangeNotifier {
 
   static ThemeData get lightTheme =>
       ThemeData.light(useMaterial3: true).copyWith(
-        extensions: [
+        extensions: <ThemeExtension<dynamic>>[
           CustomThemeExtension(
             chatBackground: Colors.white,
             messageBubbleColor: Colors.white,
@@ -26,7 +26,7 @@ class ThemeProvider extends ChangeNotifier {
       );
 
   static ThemeData get darkTheme => ThemeData.dark(useMaterial3: true).copyWith(
-        extensions: [
+        extensions: <ThemeExtension<dynamic>>[
           CustomThemeExtension(
             chatBackground: const Color(0xFF171717),
             messageBubbleColor: const Color(0xFF262626),

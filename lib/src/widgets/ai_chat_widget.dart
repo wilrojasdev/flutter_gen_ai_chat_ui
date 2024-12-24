@@ -113,61 +113,69 @@ class AiChatWidgetState extends State<AiChatWidget>
   Widget _buildWelcomeMessage(final BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+    final customTheme = theme.extension<CustomThemeExtension>();
+
+    // If no custom theme is specified, use the app's theme colors
 
     return FadeTransition(
       opacity: _animationController,
       child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF242424) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
               color: isDarkMode
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.08),
-              blurRadius: 16,
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.black.withOpacity(0.06),
+              blurRadius: 20,
               spreadRadius: -4,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color:
-                isDarkMode ? const Color(0xFF3D3D3D) : const Color(0xFFE0E0E0),
+            color: isDarkMode
+                ? Colors.white.withOpacity(0.1)
+                : Colors.black.withOpacity(0.05),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Welcome! How can I assist you today?',
+              widget.config.aiName ?? 'Welcome! How can I assist you today?',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 24,
                 fontWeight: FontWeight.w600,
-                letterSpacing: 0.1,
-                color: customTheme.messageTextColor,
+                letterSpacing: -0.5,
+                color: isDarkMode ? Colors.white : Colors.black87,
+                height: 1.3,
               ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Here are some questions you can ask:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w400,
-                color: customTheme.messageTextColor.withOpacity(0.8),
-                letterSpacing: 0.1,
+            if (widget.config.exampleQuestions?.isNotEmpty ?? false) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Here are some questions you can ask:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isDarkMode
+                      ? Colors.white.withOpacity(0.7)
+                      : Colors.black54,
+                  letterSpacing: 0.1,
+                  height: 1.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            _buildExampleQuestion(
-              'What is the weather like today?',
-              isDarkMode,
-            ),
-            _buildExampleQuestion('Tell me a joke.', isDarkMode),
-            _buildExampleQuestion('How do I reset my password?', isDarkMode),
+              const SizedBox(height: 16),
+              ...widget.config.exampleQuestions!.map(
+                (final example) => _buildExampleQuestion(
+                  example.question,
+                  isDarkMode,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -176,46 +184,47 @@ class AiChatWidgetState extends State<AiChatWidget>
 
   Widget _buildExampleQuestion(final String question, final bool isDarkMode) {
     final theme = Theme.of(context);
-    final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+    final primaryColor = theme.primaryColor;
 
     return GestureDetector(
       onTap: () => handleExampleQuestionTap(question),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
+        margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
           color: isDarkMode
-              ? customTheme.userBubbleColor.withOpacity(0.15)
-              : customTheme.userBubbleColor.withOpacity(0.08),
+              ? primaryColor.withOpacity(0.15)
+              : primaryColor.withOpacity(0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDarkMode
-                ? customTheme.userBubbleColor.withOpacity(0.3)
-                : customTheme.userBubbleColor.withOpacity(0.2),
+                ? primaryColor.withOpacity(0.3)
+                : primaryColor.withOpacity(0.2),
           ),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
+            Flexible(
               child: Text(
                 question,
                 style: TextStyle(
-                  color: isDarkMode
-                      ? customTheme.userBubbleColor.withOpacity(0.9)
-                      : customTheme.userBubbleColor,
+                  color:
+                      isDarkMode ? primaryColor.withOpacity(0.9) : primaryColor,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.2,
+                  height: 1.4,
                 ),
               ),
             ),
+            const SizedBox(width: 12),
             Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
+              Icons.arrow_forward_rounded,
+              size: 18,
               color: isDarkMode
-                  ? customTheme.userBubbleColor.withOpacity(0.7)
-                  : customTheme.userBubbleColor.withOpacity(0.6),
+                  ? primaryColor.withOpacity(0.7)
+                  : primaryColor.withOpacity(0.8),
             ),
           ],
         ),
@@ -235,62 +244,68 @@ class AiChatWidgetState extends State<AiChatWidget>
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
-    final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return InputOptions(
       sendOnEnter: true,
       autocorrect: false,
       inputTextStyle: widget.config.inputTextStyle ??
-          FontHelper.getAppropriateFont(
-            text: LocaleHelper.isRTL(context) ? 'ئ' : 'a',
-            baseStyle: TextStyle(
-              color: customTheme.inputTextColor,
-              fontSize: 16,
-            ),
+          TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontSize: 16,
+            height: 1.5,
           ),
       inputDecoration: widget.config.inputDecoration ??
           InputDecoration(
             isDense: true,
             filled: true,
-            fillColor: customTheme.inputBackgroundColor,
-            hintText: widget.config.hintText,
-            hintStyle: FontHelper.getAppropriateFont(
-              text: LocaleHelper.isRTL(context) ? 'ئ' : 'a',
-              baseStyle: TextStyle(
-                color: customTheme.hintTextColor,
-              ),
+            fillColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[50],
+            hintText: widget.config.hintText ?? 'Type a message...',
+            hintStyle: TextStyle(
+              color:
+                  isDarkMode ? Colors.white.withOpacity(0.4) : Colors.black38,
+              fontSize: 16,
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: isTablet ? 24 : 20,
-              vertical: isTablet ? 16 : 12,
+              vertical: isTablet ? 16 : 14,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: customTheme.inputBorderColor),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDarkMode
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.black.withOpacity(0.05),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: customTheme.inputBorderColor),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: isDarkMode
+                    ? Colors.white.withOpacity(0.1)
+                    : Colors.black.withOpacity(0.05),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: customTheme.inputBorderColor),
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: theme.primaryColor.withOpacity(0.5),
+                width: 1.5,
+              ),
             ),
           ),
       sendButtonBuilder: widget.config.sendButtonBuilder ??
           (final onSend) => Container(
-                margin:
-                    widget.config.sendButtonPadding ?? const EdgeInsets.all(8),
+                margin: const EdgeInsets.only(left: 8, right: 4),
                 decoration: BoxDecoration(
-                  color: customTheme.sendButtonColor,
-                  borderRadius: BorderRadius.circular(8),
+                  color: theme.primaryColor,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
                   icon: Icon(
                     widget.config.sendButtonIcon ?? Icons.send_rounded,
-                    color: customTheme.sendButtonIconColor,
-                    size: widget.config.sendButtonIconSize ?? 24,
+                    color: Colors.white,
+                    size: 20,
                   ),
                   onPressed: onSend,
                 ),
@@ -302,30 +317,28 @@ class AiChatWidgetState extends State<AiChatWidget>
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
-    final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[50]!;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return MessageOptions(
-      containerColor: customTheme.messageBubbleColor,
-      currentUserContainerColor: customTheme.userBubbleColor,
-      currentUserTextColor: customTheme.messageTextColor,
-      currentUserTimeTextColor: theme.brightness == Brightness.dark
-          ? Colors.grey[400]!
-          : Colors.grey[600]!,
-      messagePadding: EdgeInsets.only(
-        left: isTablet ? 20 : 16,
-        right: isTablet ? 20 : 16,
-        top: isTablet ? 20 : 16,
-        bottom: isTablet ? 20 : 16,
+      containerColor: backgroundColor,
+      currentUserContainerColor: theme.primaryColor.withOpacity(0.1),
+      currentUserTextColor: textColor,
+      currentUserTimeTextColor:
+          isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
+      messagePadding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 20 : 16,
+        vertical: isTablet ? 14 : 12,
       ),
       showTime: widget.config.showTimestamp,
       spaceWhenAvatarIsHidden: 8,
-      textColor: customTheme.messageTextColor,
+      textColor: textColor,
       timeFontSize: 11,
       timePadding: const EdgeInsets.only(top: 4),
-      timeTextColor: theme.brightness == Brightness.dark
-          ? Colors.grey[400]!
-          : Colors.grey[600]!,
+      timeTextColor: isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,
       messageTextBuilder:
           (final message, final previousMessage, final nextMessage) {
         if (widget.config.messageBuilder != null) {
@@ -353,14 +366,10 @@ class AiChatWidgetState extends State<AiChatWidget>
               isUser: isUser,
               isStreaming: isLatestMessage && !isUser && widget.isLoading,
               style: TextStyle(
-                color: isUser
-                    ? (widget.config.messageOptions?.currentUserTextColor
-                            as Color?) ??
-                        customTheme.messageTextColor
-                    : widget.config.messageOptions?.textColor ??
-                        customTheme.messageTextColor,
+                color: textColor,
                 fontSize: isTablet ? 16 : 15,
-                height: 1.4,
+                height: 1.5,
+                letterSpacing: 0.1,
               ),
               textBuilder: (final text, final style) => SelectableText(
                 text,

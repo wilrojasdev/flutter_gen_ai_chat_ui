@@ -71,11 +71,6 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Simple AI Chat'),
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-      ),
       body: AiChatWidget(
         // Basic configuration with minimal customization
         config: const AiChatConfig(

@@ -158,9 +158,6 @@ Need help? Here are some things you can try:
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Markdown Support Example'),
-      ),
       body: AiChatWidget(
         config: AiChatConfig(
           hintText: 'Try using **markdown** in your message...',

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class StreamingExample extends StatefulWidget {
   const StreamingExample({super.key});
@@ -175,18 +174,6 @@ class _StreamingExampleState extends State<StreamingExample>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Streaming Example',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        elevation: 0,
-        scrolledUnderElevation: 1,
-        surfaceTintColor: Colors.transparent,
-      ),
       body: AiChatWidget(
         config: AiChatConfig(
           hintText: 'Type a message...',

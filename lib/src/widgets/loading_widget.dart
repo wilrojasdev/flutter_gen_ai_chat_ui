@@ -11,6 +11,8 @@ class LoadingWidget extends StatefulWidget {
     this.texts = const ['Loading...'],
     this.interval = const Duration(seconds: 2),
     this.textStyle,
+    this.shimmerBaseColor,
+    this.shimmerHighlightColor,
   });
 
   /// The list of texts to cycle through.
@@ -21,6 +23,12 @@ class LoadingWidget extends StatefulWidget {
 
   /// The text style for the loading text.
   final TextStyle? textStyle;
+
+  /// The base color for the shimmer effect.
+  final Color? shimmerBaseColor;
+
+  /// The highlight color for the shimmer effect.
+  final Color? shimmerHighlightColor;
 
   @override
   State<LoadingWidget> createState() => _LoadingWidgetState();
@@ -43,7 +51,7 @@ class _LoadingWidgetState extends State<LoadingWidget> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(widget.interval, (final t) {
+    _timer = Timer.periodic(widget.interval, (final timer) {
       setState(() {
         _currentIndex = (_currentIndex + 1) % widget.texts.length;
       });
@@ -51,45 +59,39 @@ class _LoadingWidgetState extends State<LoadingWidget> {
   }
 
   @override
-  Widget build(final BuildContext context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildLoadingIndicator(),
-            const SizedBox(height: 16),
-            _buildLoadingText(),
-          ],
-        ),
-      );
+  Widget build(final BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = widget.shimmerBaseColor ??
+        (isDark
+            ? Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withOpacity(0.5)
+            : const Color(0xFFF7F7F8));
+    final highlightColor = widget.shimmerHighlightColor ??
+        (isDark ? Theme.of(context).colorScheme.surface : Colors.white);
 
-  Widget _buildLoadingIndicator() => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(50),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Shimmer.fromColors(
+        baseColor: baseColor,
+        highlightColor: highlightColor,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: Text(
+            widget.texts[_currentIndex],
+            key: ValueKey<String>(widget.texts[_currentIndex]),
+            style: widget.textStyle ??
+                TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.1,
+                ),
+            textAlign: TextAlign.center,
           ),
         ),
-      );
-
-  Widget _buildLoadingText() => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 500),
-        transitionBuilder: (final child, final animation) => FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
-        child: Text(
-          widget.texts[_currentIndex],
-          key: ValueKey<String>(widget.texts[_currentIndex]),
-          style: widget.textStyle ??
-              const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-        ),
-      );
+      ),
+    );
+  }
 }
