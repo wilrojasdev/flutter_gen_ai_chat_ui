@@ -51,6 +51,7 @@ And [links](https://flutter.dev) too!
 ''',
       user: _aiUser,
       createdAt: DateTime.now(),
+      isMarkdown: true,
     ));
   }
 
@@ -78,81 +79,12 @@ Need help? Here are some things you can try:
 ''',
         user: _aiUser,
         createdAt: DateTime.now(),
+        isMarkdown: true,
       );
       _controller.addMessage(response);
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  Widget _buildMarkdownMessage(ChatMessage message, bool isUser) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: MarkdownBody(
-        data: message.text,
-        styleSheet: MarkdownStyleSheet(
-          p: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 16,
-          ),
-          code: TextStyle(
-            backgroundColor: isUser
-                ? (isDark ? Colors.blue[900] : Colors.blue[50])
-                : (isDark ? Colors.grey[800] : Colors.grey[200]),
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 14,
-          ),
-          codeblockDecoration: BoxDecoration(
-            color: isUser
-                ? (isDark ? Colors.blue[900] : Colors.blue[50])
-                : (isDark ? Colors.grey[800] : Colors.grey[200]),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          blockquote: TextStyle(
-            color: (isDark ? Colors.white70 : Colors.black54),
-            fontSize: 16,
-          ),
-          listBullet: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 16,
-          ),
-          h1: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-          h2: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-          h3: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-          em: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontStyle: FontStyle.italic,
-          ),
-          strong: TextStyle(
-            color: isDark ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-          a: TextStyle(
-            color: isDark ? Colors.lightBlue[300] : Colors.blue,
-            decoration: TextDecoration.underline,
-          ),
-        ),
-        onTapLink: (text, href, title) {
-          if (href != null) {
-            launchUrl(Uri.parse(href));
-          }
-        },
-      ),
-    );
   }
 
   @override
@@ -161,11 +93,12 @@ Need help? Here are some things you can try:
       body: AiChatWidget(
         config: AiChatConfig(
           hintText: 'Try using **markdown** in your message...',
-          // Custom message builder for markdown support
-          messageBuilder: (message) {
-            final isUser = message.user.id == _currentUser.id;
-            return _buildMarkdownMessage(message, isUser);
-          },
+          messageBuilder: (message) => message.isMarkdown == true
+              ? MarkdownBody(
+                  data: message.text,
+                  // onTapLink: (url) => launch(url),
+                )
+              : SelectableText(message.text),
         ),
         controller: _controller,
         currentUser: _currentUser,

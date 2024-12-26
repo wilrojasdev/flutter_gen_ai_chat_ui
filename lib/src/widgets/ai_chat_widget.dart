@@ -417,7 +417,7 @@ class AiChatWidgetState extends State<AiChatWidget>
   Widget _defaultScrollToBottomBuilder() {
     final theme = Theme.of(context);
     final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>()!;
+        ThemeProvider.lightTheme.extension<CustomThemeExtension>();
 
     return Positioned(
       bottom: 8,
@@ -428,14 +428,15 @@ class AiChatWidgetState extends State<AiChatWidget>
           height: 32,
           width: 32,
           decoration: BoxDecoration(
-            color: customTheme.backToBottomButtonColor.withOpacity(0.8),
+            color: customTheme?.backToBottomButtonColor?.withOpacity(0.8) ??
+                Colors.grey,
             borderRadius: BorderRadius.circular(16),
           ),
           child: IconButton(
             padding: EdgeInsets.zero,
             icon: Icon(
               Icons.keyboard_arrow_down,
-              color: customTheme.chatBackground,
+              color: customTheme?.chatBackground ?? Colors.white,
               size: 24,
             ),
             onPressed: _scrollToBottom,
