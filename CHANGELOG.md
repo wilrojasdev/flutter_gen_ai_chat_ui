@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.4
+
+* Improved loading indicator visibility in both light and dark themes
+* Enhanced shimmer effect contrast and animation
+* Increased loading text size and readability
+* Optimized loading animation timing
+
 ## 1.1.3
 
 * Added comprehensive test coverage

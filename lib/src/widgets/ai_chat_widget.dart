@@ -113,9 +113,7 @@ class AiChatWidgetState extends State<AiChatWidget>
   Widget _buildWelcomeMessage(final BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final customTheme = theme.extension<CustomThemeExtension>();
-
-    // If no custom theme is specified, use the app's theme colors
+    final primaryColor = theme.primaryColor;
 
     return FadeTransition(
       opacity: _animationController,
@@ -123,22 +121,19 @@ class AiChatWidgetState extends State<AiChatWidget>
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+          color: isDarkMode ? const Color(0xFF141414) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: isDarkMode
-                  ? Colors.black.withOpacity(0.3)
-                  : Colors.black.withOpacity(0.06),
-              blurRadius: 20,
-              spreadRadius: -4,
+              color: Colors.black.withAlpha(isDarkMode ? 128 : 31),
+              blurRadius: 24,
+              spreadRadius: -2,
               offset: const Offset(0, 8),
             ),
           ],
           border: Border.all(
-            color: isDarkMode
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.05),
+            color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
+            width: 1.5,
           ),
         ),
         child: Column(
@@ -150,29 +145,43 @@ class AiChatWidgetState extends State<AiChatWidget>
                 fontSize: 24,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.5,
-                color: isDarkMode ? Colors.white : Colors.black87,
+                color: isDarkMode ? Colors.white : Colors.black,
                 height: 1.3,
               ),
             ),
             if (widget.config.exampleQuestions?.isNotEmpty ?? false) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Here are some questions you can ask:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: isDarkMode
-                      ? Colors.white.withOpacity(0.7)
-                      : Colors.black54,
-                  letterSpacing: 0.1,
-                  height: 1.5,
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: primaryColor.withAlpha(isDarkMode ? 38 : 20),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: primaryColor.withAlpha(isDarkMode ? 77 : 51),
+                  ),
+                ),
+                child: Text(
+                  'Here are some questions you can ask:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                    letterSpacing: 0.1,
+                    height: 1.5,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               ...widget.config.exampleQuestions!.map(
-                (final example) => _buildExampleQuestion(
-                  example.question,
-                  isDarkMode,
+                (final example) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildExampleQuestion(
+                    example.question,
+                    isDarkMode,
+                  ),
                 ),
               ),
             ],
@@ -186,47 +195,57 @@ class AiChatWidgetState extends State<AiChatWidget>
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
 
-    return GestureDetector(
-      onTap: () => handleExampleQuestionTap(question),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        decoration: BoxDecoration(
-          color: isDarkMode
-              ? primaryColor.withOpacity(0.15)
-              : primaryColor.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDarkMode
-                ? primaryColor.withOpacity(0.3)
-                : primaryColor.withOpacity(0.2),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => handleExampleQuestionTap(question),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: primaryColor.withAlpha(isDarkMode ? 128 : 77),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(isDarkMode ? 77 : 13),
+                blurRadius: 8,
+                spreadRadius: -2,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                question,
-                style: TextStyle(
-                  color:
-                      isDarkMode ? primaryColor.withOpacity(0.9) : primaryColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 0.2,
-                  height: 1.4,
+          child: Row(
+            children: [
+              Icon(
+                Icons.chat_bubble_outline_rounded,
+                size: 20,
+                color: isDarkMode ? Colors.white : primaryColor,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  question,
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white : primaryColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.2,
+                    height: 1.4,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Icon(
-              Icons.arrow_forward_rounded,
-              size: 18,
-              color: isDarkMode
-                  ? primaryColor.withOpacity(0.7)
-                  : primaryColor.withOpacity(0.8),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Icon(
+                Icons.arrow_forward_rounded,
+                size: 20,
+                color: isDarkMode ? Colors.white : primaryColor,
+              ),
+            ],
+          ),
         ),
       ),
     );
