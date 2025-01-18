@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.5
+
+* Enhanced loading indicator text size and visibility
+* Improved shimmer effect contrast in both light and dark themes
+* Optimized color values for better accessibility
+
 ## 1.1.4
 
 * Improved loading indicator visibility in both light and dark themes
