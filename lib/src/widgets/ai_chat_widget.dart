@@ -308,7 +308,7 @@ class AiChatWidgetState extends State<AiChatWidget>
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
-                color: theme.primaryColor.withOpacity(0.5),
+                color: theme.primaryColor.withAlpha(128),
                 width: 1.5,
               ),
             ),
@@ -344,7 +344,7 @@ class AiChatWidgetState extends State<AiChatWidget>
 
     return MessageOptions(
       containerColor: backgroundColor,
-      currentUserContainerColor: theme.primaryColor.withOpacity(0.1),
+      currentUserContainerColor: theme.primaryColor.withAlpha(26),
       currentUserTextColor: textColor,
       currentUserTimeTextColor:
           isDarkMode ? Colors.grey[400]! : Colors.grey[600]!,

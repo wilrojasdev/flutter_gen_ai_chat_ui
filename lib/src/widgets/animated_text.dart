@@ -192,7 +192,7 @@ class _StreamingTextState extends State<StreamingText>
                     newText,
                     widget.style?.copyWith(
                       color: widget.style?.color
-                          ?.withOpacity(_fadeAnimation.value),
+                          ?.withAlpha((_fadeAnimation.value * 255).toInt()),
                     ),
                   ),
                 ),
