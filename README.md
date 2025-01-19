@@ -50,25 +50,50 @@ The AI will provide:
 ## Key Features
 
 ### Core Features
-- 🎨 Dark and light mode support
-- 💫 Smooth message animations
-- 🔄 Word-by-word text streaming
-- ✨ Loading indicators with shimmer effect
-- 📱 Responsive layout for all screen sizes
-- 🎤 Professional speech-to-text with visual feedback
+- 🎨 Dark and light mode support with adaptive theming
+- 💫 Smooth message animations with word-by-word streaming
+- 🔄 Real-time message updates and streaming
+- ✨ Loading indicators with customizable shimmer effect
+- 📱 Responsive layout with configurable max width
+- 🎤 Professional speech-to-text with:
+  - 🌊 Smooth dual-layer pulse animation
+  - 📊 Real-time sound level visualization
+  - 🎨 Adaptive theming for light/dark modes
+  - 🎯 Precise error handling and recovery
+  - 🔄 Automatic language detection
+  - 📱 iOS and Android support (physical devices)
 
 ### Message Features
 - 📝 Markdown support with syntax highlighting
 - 🎯 Selectable text in messages
-- 🔗 Clickable links
-- 📜 Message pagination
+- 🔗 Clickable links and URL handling
+- 📜 Message pagination with custom loading indicators
 - 🌐 RTL language support
+- ⏱️ Customizable timestamps
+- 🔄 Message streaming with real-time updates
+- 🎨 Custom message bubble styling
 
 ### UI Components
 - 👋 Customizable welcome message
-- ⭐️ Example questions widget
-- 💬 Custom message bubbles
-- 🎮 Custom input field and send button
+- ⭐️ Example questions widget with tap actions
+- 💬 Custom message bubbles and layouts
+- 🎮 Custom input field with:
+  - 🎨 Customizable styling and decoration
+  - 🎯 Custom send button
+  - 🎤 Integrated speech-to-text
+  - ⌨️ Multi-line input support
+- ⬇️ Smart scroll-to-bottom button
+- 🔄 Loading indicators and shimmer effects
+
+### Advanced Features
+- 🎮 Complete message controller
+- 🔄 Pagination support with custom offset
+- 🎯 Action callbacks for send/clear/stop
+- 🌍 Locale support for speech recognition
+- 🎨 Theme extension for deep customization
+- 📱 Platform-specific optimizations
+- 🔒 Permission handling for speech recognition
+- 🎯 Error handling and recovery
 
 ## Quick Start
 
@@ -149,6 +174,160 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 }
+```
+
+## Configuration Guide
+
+### AiChatConfig Options
+
+The `AiChatConfig` class provides extensive customization options. Here's a comprehensive guide:
+
+#### Basic Configuration
+```dart
+AiChatConfig(
+  // User Interface
+  userName: 'User',            // Name displayed for the user
+  aiName: 'AI Assistant',      // Name displayed for the AI
+  hintText: 'Type a message...', // Input field placeholder
+  maxWidth: 800,              // Maximum width of the chat interface
+  padding: EdgeInsets.all(16), // Padding around the chat interface
+  
+  // Feature Toggles
+  enableAnimation: true,       // Enable/disable message animations
+  showTimestamp: true,        // Show/hide message timestamps
+  readOnly: false,            // Make chat read-only
+  enablePagination: false,    // Enable/disable message pagination
+  
+  // Example Questions
+  exampleQuestions: [
+    ChatExample(
+      question: 'What can you help me with?',
+      onTap: (controller) {
+        controller.handleExampleQuestion(
+          'What can you help me with?',
+          currentUser,
+          aiUser,
+        );
+      },
+    ),
+  ],
+)
+```
+
+#### Speech-to-Text Configuration
+```dart
+AiChatConfig(
+  enableSpeechToText: true,
+  speechToTextIcon: Icons.mic_none_rounded,      // Default mic icon
+  speechToTextActiveIcon: Icons.mic_rounded,     // Icon when active
+  speechToTextLocale: 'en_US',                  // Recognition language
+  
+  // Speech Recognition Callbacks
+  onSpeechStart: () async {
+    // Called when speech recognition starts
+  },
+  onSpeechEnd: () async {
+    // Called when speech recognition ends
+  },
+  onSpeechError: (error) {
+    // Handle speech recognition errors
+  },
+  onRequestSpeechPermission: () async {
+    // Handle permission requests
+    return true; // Return true if permission granted
+  },
+  
+  // Custom Speech Button
+  customSpeechToTextButton: (isListening, onPressed) {
+    return YourCustomButton(
+      isListening: isListening,
+      onPressed: onPressed,
+    );
+  },
+)
+```
+
+#### UI Customization
+```dart
+AiChatConfig(
+  // Input Field Styling
+  inputTextStyle: TextStyle(fontSize: 16),
+  inputDecoration: InputDecoration(
+    border: OutlineInputBorder(),
+    filled: true,
+  ),
+  
+  // Message Display
+  messageBuilder: (message) {
+    return CustomMessageBubble(message: message);
+  },
+  
+  // Send Button
+  sendButtonIcon: Icons.send_rounded,
+  sendButtonIconSize: 24,
+  sendButtonPadding: EdgeInsets.all(8),
+  sendButtonBuilder: (onSend) {
+    return CustomSendButton(onPressed: onSend);
+  },
+  
+  // Scroll Button
+  scrollToBottomBuilder: (controller) {
+    return CustomScrollButton(controller: controller);
+  },
+)
+```
+
+#### Pagination and Loading
+```dart
+AiChatConfig(
+  enablePagination: true,
+  paginationLoadingIndicatorOffset: 100,
+  loadMoreIndicator: ({required bool isLoading}) {
+    return CustomLoadingIndicator(isLoading: isLoading);
+  },
+)
+```
+
+#### Action Callbacks
+```dart
+AiChatConfig(
+  onSendButtonPressed: (message) {
+    // Handle send button press
+  },
+  onClearButtonPressed: () {
+    // Handle clear button press
+  },
+  onStopButtonPressed: () {
+    // Handle stop button press (e.g., stop streaming)
+  },
+)
+```
+
+#### Advanced Message Options
+```dart
+AiChatConfig(
+  // Message Options
+  messageOptions: MessageOptions(
+    showTime: true,
+    timePadding: EdgeInsets.only(top: 4),
+    containerColor: Colors.grey[200],
+    textColor: Colors.black87,
+  ),
+  
+  // Message List Options
+  messageListOptions: MessageListOptions(
+    showDateSeparator: true,
+    scrollPhysics: BouncingScrollPhysics(),
+  ),
+  
+  // Quick Reply Options
+  quickReplyOptions: QuickReplyOptions(
+    quickReplyStyle: BoxDecoration(
+      border: Border.all(),
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+)
 ```
 
 ## Advanced Features
