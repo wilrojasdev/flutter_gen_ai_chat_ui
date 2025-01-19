@@ -116,8 +116,7 @@ The speech-to-text button now includes:
 
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.1.2
-  speech_to_text: ^6.6.0  # Required for speech-to-text functionality
+  flutter_gen_ai_chat_ui: ^1.1.6
 ```
 
 ### 2. Import the package
@@ -273,4 +272,40 @@ Check out our [example](example) folder for complete implementations:
 ## License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
+
+### Speech-to-Text Features
+
+The package includes a professional speech-to-text button with:
+- 🌊 Smooth dual-layer pulse animation
+- 📊 Real-time sound level visualization
+- 🎨 Adaptive theming for light/dark modes
+- 🎯 Precise error handling and recovery
+- 🔄 Automatic language detection
+- 📱 iOS and Android support (physical devices)
+
+#### Configuration Example:
+```dart
+AiChatConfig(
+  enableSpeechToText: true,
+  speechToTextIcon: Icons.mic_none_rounded,
+  speechToTextActiveIcon: Icons.mic_rounded,
+  speechToTextLocale: 'en_US',
+  // Optional callbacks
+  onSpeechStart: () async {
+    // Show recording indicator
+  },
+  onSpeechEnd: () async {
+    // Hide recording indicator
+  },
+  onSpeechError: (error) {
+    // Handle errors gracefully
+  },
+  onRequestSpeechPermission: () async {
+    // Custom permission handling
+    return true;
+  },
+)
+```
+
+Note: Speech recognition requires a physical device. It will not work on simulators/emulators.
 
