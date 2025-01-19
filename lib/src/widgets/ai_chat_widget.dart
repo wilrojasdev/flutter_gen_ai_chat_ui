@@ -286,8 +286,7 @@ class AiChatWidgetState extends State<AiChatWidget>
             fillColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[50],
             hintText: widget.config.hintText ?? 'Type a message...',
             hintStyle: TextStyle(
-              color:
-                  isDarkMode ? Colors.white.withOpacity(0.4) : Colors.black38,
+              color: isDarkMode ? Colors.white.withAlpha(102) : Colors.black38,
               fontSize: 16,
             ),
             contentPadding: EdgeInsets.symmetric(
@@ -298,16 +297,16 @@ class AiChatWidgetState extends State<AiChatWidget>
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withAlpha(26)
+                    : Colors.black.withAlpha(13),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide(
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.1)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withAlpha(26)
+                    : Colors.black.withAlpha(13),
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -476,7 +475,7 @@ class AiChatWidgetState extends State<AiChatWidget>
           height: 32,
           width: 32,
           decoration: BoxDecoration(
-            color: customTheme?.backToBottomButtonColor.withOpacity(0.8) ??
+            color: customTheme?.backToBottomButtonColor.withAlpha(204) ??
                 Colors.grey,
             borderRadius: BorderRadius.circular(16),
           ),
