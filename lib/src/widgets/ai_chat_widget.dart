@@ -321,7 +321,7 @@ class AiChatWidgetState extends State<AiChatWidget>
       leading: widget.config.enableSpeechToText
           ? [
               SpeechToTextButton(
-                onResult: (text) {
+                onResult: (final text) {
                   if (text.isNotEmpty) {
                     final message = ChatMessage(
                       text: text,
@@ -476,7 +476,7 @@ class AiChatWidgetState extends State<AiChatWidget>
           height: 32,
           width: 32,
           decoration: BoxDecoration(
-            color: customTheme?.backToBottomButtonColor?.withOpacity(0.8) ??
+            color: customTheme?.backToBottomButtonColor.withOpacity(0.8) ??
                 Colors.grey,
             borderRadius: BorderRadius.circular(16),
           ),

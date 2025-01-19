@@ -9,7 +9,7 @@ class SpeechService {
   Future<bool> initializeStt() async {
     try {
       _speechEnabled = await speechToText.initialize(
-        onError: (error) {
+        onError: (final error) {
           debugPrint('Speech recognition error: ${error.errorMsg}');
           // Check for specific iOS errors
           if (error.errorMsg.contains('Retry') ||
@@ -18,15 +18,14 @@ class SpeechService {
             speechToText.cancel();
           }
         },
-        finalTimeout: const Duration(seconds: 2),
       );
 
       if (_speechEnabled) {
-        var systemLocale = await speechToText.systemLocale();
-        var availableLocales = await speechToText.locales();
+        final systemLocale = await speechToText.systemLocale();
+        final availableLocales = await speechToText.locales();
 
         preferredLocale = availableLocales.firstWhere(
-          (locale) =>
+          (final locale) =>
               locale.localeId.startsWith('en_') ||
               locale.localeId.startsWith('en-'),
           orElse: () => systemLocale ?? availableLocales.first,
@@ -96,9 +95,10 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
     with SingleTickerProviderStateMixin {
   late final SpeechService _speechService;
   bool _isListening = false;
-  double _soundLevel = 0.0;
+  double _soundLevel = 0;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -107,20 +107,37 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
     _initSpeechToText();
 
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
+    _pulseAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.95, end: 1.2)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 50,
       ),
-    )..addListener(() {
-        setState(() {});
-      });
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.2, end: 0.95)
+            .chain(CurveTween(curve: Curves.easeInCubic)),
+        weight: 50,
+      ),
+    ]).animate(_pulseController);
 
-    _pulseController.repeat(reverse: true);
+    _fadeAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.3, end: 0.7)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.7, end: 0.3)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 50,
+      ),
+    ]).animate(_pulseController);
+
+    _pulseController.repeat();
   }
 
   Future<void> _initSpeechToText() async {
@@ -144,7 +161,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
   }
 
   Future<void> _startListening() async {
-    bool hasPermission = true;
+    var hasPermission = true;
     if (widget.onRequestPermission != null) {
       hasPermission = await widget.onRequestPermission!();
     }
@@ -162,7 +179,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
 
     try {
       await _speechService.speechToText.listen(
-        onResult: (result) {
+        onResult: (final result) {
           if (result.finalResult) {
             if (result.recognizedWords.isNotEmpty) {
               widget.onResult(result.recognizedWords);
@@ -171,10 +188,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
           }
         },
         localeId: widget.locale ?? _speechService.preferredLocale?.localeId,
-        cancelOnError: false,
-        partialResults: true,
-        listenMode: ListenMode.confirmation,
-        onSoundLevelChange: (level) {
+        onSoundLevelChange: (final level) {
           if (mounted) {
             setState(() {
               _soundLevel = level;
@@ -206,7 +220,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(final BuildContext context) {
     if (widget.customBuilder != null) {
       return widget.customBuilder!(_isListening, _toggleListening);
     }
@@ -214,6 +228,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
+    final activeColor = isDarkMode ? Colors.white : primaryColor;
 
     return Container(
       margin: const EdgeInsets.only(right: 8),
@@ -221,51 +236,70 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
         alignment: Alignment.center,
         children: [
           if (_isListening) ...[
-            // Outer pulse animation
-            Transform.scale(
-              scale: _pulseAnimation.value,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
+            // Outer pulse
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) => Transform.scale(
+                scale: _pulseAnimation.value,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: activeColor
+                        .withAlpha((_fadeAnimation.value * 255).toInt()),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+            // Inner pulse
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) => Transform.scale(
+                scale: _pulseAnimation.value * 0.85,
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: activeColor
+                        .withAlpha((_fadeAnimation.value * 255 * 0.7).toInt()),
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
             // Sound level indicator
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.2),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: primaryColor.withOpacity(0.3),
-                  width: 2,
-                ),
-              ),
-              child: CustomPaint(
-                painter: SoundLevelPainter(
-                  level: _soundLevel,
-                  color: primaryColor,
-                ),
+            CustomPaint(
+              size: const Size(40, 40),
+              painter: SoundLevelPainter(
+                level: _soundLevel,
+                color: activeColor,
               ),
             ),
           ],
-          // Main button
-          IconButton(
-            icon: Icon(
-              _isListening
-                  ? (widget.activeIcon ?? Icons.mic)
-                  : (widget.icon ?? Icons.mic_none),
+          // Main button with background
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
               color: _isListening
-                  ? primaryColor
-                  : (isDarkMode ? Colors.white70 : Colors.black54),
-              size: 24,
+                  ? activeColor.withAlpha(isDarkMode ? 77 : 26)
+                  : Colors.transparent,
+              shape: BoxShape.circle,
             ),
-            onPressed: _toggleListening,
-            tooltip: _isListening ? 'Stop listening' : 'Start listening',
+            child: IconButton(
+              icon: Icon(
+                _isListening
+                    ? (widget.activeIcon ?? Icons.mic)
+                    : (widget.icon ?? Icons.mic_none),
+                color: _isListening
+                    ? activeColor
+                    : (isDarkMode ? Colors.white : Colors.black54),
+                size: 22,
+              ),
+              onPressed: _toggleListening,
+              tooltip: _isListening ? 'Stop listening' : 'Start listening',
+            ),
           ),
         ],
       ),
@@ -281,14 +315,15 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
 }
 
 class SoundLevelPainter extends CustomPainter {
-  final double level;
-  final Color color;
-  static const double minBarHeight = 5.0; // Minimum height to show a bar
+  // Minimum height to show a bar
 
   SoundLevelPainter({required this.level, required this.color});
+  final double level;
+  final Color color;
+  static const double minBarHeight = 5;
 
   @override
-  void paint(Canvas canvas, Size size) {
+  void paint(final Canvas canvas, final Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     final paint = Paint()
@@ -298,8 +333,8 @@ class SoundLevelPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     // Draw sound level bars
-    final maxBars = 8;
-    final barWidth = 1.0;
+    const maxBars = 8;
+    const barWidth = 1.0;
     final maxHeight = radius - 6; // Reduced max height to prevent edge touching
     final normalizedLevel = (level / 100) * maxHeight;
 
@@ -337,6 +372,6 @@ class SoundLevelPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(SoundLevelPainter oldDelegate) =>
+  bool shouldRepaint(final SoundLevelPainter oldDelegate) =>
       level != oldDelegate.level;
 }
