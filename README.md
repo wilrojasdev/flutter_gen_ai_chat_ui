@@ -1,9 +1,9 @@
-# Flutter ChatGPT UI
+# Flutter Gen AI Chat UI
 
 [![pub package](https://img.shields.io/pub/v/flutter_gen_ai_chat_ui.svg)](https://pub.dev/packages/flutter_gen_ai_chat_ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Build ChatGPT-style chat interfaces in Flutter. Simple to use, easy to customize.
+A modern, customizable chat interface for AI applications in Flutter. Simple to use, easy to customize.
 
 <table>
   <tr>
@@ -52,50 +52,10 @@ The AI will provide:
 ### Core Features
 - 🎨 Dark and light mode support
 - 💫 Smooth message animations
-- 🔄 Word-by-word text streaming (like ChatGPT)
+- 🔄 Word-by-word text streaming
 - ✨ Loading indicators with shimmer effect
 - 📱 Responsive layout for all screen sizes
-- 🎤 Speech-to-text support
-
-### Speech-to-Text Setup
-
-#### 1. Platform Configuration
-
-**iOS** - Add to `ios/Runner/Info.plist`:
-```xml
-<key>NSMicrophoneUsageDescription</key>
-<string>This app needs microphone access for speech recognition</string>
-<key>NSSpeechRecognitionUsageDescription</key>
-<string>This app needs speech recognition to convert your voice to text</string>
-```
-
-**Android** - Add to `android/app/src/main/AndroidManifest.xml`:
-```xml
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-```
-
-#### 2. Enable in AiChatConfig:
-```dart
-AiChatConfig(
-  enableSpeechToText: true,  // Enable the feature
-  speechToTextIcon: Icons.mic_none_rounded,  // Optional: Custom icon
-  speechToTextActiveIcon: Icons.mic_rounded,  // Optional: Custom active icon
-  speechToTextLocale: 'en_US',  // Optional: Set language
-  // Optional: Custom callbacks
-  onSpeechStart: () async { /* Custom logic when speech starts */ },
-  onSpeechEnd: () async { /* Custom logic when speech ends */ },
-  onSpeechError: (error) { /* Handle errors */ },
-  onRequestSpeechPermission: () async { /* Custom permission handling */ },
-)
-```
-
-The speech-to-text button now includes:
-- 🎯 Visual sound level indicator
-- 💫 Pulsing animation when active
-- 🎨 Theme-aware styling
-- ⚡️ Improved error handling
-- 🌐 Automatic language detection
-- 📱 Works on both iOS and Android (physical devices)
+- 🎤 Professional speech-to-text with visual feedback
 
 ### Message Features
 - 📝 Markdown support with syntax highlighting
@@ -119,90 +79,100 @@ dependencies:
   flutter_gen_ai_chat_ui: ^1.1.6
 ```
 
-### 2. Import the package
+### 2. Platform Setup
 
-```dart
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
+#### iOS - Add to `ios/Runner/Info.plist`:
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>This app needs microphone access for speech recognition</string>
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>This app needs speech recognition to convert your voice to text</string>
+```
+
+#### Android - Add to `android/app/src/main/AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
 
 ### 3. Basic Implementation
 
-Here's a simple chat screen:
-
 ```dart
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:dash_chat_2/dash_chat_2.dart';
+
 class ChatScreen extends StatefulWidget {
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  late final _controller = ChatMessagesController();
-  late final _currentUser = ChatUser(id: '1', firstName: 'User');
-  late final _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+  final _controller = ChatMessagesController();
+  final _currentUser = ChatUser(id: '1', firstName: 'User');
+  final _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
   bool _isLoading = false;
-
-  Future<void> _handleSendMessage(ChatMessage message) async {
-    setState(() => _isLoading = true);
-    _controller.addMessage(message);
-
-    try {
-      // Add your AI response logic here
-      final response = ChatMessage(
-        text: "Hello! I received: ${message.text}",
-        user: _aiUser,
-        createdAt: DateTime.now(),
-      );
-      _controller.addMessage(response);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('AI Chat')),
-      body: Material(
-        type: MaterialType.transparency,
-        child: AiChatWidget(
-          config: AiChatConfig(
-            hintText: 'Type a message...',
-            enableAnimation: true,
-          ),
-          controller: _controller,
-          currentUser: _currentUser,
-          aiUser: _aiUser,
-          onSendMessage: _handleSendMessage,
-          isLoading: _isLoading,
+      body: AiChatWidget(
+        config: AiChatConfig(
+          enableSpeechToText: true,  // Enable speech recognition
+          hintText: 'Type or speak your message...',
+          enableAnimation: true,
+          // Optional speech-to-text customization
+          speechToTextIcon: Icons.mic_none_rounded,
+          speechToTextActiveIcon: Icons.mic_rounded,
+          onSpeechError: (error) => print('Speech error: $error'),
         ),
+        controller: _controller,
+        currentUser: _currentUser,
+        aiUser: _aiUser,
+        onSendMessage: _handleMessage,
+        isLoading: _isLoading,
       ),
     );
+  }
+
+  Future<void> _handleMessage(ChatMessage message) async {
+    setState(() => _isLoading = true);
+    try {
+      // Add your AI response logic here
+      await Future.delayed(Duration(seconds: 1));
+      _controller.addMessage(ChatMessage(
+        text: "I received: ${message.text}",
+        user: _aiUser,
+        createdAt: DateTime.now(),
+      ));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 }
 ```
 
-## Customization Examples
+## Advanced Features
 
-### 1. Dark Mode Support
+### 1. Speech Recognition
+The package includes a professional speech-to-text button with:
+- 🌊 Smooth dual-layer pulse animation
+- 📊 Real-time sound level visualization
+- 🎨 Adaptive theming for light/dark modes
+- 🎯 Precise error handling and recovery
+- 🔄 Automatic language detection
+- 📱 iOS and Android support (physical devices only)
+
+### 2. Dark Mode Support
 
 ```dart
 Theme(
   data: Theme.of(context).copyWith(
     extensions: [
       CustomThemeExtension(
-        // Message colors
         messageBubbleColor: isDark ? Color(0xFF262626) : Colors.white,
         userBubbleColor: isDark ? Color(0xFF1A4B8F) : Color(0xFFE3F2FD),
         messageTextColor: isDark ? Color(0xFFE5E5E5) : Colors.grey[800]!,
-        
-        // Input field colors
-        inputBackgroundColor: isDark ? Color(0xFF262626) : Colors.white,
-        inputBorderColor: isDark ? Color(0xFF404040) : Colors.grey[300]!,
-        
-        // Background and accent colors
         chatBackground: isDark ? Color(0xFF171717) : Colors.grey[50]!,
-        sendButtonIconColor: isDark ? Color(0xFF60A5FA) : Colors.blue,
       ),
     ],
   ),
@@ -210,102 +180,31 @@ Theme(
 )
 ```
 
-### 2. Streaming Responses
+### 3. Streaming Responses
 
 ```dart
-Future<void> handleStreamingResponse(ChatMessage message) async {
+Future<void> handleStreamingResponse(String text) async {
   final response = ChatMessage(
     text: "",
     user: aiUser,
     createdAt: DateTime.now(),
   );
-  controller.addMessage(response);
-
-  // Simulate streaming response
-  final words = "Hello! How can I help you today?".split(' ');
-  String currentText = '';
   
-  for (var word in words) {
+  for (var word in text.split(' ')) {
     await Future.delayed(Duration(milliseconds: 50));
-    currentText += (currentText.isEmpty ? '' : ' ') + word;
-    controller.messages.removeWhere((m) => 
-      m.createdAt == response.createdAt && m.user.id == aiUser.id
-    );
-    controller.addMessage(ChatMessage(
-      text: currentText,
-      user: aiUser,
-      createdAt: response.createdAt,
-    ));
+    response.text += '${response.text.isEmpty ? '' : ' '}$word';
+    controller.updateMessage(response);
   }
 }
 ```
 
-### 3. Markdown Messages
+## Examples & Support
 
-```dart
-AiChatConfig(
-  messageBuilder: (message) => MarkdownBody(
-    data: message.text,
-    styleSheet: MarkdownStyleSheet(
-      p: TextStyle(color: Colors.white),
-      code: TextStyle(backgroundColor: Colors.grey[800]),
-      h1: TextStyle(color: Colors.white, fontSize: 24),
-    ),
-  ),
-)
-```
-
-## Examples
-
-Check out our [example](example) folder for complete implementations:
-
-1. **Streaming Example**: Word-by-word text streaming like ChatGPT
-2. **Custom Styling**: Dark/light mode with beautiful UI
-3. **Markdown Support**: Rich text formatting in messages
-
-## Need Help?
-
-- 📘 Check our [example](example) folder
+- 📘 Check our [example](example) folder for complete implementations
 - 🐛 File issues on our [GitHub repository](https://github.com/hooshyar/flutter_gen_ai_chat_ui)
 - 💡 Contribute to the project
 
 ## License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
-
-### Speech-to-Text Features
-
-The package includes a professional speech-to-text button with:
-- 🌊 Smooth dual-layer pulse animation
-- 📊 Real-time sound level visualization
-- 🎨 Adaptive theming for light/dark modes
-- 🎯 Precise error handling and recovery
-- 🔄 Automatic language detection
-- 📱 iOS and Android support (physical devices)
-
-#### Configuration Example:
-```dart
-AiChatConfig(
-  enableSpeechToText: true,
-  speechToTextIcon: Icons.mic_none_rounded,
-  speechToTextActiveIcon: Icons.mic_rounded,
-  speechToTextLocale: 'en_US',
-  // Optional callbacks
-  onSpeechStart: () async {
-    // Show recording indicator
-  },
-  onSpeechEnd: () async {
-    // Hide recording indicator
-  },
-  onSpeechError: (error) {
-    // Handle errors gracefully
-  },
-  onRequestSpeechPermission: () async {
-    // Custom permission handling
-    return true;
-  },
-)
-```
-
-Note: Speech recognition requires a physical device. It will not work on simulators/emulators.
 
