@@ -1,6 +1,7 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:flutter_gen_ai_chat_ui/src/widgets/speech_to_text_button.dart';
 
 /// A customizable chat widget for AI conversations.
 class AiChatWidget extends StatefulWidget {
@@ -87,22 +88,26 @@ class AiChatWidgetState extends State<AiChatWidget>
                 widget.welcomeMessageBuilder?.call() ??
                     _buildWelcomeMessage(context),
               Expanded(
-                child: DashChat(
-                  currentUser: widget.currentUser,
-                  onSend: _handleSend,
-                  messages: widget.controller.messages,
-                  inputOptions:
-                      widget.config.inputOptions ?? _buildInputOptions(context),
-                  messageOptions: widget.config.messageOptions ??
-                      _buildMessageOptions(context),
-                  messageListOptions: widget.config.messageListOptions ??
-                      _buildMessageListOptions(),
-                  quickReplyOptions: widget.config.quickReplyOptions ??
-                      const QuickReplyOptions(),
-                  scrollToBottomOptions: widget.config.scrollToBottomOptions ??
-                      _buildScrollOptions(),
-                  readOnly: widget.config.readOnly,
-                  typingUsers: widget.config.typingUsers,
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: DashChat(
+                    currentUser: widget.currentUser,
+                    onSend: _handleSend,
+                    messages: widget.controller.messages,
+                    inputOptions: widget.config.inputOptions ??
+                        _buildInputOptions(context),
+                    messageOptions: widget.config.messageOptions ??
+                        _buildMessageOptions(context),
+                    messageListOptions: widget.config.messageListOptions ??
+                        _buildMessageListOptions(),
+                    quickReplyOptions: widget.config.quickReplyOptions ??
+                        const QuickReplyOptions(),
+                    scrollToBottomOptions:
+                        widget.config.scrollToBottomOptions ??
+                            _buildScrollOptions(),
+                    readOnly: widget.config.readOnly,
+                    typingUsers: widget.config.typingUsers,
+                  ),
                 ),
               ),
             ],
@@ -313,6 +318,30 @@ class AiChatWidgetState extends State<AiChatWidget>
               ),
             ),
           ),
+      leading: widget.config.enableSpeechToText
+          ? [
+              SpeechToTextButton(
+                onResult: (text) {
+                  if (text.isNotEmpty) {
+                    final message = ChatMessage(
+                      text: text,
+                      user: widget.currentUser,
+                      createdAt: DateTime.now(),
+                    );
+                    _handleSend(message);
+                  }
+                },
+                icon: widget.config.speechToTextIcon,
+                activeIcon: widget.config.speechToTextActiveIcon,
+                locale: widget.config.speechToTextLocale,
+                customBuilder: widget.config.customSpeechToTextButton,
+                onSpeechStart: widget.config.onSpeechStart,
+                onSpeechEnd: widget.config.onSpeechEnd,
+                onSpeechError: widget.config.onSpeechError,
+                onRequestPermission: widget.config.onRequestSpeechPermission,
+              ),
+            ]
+          : null,
       sendButtonBuilder: widget.config.sendButtonBuilder ??
           (final onSend) => Container(
                 margin: const EdgeInsets.only(left: 8, right: 4),

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.6
+
+* Enhanced speech-to-text functionality with visual feedback
+* Added sound level visualization with animated bars
+* Added pulsing animation for active recording state
+* Improved error handling for iOS speech recognition
+* Added automatic language detection
+* Added theme-aware styling for speech button
+* Updated documentation with new speech-to-text features
+
 ## 1.1.5
 
 * Enhanced loading indicator text size and visibility

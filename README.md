@@ -55,6 +55,47 @@ The AI will provide:
 - 🔄 Word-by-word text streaming (like ChatGPT)
 - ✨ Loading indicators with shimmer effect
 - 📱 Responsive layout for all screen sizes
+- 🎤 Speech-to-text support
+
+### Speech-to-Text Setup
+
+#### 1. Platform Configuration
+
+**iOS** - Add to `ios/Runner/Info.plist`:
+```xml
+<key>NSMicrophoneUsageDescription</key>
+<string>This app needs microphone access for speech recognition</string>
+<key>NSSpeechRecognitionUsageDescription</key>
+<string>This app needs speech recognition to convert your voice to text</string>
+```
+
+**Android** - Add to `android/app/src/main/AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+```
+
+#### 2. Enable in AiChatConfig:
+```dart
+AiChatConfig(
+  enableSpeechToText: true,  // Enable the feature
+  speechToTextIcon: Icons.mic_none_rounded,  // Optional: Custom icon
+  speechToTextActiveIcon: Icons.mic_rounded,  // Optional: Custom active icon
+  speechToTextLocale: 'en_US',  // Optional: Set language
+  // Optional: Custom callbacks
+  onSpeechStart: () async { /* Custom logic when speech starts */ },
+  onSpeechEnd: () async { /* Custom logic when speech ends */ },
+  onSpeechError: (error) { /* Handle errors */ },
+  onRequestSpeechPermission: () async { /* Custom permission handling */ },
+)
+```
+
+The speech-to-text button now includes:
+- 🎯 Visual sound level indicator
+- 💫 Pulsing animation when active
+- 🎨 Theme-aware styling
+- ⚡️ Improved error handling
+- 🌐 Automatic language detection
+- 📱 Works on both iOS and Android (physical devices)
 
 ### Message Features
 - 📝 Markdown support with syntax highlighting
@@ -76,6 +117,7 @@ The AI will provide:
 ```yaml
 dependencies:
   flutter_gen_ai_chat_ui: ^1.1.2
+  speech_to_text: ^6.6.0  # Required for speech-to-text functionality
 ```
 
 ### 2. Import the package
@@ -122,16 +164,19 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('AI Chat')),
-      body: AiChatWidget(
-        config: AiChatConfig(
-          hintText: 'Type a message...',
-          enableAnimation: true,
+      body: Material(
+        type: MaterialType.transparency,
+        child: AiChatWidget(
+          config: AiChatConfig(
+            hintText: 'Type a message...',
+            enableAnimation: true,
+          ),
+          controller: _controller,
+          currentUser: _currentUser,
+          aiUser: _aiUser,
+          onSendMessage: _handleSendMessage,
+          isLoading: _isLoading,
         ),
-        controller: _controller,
-        currentUser: _currentUser,
-        aiUser: _aiUser,
-        onSendMessage: _handleSendMessage,
-        isLoading: _isLoading,
       ),
     );
   }

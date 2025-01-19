@@ -40,6 +40,16 @@ class AiChatConfig {
     this.onSendButtonPressed,
     this.onClearButtonPressed,
     this.onStopButtonPressed,
+    // Speech-to-text options
+    this.enableSpeechToText = false,
+    this.speechToTextIcon,
+    this.speechToTextActiveIcon,
+    this.onSpeechStart,
+    this.onSpeechEnd,
+    this.onSpeechError,
+    this.onRequestSpeechPermission,
+    this.customSpeechToTextButton,
+    this.speechToTextLocale,
   });
 
   /// The name of the user in the chat interface.
@@ -129,6 +139,34 @@ class AiChatConfig {
   /// Callback function when the stop button is pressed
   final void Function()? onStopButtonPressed;
 
+  /// Whether to enable speech-to-text functionality
+  final bool enableSpeechToText;
+
+  /// Custom icon for the speech-to-text button (default: mic)
+  final IconData? speechToTextIcon;
+
+  /// Custom icon for the active speech-to-text button (default: mic)
+  final IconData? speechToTextActiveIcon;
+
+  /// Callback when speech recognition starts
+  final Future<void> Function()? onSpeechStart;
+
+  /// Callback when speech recognition ends
+  final Future<void> Function()? onSpeechEnd;
+
+  /// Callback when speech recognition has an error
+  final void Function(String error)? onSpeechError;
+
+  /// Callback to handle speech recognition permissions
+  final Future<bool> Function()? onRequestSpeechPermission;
+
+  /// Custom speech-to-text button widget
+  final Widget Function(bool isListening, VoidCallback onPressed)?
+      customSpeechToTextButton;
+
+  /// Locale for speech recognition (e.g., 'en_US')
+  final String? speechToTextLocale;
+
   // Create a copy with method for easy modification
   AiChatConfig copyWith({
     final String? userName,
@@ -160,6 +198,15 @@ class AiChatConfig {
     final void Function(String message)? onSendButtonPressed,
     final void Function()? onClearButtonPressed,
     final void Function()? onStopButtonPressed,
+    final bool? enableSpeechToText,
+    final IconData? speechToTextIcon,
+    final IconData? speechToTextActiveIcon,
+    final Future<void> Function()? onSpeechStart,
+    final Future<void> Function()? onSpeechEnd,
+    final void Function(String)? onSpeechError,
+    final Future<bool> Function()? onRequestSpeechPermission,
+    final Widget Function(bool, VoidCallback)? customSpeechToTextButton,
+    final String? speechToTextLocale,
   }) =>
       AiChatConfig(
         userName: userName ?? this.userName,
@@ -194,5 +241,17 @@ class AiChatConfig {
         onSendButtonPressed: onSendButtonPressed ?? this.onSendButtonPressed,
         onClearButtonPressed: onClearButtonPressed ?? this.onClearButtonPressed,
         onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
+        enableSpeechToText: enableSpeechToText ?? this.enableSpeechToText,
+        speechToTextIcon: speechToTextIcon ?? this.speechToTextIcon,
+        speechToTextActiveIcon:
+            speechToTextActiveIcon ?? this.speechToTextActiveIcon,
+        onSpeechStart: onSpeechStart ?? this.onSpeechStart,
+        onSpeechEnd: onSpeechEnd ?? this.onSpeechEnd,
+        onSpeechError: onSpeechError ?? this.onSpeechError,
+        onRequestSpeechPermission:
+            onRequestSpeechPermission ?? this.onRequestSpeechPermission,
+        customSpeechToTextButton:
+            customSpeechToTextButton ?? this.customSpeechToTextButton,
+        speechToTextLocale: speechToTextLocale ?? this.speechToTextLocale,
       );
 }

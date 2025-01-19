@@ -117,6 +117,7 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
           child: AiChatWidget(
             config: AiChatConfig(
               hintText: 'Send a message',
+              enableSpeechToText: true,
               enableAnimation: true,
               showTimestamp: true,
               messageOptions: MessageOptions(

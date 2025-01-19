@@ -1,6 +1,6 @@
 name: flutter_gen_ai_chat_ui
 description: A Flutter package that provides a customizable chat UI for AI applications, featuring streaming responses, code highlighting, and markdown support.
-version: 1.1.5
+version: 1.1.6
 homepage: https://github.com/hooshyar/flutter_gen_ai_chat_ui
 repository: https://github.com/hooshyar/flutter_gen_ai_chat_ui
 issue_tracker: https://github.com/hooshyar/flutter_gen_ai_chat_ui/issues
@@ -14,12 +14,16 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.1.2
-  dash_chat_2: ^0.0.21
+  dash_chat_2: ^0.0.20
   shimmer: ^3.0.0
-  google_fonts: ^6.2.1
+  google_fonts: ^6.1.0
   flutter_markdown: ^0.7.4+3 
   url_launcher: ^6.3.1
   intl: ^0.19.0
+  speech_to_text: ^6.6.0
+  permission_handler: ^11.3.0
+  flutter_tts: ^3.8.5
+  record: ^5.0.4
 
 dev_dependencies:
   flutter_test:
