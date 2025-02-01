@@ -1,0 +1,1 @@
+2023-10-15 12:34:56 - Updated speech_to_text_button.dart listen method to cast result as bool. 

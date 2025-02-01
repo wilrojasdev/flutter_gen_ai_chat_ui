@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.7
+
+* Made speech-to-text an optional dependency
+* Improved error handling for missing STT dependency
+* Updated documentation for optional STT setup
+* Fixed platform-specific STT implementation
+* Added clear error messages for STT requirements
+
 ## 1.1.6
 
 * Enhanced speech-to-text functionality with visual feedback

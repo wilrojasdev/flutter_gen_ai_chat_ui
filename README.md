@@ -106,6 +106,10 @@ dependencies:
 
 ### 2. Platform Setup
 
+Speech-to-text functionality is optional. If you plan to use it (`enableSpeechToText: true`), you'll need to:
+
+1. Add the required permissions:
+
 #### iOS - Add to `ios/Runner/Info.plist`:
 ```xml
 <key>NSMicrophoneUsageDescription</key>
@@ -118,6 +122,10 @@ dependencies:
 ```xml
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
+
+Note: Speech-to-text is only supported on physical devices, not on simulators/emulators.
+
+If you don't plan to use speech-to-text, you can skip this setup and simply set `enableSpeechToText: false` in your `AiChatConfig`.
 
 ### 3. Basic Implementation
 

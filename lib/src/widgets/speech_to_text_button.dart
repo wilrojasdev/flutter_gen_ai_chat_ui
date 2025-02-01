@@ -1,11 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
-class SpeechService {
+// Base interface for speech service
+abstract class BaseSpeechService {
+  Future<bool> initializeStt();
+  void dispose();
+  Future<bool> listen({
+    required Function(String text) onResult,
+    required Function(double level) onSoundLevel,
+    String? localeId,
+  });
+  Future<void> stop();
+  Future<LocaleName?> getSystemLocale();
+  Future<List<LocaleName>> getLocales();
+}
+
+// Stub implementation when speech_to_text is not available
+class StubSpeechService implements BaseSpeechService {
+  @override
+  Future<bool> initializeStt() async {
+    throw UnsupportedError(
+      'Speech-to-text is not available. To use this feature, add speech_to_text: ^6.6.0 to your pubspec.yaml',
+    );
+  }
+
+  @override
+  void dispose() {}
+
+  @override
+  Future<bool> listen({
+    required Function(String text) onResult,
+    required Function(double level) onSoundLevel,
+    String? localeId,
+  }) async {
+    return false; // Return false for stub implementation
+  }
+
+  @override
+  Future<void> stop() async {
+    throw UnsupportedError(
+      'Speech-to-text is not available. To use this feature, add speech_to_text: ^6.6.0 to your pubspec.yaml',
+    );
+  }
+
+  @override
+  Future<LocaleName?> getSystemLocale() async {
+    throw UnsupportedError(
+      'Speech-to-text is not available. To use this feature, add speech_to_text: ^6.6.0 to your pubspec.yaml',
+    );
+  }
+
+  @override
+  Future<List<LocaleName>> getLocales() async {
+    throw UnsupportedError(
+      'Speech-to-text is not available. To use this feature, add speech_to_text: ^6.6.0 to your pubspec.yaml',
+    );
+  }
+}
+
+// Real implementation when speech_to_text is available
+class SpeechService implements BaseSpeechService {
   final SpeechToText speechToText = SpeechToText();
   bool _speechEnabled = false;
   LocaleName? preferredLocale;
 
+  @override
   Future<bool> initializeStt() async {
     try {
       _speechEnabled = await speechToText.initialize(
@@ -21,8 +80,8 @@ class SpeechService {
       );
 
       if (_speechEnabled) {
-        final systemLocale = await speechToText.systemLocale();
-        final availableLocales = await speechToText.locales();
+        final systemLocale = await getSystemLocale();
+        final availableLocales = await getLocales();
 
         preferredLocale = availableLocales.firstWhere(
           (final locale) =>
@@ -39,6 +98,40 @@ class SpeechService {
     }
   }
 
+  @override
+  Future<bool> listen({
+    required Function(String text) onResult,
+    required Function(double level) onSoundLevel,
+    String? localeId,
+  }) async {
+    final result = await speechToText.listen(
+      onResult: (result) {
+        if (result.finalResult && result.recognizedWords.isNotEmpty) {
+          onResult(result.recognizedWords);
+        }
+      },
+      localeId: localeId ?? preferredLocale?.localeId,
+      onSoundLevelChange: onSoundLevel,
+    );
+    return result as bool;
+  }
+
+  @override
+  Future<void> stop() async {
+    await speechToText.stop();
+  }
+
+  @override
+  Future<LocaleName?> getSystemLocale() async {
+    return speechToText.systemLocale();
+  }
+
+  @override
+  Future<List<LocaleName>> getLocales() async {
+    return speechToText.locales();
+  }
+
+  @override
   void dispose() {
     speechToText.cancel();
   }
@@ -93,7 +186,7 @@ class SpeechToTextButton extends StatefulWidget {
 
 class _SpeechToTextButtonState extends State<SpeechToTextButton>
     with SingleTickerProviderStateMixin {
-  late final SpeechService _speechService;
+  late final BaseSpeechService _speechService;
   bool _isListening = false;
   double _soundLevel = 0;
   late final AnimationController _pulseController;
@@ -103,8 +196,15 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
   @override
   void initState() {
     super.initState();
-    _speechService = SpeechService();
-    _initSpeechToText();
+    try {
+      _speechService = SpeechService();
+      _initSpeechToText();
+    } catch (e) {
+      _speechService = StubSpeechService();
+      widget.onSpeechError?.call(
+        'Speech-to-text is not available. Add speech_to_text: ^6.6.0 to your pubspec.yaml',
+      );
+    }
 
     _pulseController = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -178,17 +278,10 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
     widget.onSpeechStart?.call();
 
     try {
-      await _speechService.speechToText.listen(
-        onResult: (final result) {
-          if (result.finalResult) {
-            if (result.recognizedWords.isNotEmpty) {
-              widget.onResult(result.recognizedWords);
-            }
-            _stopListening();
-          }
-        },
-        localeId: widget.locale ?? _speechService.preferredLocale?.localeId,
-        onSoundLevelChange: (final level) {
+      await _speechService.listen(
+        onResult: widget.onResult,
+        localeId: widget.locale,
+        onSoundLevel: (level) {
           if (mounted) {
             setState(() {
               _soundLevel = level;
@@ -205,7 +298,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
 
   Future<void> _stopListening() async {
     try {
-      await _speechService.speechToText.stop();
+      await _speechService.stop();
     } catch (e) {
       debugPrint('Error stopping speech recognition: $e');
     } finally {
