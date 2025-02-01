@@ -1,6 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
-import 'dart:async';
 
 // Base interface for speech service
 abstract class BaseSpeechService {
