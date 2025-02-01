@@ -7,6 +7,10 @@
 * Updated documentation for optional STT setup
 * Fixed platform-specific STT implementation
 * Added clear error messages for STT requirements
+* Fixed speech-to-text button function return type inference
+* Added proper type annotations for callback functions
+* Fixed missing await warnings
+* Code quality improvements
 
 ## 1.1.6
 

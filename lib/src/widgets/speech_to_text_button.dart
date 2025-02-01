@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'dart:async';
 
 // Base interface for speech service
 abstract class BaseSpeechService {
   Future<bool> initializeStt();
   void dispose();
   Future<bool> listen({
-    required Function(String text) onResult,
-    required Function(double level) onSoundLevel,
+    required void Function(String text) onResult,
+    required void Function(double level) onSoundLevel,
     String? localeId,
   });
   Future<void> stop();
@@ -29,8 +30,8 @@ class StubSpeechService implements BaseSpeechService {
 
   @override
   Future<bool> listen({
-    required Function(String text) onResult,
-    required Function(double level) onSoundLevel,
+    required void Function(String text) onResult,
+    required void Function(double level) onSoundLevel,
     String? localeId,
   }) async {
     return false; // Return false for stub implementation
@@ -100,8 +101,8 @@ class SpeechService implements BaseSpeechService {
 
   @override
   Future<bool> listen({
-    required Function(String text) onResult,
-    required Function(double level) onSoundLevel,
+    required void Function(String text) onResult,
+    required void Function(double level) onSoundLevel,
     String? localeId,
   }) async {
     final result = await speechToText.listen(
@@ -198,7 +199,7 @@ class _SpeechToTextButtonState extends State<SpeechToTextButton>
     super.initState();
     try {
       _speechService = SpeechService();
-      _initSpeechToText();
+      unawaited(_initSpeechToText());
     } catch (e) {
       _speechService = StubSpeechService();
       widget.onSpeechError?.call(
