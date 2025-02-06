@@ -1,6 +1,7 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class SimpleChatScreen extends StatefulWidget {
   const SimpleChatScreen({super.key});
@@ -16,6 +17,10 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   late final ChatUser _aiUser;
   bool _isLoading = false;
 
+  // Speech recognition
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+
   @override
   void initState() {
     super.initState();
@@ -24,23 +29,58 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
     _currentUser = ChatUser(id: '1', firstName: 'User');
     _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
 
-    // Optional: Pre-populate chat with initial messages
-    final initialMessages = [
-      ChatMessage(
-        text: "Hello! How can I help you today?",
-        user: _aiUser,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      ChatMessage(
-        text: "I have a question about Flutter",
-        user: _currentUser,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      // Add more messages as needed
-    ];
+    // // Optional: Pre-populate chat with initial messages
+    // final initialMessages = [
+    //   ChatMessage(
+    //     text: "Hello! How can I help you today?",
+    //     user: _aiUser,
+    //     createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    //   ),
+    //   ChatMessage(
+    //     text: "I have a question about Flutter",
+    //     user: _currentUser,
+    //     createdAt: DateTime.now().subtract(const Duration(days: 1)),
+    //   ),
+    //   // Add more messages as needed
+    // ];
 
     // Initialize controller with optional initial messages
-    _controller = ChatMessagesController(initialMessages: initialMessages);
+    _controller = ChatMessagesController();
+    _initSpeech();
+  }
+
+  // Initialize speech recognition
+  Future<void> _initSpeech() async {
+    await _speech.initialize(
+      onError: (error) => debugPrint('Speech error: $error'),
+      onStatus: (status) => debugPrint('Speech status: $status'),
+    );
+  }
+
+  // Toggle listening
+  Future<void> _listen() async {
+    if (!_isListening) {
+      final available = await _speech.initialize();
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            if (result.finalResult && result.recognizedWords.isNotEmpty) {
+              final message = ChatMessage(
+                text: result.recognizedWords,
+                user: _currentUser,
+                createdAt: DateTime.now(),
+              );
+              _handleSendMessage(message);
+              setState(() => _isListening = false);
+            }
+          },
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   // Handle new messages and AI responses
@@ -72,10 +112,35 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AiChatWidget(
-        // Basic configuration with minimal customization
-        config: const AiChatConfig(
+        config: AiChatConfig(
           hintText: 'Type a message...',
           enableAnimation: true,
+          welcomeMessageConfig: const WelcomeMessageConfig(
+            title: 'Welcome to Simple Chat!',
+            questionsSectionTitle: 'Try asking these questions:',
+          ),
+          aiName: 'AI Assistant',
+          exampleQuestions: const [
+            ExampleQuestion(
+              question: 'What is the weather in Tokyo?',
+            ),
+            ExampleQuestion(
+              question: 'What is the capital of France?',
+            ),
+            ExampleQuestion(
+              question: 'What is the capital of Japan?',
+            ),
+          ],
+          // Custom input decoration with speech button
+          inputDecoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            prefixIcon: IconButton(
+              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+              onPressed: _listen,
+            ),
+          ),
         ),
         currentUser: _currentUser,
         aiUser: _aiUser,
@@ -89,6 +154,19 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   @override
   void dispose() {
     _controller.dispose();
+    _speech.cancel();
     super.dispose();
+  }
+
+  // Speech recognition permission handler
+  static Future<bool> _requestSpeechPermission() async {
+    // Return true to indicate permission is granted
+    // You can add actual permission request logic here if needed
+    return true;
+  }
+
+  // Speech error handler
+  static void _handleSpeechError(dynamic error) {
+    debugPrint('Speech recognition error: $error');
   }
 }

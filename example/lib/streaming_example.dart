@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 
 class StreamingExample extends StatefulWidget {
   const StreamingExample({super.key});
@@ -14,9 +15,11 @@ class _StreamingExampleState extends State<StreamingExample>
   late final ChatMessagesController _controller;
   late final ChatUser _currentUser;
   late final ChatUser _aiUser;
-  late final List<ChatExample> _exampleQuestions;
+  late final List<ExampleQuestion> _exampleQuestions;
   bool _isLoading = false;
   bool _isStreaming = false;
+  String? _streamingMessageId;
+  String? _latestMessageId; // Add this line
   late final AnimationController _loadingAnimationController;
 
   @override
@@ -40,37 +43,33 @@ class _StreamingExampleState extends State<StreamingExample>
     ));
   }
 
-  List<ChatExample> _createExampleQuestions() {
+  List<ExampleQuestion> _createExampleQuestions() {
     return [
-      ChatExample(
-        question: "What is streaming in chat applications?",
-        onTap: (controller) {
-          _handleSendMessage(ChatMessage(
-            text: "What is streaming in chat applications?",
-            user: _currentUser,
-            createdAt: DateTime.now(),
-          ));
-        },
+      ExampleQuestion(
+        question: 'What can you help me with?',
+        config: ExampleQuestionConfig(
+          onTap: (question) {
+            final message = ChatMessage(
+              text: 'What can you help me with?',
+              user: _currentUser,
+              createdAt: DateTime.now(),
+            );
+            _handleSendMessage(message);
+          },
+        ),
       ),
-      ChatExample(
-        question: "Show me how word-by-word responses work",
-        onTap: (controller) {
-          _handleSendMessage(ChatMessage(
-            text: "Show me how word-by-word responses work",
-            user: _currentUser,
-            createdAt: DateTime.now(),
-          ));
-        },
-      ),
-      ChatExample(
-        question: "What are the benefits of streaming responses?",
-        onTap: (controller) {
-          _handleSendMessage(ChatMessage(
-            text: "What are the benefits of streaming responses?",
-            user: _currentUser,
-            createdAt: DateTime.now(),
-          ));
-        },
+      ExampleQuestion(
+        question: 'Show me streaming responses',
+        config: ExampleQuestionConfig(
+          onTap: (question) {
+            final message = ChatMessage(
+              text: 'Can you demonstrate streaming responses?',
+              user: _currentUser,
+              createdAt: DateTime.now(),
+            );
+            _handleSendMessage(message);
+          },
+        ),
       ),
     ];
   }
@@ -85,6 +84,7 @@ class _StreamingExampleState extends State<StreamingExample>
 
     try {
       final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+      _streamingMessageId = messageId;
 
       setState(() {
         _isLoading = false;
@@ -138,6 +138,10 @@ class _StreamingExampleState extends State<StreamingExample>
       ),
     );
 
+    setState(() {
+      _latestMessageId = messageId; // Add this line
+    });
+
     // Stream the words
     for (final word in words) {
       await Future.delayed(const Duration(milliseconds: 50));
@@ -171,6 +175,47 @@ class _StreamingExampleState extends State<StreamingExample>
     );
   }
 
+  bool _isMessageStreaming(String messageId) {
+    return _isStreaming && messageId == _streamingMessageId;
+  }
+
+  Widget _buildMessage(ChatMessage message) {
+    if (_isMessageStreaming(message.customProperties?['id'])) {
+      return StreamingTextMarkdown(
+        text: message.text,
+        // style: const TextStyle(color: Colors.black),
+      );
+    }
+    return Text(message.text);
+  }
+
+  void _handleNewMessage(String text) {
+    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
+    setState(() {
+      _streamingMessageId = messageId;
+      _isStreaming = true;
+    });
+
+    // Add message to chat with streaming animation
+    _controller.addMessage(ChatMessage(
+      text: text,
+      user: _aiUser,
+      createdAt: DateTime.now(),
+      customProperties: {
+        'id': messageId,
+        'isStreaming': true,
+      },
+    ));
+
+    // When streaming completes:
+    Future.delayed(const Duration(seconds: 2), () {
+      setState(() {
+        _isStreaming = false;
+        _streamingMessageId = null;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -198,10 +243,14 @@ class _StreamingExampleState extends State<StreamingExample>
                 Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
             timeTextColor:
                 Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-            messageTextBuilder: (message, previousMessage, nextMessage) {
-              final bool isUser = message.user.id == _currentUser.id;
+            messageTextBuilder:
+                (final message, final previousMessage, final nextMessage) {
               final bool isStreaming =
-                  message.customProperties?['isStreaming'] == true;
+                  message.customProperties?['isStreaming'] == true &&
+                      message.customProperties?['id'] == _streamingMessageId;
+              final bool isUser = message.user.id == _currentUser.id;
+              final bool isLatestMessage =
+                  message.customProperties?['id'] == _latestMessageId;
 
               return AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
@@ -210,19 +259,29 @@ class _StreamingExampleState extends State<StreamingExample>
                   key: ValueKey(message.createdAt.millisecondsSinceEpoch),
                   animate: false,
                   isUser: isUser,
-                  child: AnimatedTextMessage(
-                    key: ValueKey(
-                        '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
-                    text: message.text,
-                    animate: !isStreaming && !isUser,
-                    isUser: isUser,
-                    isStreaming: isStreaming,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 15,
-                      height: 1.4,
-                    ),
-                  ),
+                  child: isStreaming && !isUser
+                      ? StreamingTextMarkdown(
+                          key: ValueKey(
+                              '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
+                          text: message.text,
+                          typingSpeed: const Duration(milliseconds: 50),
+                          fadeInEnabled: true,
+                        )
+                      : AnimatedTextMessage(
+                          key: ValueKey(
+                              '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
+                          text: message.text,
+                          animate: !isStreaming &&
+                              !isUser &&
+                              isLatestMessage, // Update this line
+                          isUser: isUser,
+                          isStreaming: isStreaming,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
+                        ),
                 ),
               );
             },

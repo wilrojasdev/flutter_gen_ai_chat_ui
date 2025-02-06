@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.0] - 2024-10-19
+### Added
+- Initial release of flutter_gen_ai_chat_ui package.
+- Customizable chat UI with theming, animations, and markdown streaming support using flutter_streaming_text_markdown.
+- Streaming example updated to use flutter_streaming_text_markdown package.
+
+### Changed
+- Reverted dash_chat_2 dependency to ^0.0.21 for compatibility.
+
+### Fixed
+- Minor UI and linter issues.
+
 ## 1.1.7
 
 * Made speech-to-text an optional dependency

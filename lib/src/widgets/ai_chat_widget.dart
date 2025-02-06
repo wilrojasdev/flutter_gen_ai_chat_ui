@@ -1,7 +1,7 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:flutter_gen_ai_chat_ui/src/widgets/speech_to_text_button.dart';
+import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme_extension.dart';
 
 /// A customizable chat widget for AI conversations.
 class AiChatWidget extends StatefulWidget {
@@ -120,72 +120,90 @@ class AiChatWidgetState extends State<AiChatWidget>
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
 
+    final welcomeConfig = widget.config.welcomeMessageConfig;
+    final defaultQuestionConfig = widget.config.exampleQuestionConfig;
+
     return FadeTransition(
       opacity: _animationController,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF141414) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(isDarkMode ? 128 : 31),
-              blurRadius: 24,
-              spreadRadius: -2,
-              offset: const Offset(0, 8),
+        margin: welcomeConfig?.containerMargin ??
+            const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
             ),
-          ],
-          border: Border.all(
-            color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
-            width: 1.5,
-          ),
-        ),
+        padding: welcomeConfig?.containerPadding ?? const EdgeInsets.all(24),
+        decoration: welcomeConfig?.containerDecoration ??
+            BoxDecoration(
+              color: isDarkMode ? const Color(0xFF141414) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(isDarkMode ? 128 : 31),
+                  blurRadius: 24,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+              border: Border.all(
+                color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
+                width: 1.5,
+              ),
+            ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.config.aiName ?? 'Welcome! How can I assist you today?',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.5,
-                color: isDarkMode ? Colors.white : Colors.black,
-                height: 1.3,
-              ),
+              welcomeConfig?.title ??
+                  widget.config.aiName ??
+                  'Welcome! How can I assist you today?',
+              style: welcomeConfig?.titleStyle ??
+                  TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.5,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                    height: 1.3,
+                  ),
             ),
             if (widget.config.exampleQuestions?.isNotEmpty ?? false) ...[
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: primaryColor.withAlpha(isDarkMode ? 38 : 20),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: primaryColor.withAlpha(isDarkMode ? 77 : 51),
-                  ),
-                ),
+                padding: welcomeConfig?.questionsSectionPadding ??
+                    const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                decoration: welcomeConfig?.questionsSectionDecoration ??
+                    BoxDecoration(
+                      color: primaryColor.withAlpha(isDarkMode ? 38 : 20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: primaryColor.withAlpha(isDarkMode ? 77 : 51),
+                      ),
+                    ),
                 child: Text(
-                  'Here are some questions you can ask:',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: isDarkMode ? Colors.white : Colors.black87,
-                    letterSpacing: 0.1,
-                    height: 1.5,
-                  ),
+                  welcomeConfig?.questionsSectionTitle ??
+                      'Here are some questions you can ask:',
+                  style: welcomeConfig?.questionsSectionTitleStyle ??
+                      TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        letterSpacing: 0.1,
+                        height: 1.5,
+                      ),
                 ),
               ),
               const SizedBox(height: 16),
               ...widget.config.exampleQuestions!.map(
                 (final example) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: EdgeInsets.only(
+                    bottom: welcomeConfig?.questionSpacing ?? 12,
+                  ),
                   child: _buildExampleQuestion(
-                    example.question,
+                    example,
                     isDarkMode,
+                    defaultQuestionConfig,
                   ),
                 ),
               ),
@@ -196,58 +214,77 @@ class AiChatWidgetState extends State<AiChatWidget>
     );
   }
 
-  Widget _buildExampleQuestion(final String question, final bool isDarkMode) {
+  Widget _buildExampleQuestion(
+    final ExampleQuestion example,
+    final bool isDarkMode,
+    final ExampleQuestionConfig? defaultConfig,
+  ) {
     final theme = Theme.of(context);
     final primaryColor = theme.primaryColor;
+    final config = example.config ?? defaultConfig;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => handleExampleQuestionTap(question),
+        onTap: () {
+          if (config?.onTap != null) {
+            config!.onTap!(example.question);
+          } else {
+            handleExampleQuestionTap(example.question);
+          }
+        },
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          decoration: BoxDecoration(
-            color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: primaryColor.withAlpha(isDarkMode ? 128 : 77),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(isDarkMode ? 77 : 13),
-                blurRadius: 8,
-                spreadRadius: -2,
-                offset: const Offset(0, 2),
+          padding: config?.containerPadding ??
+              const EdgeInsets.symmetric(
+                vertical: 14,
+                horizontal: 16,
               ),
-            ],
-          ),
+          decoration: config?.containerDecoration ??
+              BoxDecoration(
+                color: primaryColor.withAlpha(isDarkMode ? 77 : 38),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: primaryColor.withAlpha(isDarkMode ? 128 : 77),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(isDarkMode ? 77 : 13),
+                    blurRadius: 8,
+                    spreadRadius: -2,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
           child: Row(
             children: [
               Icon(
-                Icons.chat_bubble_outline_rounded,
-                size: 20,
-                color: isDarkMode ? Colors.white : primaryColor,
+                config?.iconData ?? Icons.chat_bubble_outline_rounded,
+                size: config?.iconSize ?? 20,
+                color: config?.iconColor ??
+                    (isDarkMode ? Colors.white : primaryColor),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: config?.spacing ?? 12),
               Expanded(
                 child: Text(
-                  question,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : primaryColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.2,
-                    height: 1.4,
-                  ),
+                  example.question,
+                  style: config?.textStyle ??
+                      TextStyle(
+                        color: isDarkMode ? Colors.white : primaryColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.2,
+                        height: 1.4,
+                      ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: config?.spacing ?? 12),
               Icon(
-                Icons.arrow_forward_rounded,
-                size: 20,
-                color: isDarkMode ? Colors.white : primaryColor,
+                config?.trailingIconData ?? Icons.arrow_forward_rounded,
+                size: config?.trailingIconSize ?? 20,
+                color: config?.trailingIconColor ??
+                    (isDarkMode ? Colors.white : primaryColor),
               ),
             ],
           ),
@@ -317,30 +354,7 @@ class AiChatWidgetState extends State<AiChatWidget>
               ),
             ),
           ),
-      leading: widget.config.enableSpeechToText
-          ? [
-              SpeechToTextButton(
-                onResult: (final text) {
-                  if (text.isNotEmpty) {
-                    final message = ChatMessage(
-                      text: text,
-                      user: widget.currentUser,
-                      createdAt: DateTime.now(),
-                    );
-                    _handleSend(message);
-                  }
-                },
-                icon: widget.config.speechToTextIcon,
-                activeIcon: widget.config.speechToTextActiveIcon,
-                locale: widget.config.speechToTextLocale,
-                customBuilder: widget.config.customSpeechToTextButton,
-                onSpeechStart: widget.config.onSpeechStart,
-                onSpeechEnd: widget.config.onSpeechEnd,
-                onSpeechError: widget.config.onSpeechError,
-                onRequestPermission: widget.config.onRequestSpeechPermission,
-              ),
-            ]
-          : null,
+      leading: null,
       sendButtonBuilder: widget.config.sendButtonBuilder ??
           (final onSend) => Container(
                 margin: const EdgeInsets.only(left: 8, right: 4),
@@ -463,8 +477,7 @@ class AiChatWidgetState extends State<AiChatWidget>
 
   Widget _defaultScrollToBottomBuilder() {
     final theme = Theme.of(context);
-    final customTheme = theme.extension<CustomThemeExtension>() ??
-        ThemeProvider.lightTheme.extension<CustomThemeExtension>();
+    final customTheme = Theme.of(context).extension<CustomThemeExtension>()!;
 
     return Positioned(
       bottom: 8,
@@ -475,7 +488,7 @@ class AiChatWidgetState extends State<AiChatWidget>
           height: 32,
           width: 32,
           decoration: BoxDecoration(
-            color: customTheme?.backToBottomButtonColor.withAlpha(204) ??
+            color: customTheme.backToBottomButtonColor?.withAlpha(204) ??
                 Colors.grey,
             borderRadius: BorderRadius.circular(16),
           ),
@@ -483,7 +496,7 @@ class AiChatWidgetState extends State<AiChatWidget>
             padding: EdgeInsets.zero,
             icon: Icon(
               Icons.keyboard_arrow_down,
-              color: customTheme?.chatBackground ?? Colors.white,
+              color: customTheme.chatBackground ?? Colors.white,
               size: 24,
             ),
             onPressed: _scrollToBottom,

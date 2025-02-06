@@ -16,6 +16,9 @@ class AiChatConfig {
     this.enableAnimation = true,
     this.showTimestamp = true,
     this.exampleQuestions,
+    // Welcome message configuration
+    this.welcomeMessageConfig,
+    this.exampleQuestionConfig,
     // DashChat options
     this.inputOptions,
     this.messageOptions,
@@ -40,16 +43,6 @@ class AiChatConfig {
     this.onSendButtonPressed,
     this.onClearButtonPressed,
     this.onStopButtonPressed,
-    // Speech-to-text options
-    this.enableSpeechToText = false,
-    this.speechToTextIcon,
-    this.speechToTextActiveIcon,
-    this.onSpeechStart,
-    this.onSpeechEnd,
-    this.onSpeechError,
-    this.onRequestSpeechPermission,
-    this.customSpeechToTextButton,
-    this.speechToTextLocale,
   });
 
   /// The name of the user in the chat interface.
@@ -74,7 +67,13 @@ class AiChatConfig {
   final bool showTimestamp;
 
   /// List of example questions to show in the welcome message.
-  final List<ChatExample>? exampleQuestions;
+  final List<ExampleQuestion>? exampleQuestions;
+
+  /// Configuration for the welcome message section
+  final WelcomeMessageConfig? welcomeMessageConfig;
+
+  /// Default configuration for example questions
+  final ExampleQuestionConfig? exampleQuestionConfig;
 
   /// Custom options for the input field.
   final InputOptions? inputOptions;
@@ -139,74 +138,39 @@ class AiChatConfig {
   /// Callback function when the stop button is pressed
   final void Function()? onStopButtonPressed;
 
-  /// Whether to enable speech-to-text functionality
-  final bool enableSpeechToText;
-
-  /// Custom icon for the speech-to-text button (default: mic)
-  final IconData? speechToTextIcon;
-
-  /// Custom icon for the active speech-to-text button (default: mic)
-  final IconData? speechToTextActiveIcon;
-
-  /// Callback when speech recognition starts
-  final Future<void> Function()? onSpeechStart;
-
-  /// Callback when speech recognition ends
-  final Future<void> Function()? onSpeechEnd;
-
-  /// Callback when speech recognition has an error
-  final void Function(String error)? onSpeechError;
-
-  /// Callback to handle speech recognition permissions
-  final Future<bool> Function()? onRequestSpeechPermission;
-
-  /// Custom speech-to-text button widget
-  final Widget Function(bool isListening, VoidCallback onPressed)?
-      customSpeechToTextButton;
-
-  /// Locale for speech recognition (e.g., 'en_US')
-  final String? speechToTextLocale;
-
-  // Create a copy with method for easy modification
+  /// Creates a copy of this config with the given fields replaced with new values
   AiChatConfig copyWith({
-    final String? userName,
-    final String? aiName,
-    final String? hintText,
-    final double? maxWidth,
-    final EdgeInsets? padding,
-    final bool? enableAnimation,
-    final bool? showTimestamp,
-    final List<ChatExample>? exampleQuestions,
-    final InputOptions? inputOptions,
-    final MessageOptions? messageOptions,
-    final MessageListOptions? messageListOptions,
-    final QuickReplyOptions? quickReplyOptions,
-    final ScrollToBottomOptions? scrollToBottomOptions,
-    final bool? readOnly,
-    final List<ChatUser>? typingUsers,
-    final TextStyle? inputTextStyle,
-    final InputDecoration? inputDecoration,
-    final Widget Function(ChatMessage message)? messageBuilder,
-    final Widget Function(ScrollController)? scrollToBottomBuilder,
-    final Widget Function(void Function() onSend)? sendButtonBuilder,
-    final IconData? sendButtonIcon,
-    final double? sendButtonIconSize,
-    final EdgeInsets? sendButtonPadding,
-    final bool? enablePagination,
-    final double? paginationLoadingIndicatorOffset,
-    final Widget Function({bool isLoading})? loadMoreIndicator,
-    final void Function(String message)? onSendButtonPressed,
-    final void Function()? onClearButtonPressed,
-    final void Function()? onStopButtonPressed,
-    final bool? enableSpeechToText,
-    final IconData? speechToTextIcon,
-    final IconData? speechToTextActiveIcon,
-    final Future<void> Function()? onSpeechStart,
-    final Future<void> Function()? onSpeechEnd,
-    final void Function(String)? onSpeechError,
-    final Future<bool> Function()? onRequestSpeechPermission,
-    final Widget Function(bool, VoidCallback)? customSpeechToTextButton,
-    final String? speechToTextLocale,
+    String? userName,
+    String? aiName,
+    String? hintText,
+    double? maxWidth,
+    EdgeInsets? padding,
+    bool? enableAnimation,
+    bool? showTimestamp,
+    List<ExampleQuestion>? exampleQuestions,
+    WelcomeMessageConfig? welcomeMessageConfig,
+    ExampleQuestionConfig? exampleQuestionConfig,
+    InputOptions? inputOptions,
+    MessageOptions? messageOptions,
+    MessageListOptions? messageListOptions,
+    QuickReplyOptions? quickReplyOptions,
+    ScrollToBottomOptions? scrollToBottomOptions,
+    bool? readOnly,
+    List<ChatUser>? typingUsers,
+    TextStyle? inputTextStyle,
+    InputDecoration? inputDecoration,
+    Widget Function(ChatMessage message)? messageBuilder,
+    Widget Function(ScrollController)? scrollToBottomBuilder,
+    Widget Function(void Function() onSend)? sendButtonBuilder,
+    IconData? sendButtonIcon,
+    double? sendButtonIconSize,
+    EdgeInsets? sendButtonPadding,
+    bool? enablePagination,
+    double? paginationLoadingIndicatorOffset,
+    Widget Function({bool isLoading})? loadMoreIndicator,
+    void Function(String message)? onSendButtonPressed,
+    void Function()? onClearButtonPressed,
+    void Function()? onStopButtonPressed,
   }) =>
       AiChatConfig(
         userName: userName ?? this.userName,
@@ -217,6 +181,9 @@ class AiChatConfig {
         enableAnimation: enableAnimation ?? this.enableAnimation,
         showTimestamp: showTimestamp ?? this.showTimestamp,
         exampleQuestions: exampleQuestions ?? this.exampleQuestions,
+        welcomeMessageConfig: welcomeMessageConfig ?? this.welcomeMessageConfig,
+        exampleQuestionConfig:
+            exampleQuestionConfig ?? this.exampleQuestionConfig,
         inputOptions: inputOptions ?? this.inputOptions,
         messageOptions: messageOptions ?? this.messageOptions,
         messageListOptions: messageListOptions ?? this.messageListOptions,
@@ -241,17 +208,5 @@ class AiChatConfig {
         onSendButtonPressed: onSendButtonPressed ?? this.onSendButtonPressed,
         onClearButtonPressed: onClearButtonPressed ?? this.onClearButtonPressed,
         onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
-        enableSpeechToText: enableSpeechToText ?? this.enableSpeechToText,
-        speechToTextIcon: speechToTextIcon ?? this.speechToTextIcon,
-        speechToTextActiveIcon:
-            speechToTextActiveIcon ?? this.speechToTextActiveIcon,
-        onSpeechStart: onSpeechStart ?? this.onSpeechStart,
-        onSpeechEnd: onSpeechEnd ?? this.onSpeechEnd,
-        onSpeechError: onSpeechError ?? this.onSpeechError,
-        onRequestSpeechPermission:
-            onRequestSpeechPermission ?? this.onRequestSpeechPermission,
-        customSpeechToTextButton:
-            customSpeechToTextButton ?? this.customSpeechToTextButton,
-        speechToTextLocale: speechToTextLocale ?? this.speechToTextLocale,
       );
 }

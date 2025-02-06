@@ -1,1 +1,20 @@
 2023-10-15 12:34:56 - Updated speech_to_text_button.dart listen method to cast result as bool. 
+[2024-03-19 12:00:00] Created WelcomeMessageConfig and ExampleQuestionConfig classes for more customizable welcome message and example questions
+[2024-03-19 12:00:01] Updated AiChatConfig to use new configuration classes
+[2024-03-19 12:00:02] Updated AiChatWidget to implement new configuration options
+[2024-03-19 12:00:03] Updated library exports to include new model classes
+[2024-03-19 12:00:04] Created CustomThemeExtension for theme support
+[2024-03-19 12:00:05] Created ThemeProvider for light and dark themes
+[2024-03-19 12:00:06] Created AnimatedTextMessage widget for text animations 
+[2024-03-19 12:01:00] Added additional theme properties to CustomThemeExtension
+[2024-03-19 12:01:01] Updated ThemeProvider with new theme colors
+[2024-03-19 12:01:02] Updated example to use ExampleQuestion instead of ChatExample
+[2024-03-19 12:02:00] Made ThemeProvider extend ChangeNotifier for proper state management
+[2024-03-19 12:02:01] Fixed deprecated withOpacity calls to use withValues
+[2024-03-19 12:02:02] Updated main example to use ExampleQuestion configuration
+[2024-03-19 12:03:00] Fixed void result error in example question tap handling
+[2024-03-19 12:03:01] Updated streaming example to use ExampleQuestion type
+[2024-03-19 12:04:00] Removed speech recognition from package and moved to example implementation
+[2024-03-19 12:04:01] Added custom speech button example in simple_chat_screen.dart
+[2024-03-19 12:04:02] Removed speech-related exports from library file
+[2024-03-19 12:04:03] Fixed enableSpeechToText parameter usage in examples 

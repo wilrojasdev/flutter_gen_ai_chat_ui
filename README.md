@@ -3,7 +3,7 @@
 [![pub package](https://img.shields.io/pub/v/flutter_gen_ai_chat_ui.svg)](https://pub.dev/packages/flutter_gen_ai_chat_ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A modern, customizable chat interface for AI applications in Flutter. Simple to use, easy to customize.
+A customizable chat UI for AI applications built with Flutter. This package offers features such as streaming responses, markdown support, animations, and easy integration into your Flutter app.
 
 <table>
   <tr>
@@ -19,6 +19,46 @@ A modern, customizable chat interface for AI applications in Flutter. Simple to 
     </td>
   </tr>
 </table>
+
+## Features
+- Customizable AI chat interface with theming and animations.
+- Support for streaming responses with markdown rendering using [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown).
+- Example implementations: Simple Chat, Custom Styling, Detailed Example, Markdown, Pagination, and Streaming.
+
+## Installation
+
+Add the following to your `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^0.1.0
+```
+
+Then run:
+
+```bash
+flutter pub get
+```
+
+## Usage
+
+Import the package and use one of the provided widgets (e.g. `AiChatWidget`) along with the configuration classes. See the example apps in the `example/` directory for various integrations:
+
+- simple_chat_screen.dart
+- custom_styling_example.dart
+- detailed_example.dart
+- streaming_example.dart
+
+## Release Notes
+
+This release includes:
+- Updated streaming example to use [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown) for improved streaming text rendering.
+- Reverted dash_chat_2 dependency to ^0.0.21 for compatibility.
+- Various bug fixes and improvements in behavior and styling.
+
+## License
+
+[MIT License](LICENSE)
 
 ## 🤖 Quick Integration with AI Help
 
@@ -390,8 +430,4 @@ Future<void> handleStreamingResponse(String text) async {
 - 📘 Check our [example](example) folder for complete implementations
 - 🐛 File issues on our [GitHub repository](https://github.com/hooshyar/flutter_gen_ai_chat_ui)
 - 💡 Contribute to the project
-
-## License
-
-MIT License - see the [LICENSE](LICENSE) file for details.
 

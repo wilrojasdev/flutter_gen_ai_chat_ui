@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme_extension.dart';
 
 class CustomStylingExample extends StatefulWidget {
   const CustomStylingExample({super.key});
@@ -116,10 +117,13 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
           data: theme,
           child: AiChatWidget(
             config: AiChatConfig(
-              hintText: 'Send a message',
-              enableSpeechToText: true,
+              hintText: 'Type a message...',
               enableAnimation: true,
-              showTimestamp: true,
+              welcomeMessageConfig: const WelcomeMessageConfig(
+                title: 'Welcome to Simple Chat!',
+                questionsSectionTitle: 'Try asking these questions:',
+              ),
+              aiName: 'AI Assistant',
               messageOptions: MessageOptions(
                 containerColor: Theme.of(context).brightness == Brightness.dark
                     ? Theme.of(context).colorScheme.surface
@@ -205,25 +209,29 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
                 ),
               ),
               exampleQuestions: [
-                ChatExample(
+                ExampleQuestion(
                   question: 'How does the styling work?',
-                  onTap: (controller) {
-                    controller.handleExampleQuestion(
-                      'How does the styling work?',
-                      _currentUser,
-                      _aiUser,
-                    );
-                  },
+                  config: ExampleQuestionConfig(
+                    onTap: (question) {
+                      _controller.handleExampleQuestion(
+                        question,
+                        _currentUser,
+                        _aiUser,
+                      );
+                    },
+                  ),
                 ),
-                ChatExample(
+                ExampleQuestion(
                   question: 'Show me dark mode features',
-                  onTap: (controller) {
-                    controller.handleExampleQuestion(
-                      'Show me dark mode features',
-                      _currentUser,
-                      _aiUser,
-                    );
-                  },
+                  config: ExampleQuestionConfig(
+                    onTap: (question) {
+                      _controller.handleExampleQuestion(
+                        question,
+                        _currentUser,
+                        _aiUser,
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
