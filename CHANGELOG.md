@@ -87,3 +87,9 @@
 * Fixed various linter issues
 * Removed redundant dependencies
 * Added CustomThemeExtension to package exports
+
+## 1.1.9
+
+* Updated flutter_streaming_text_markdown to version 1.1.0
+* Improved streaming text performance and reliability
+* Enhanced markdown rendering capabilities

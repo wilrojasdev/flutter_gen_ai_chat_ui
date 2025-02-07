@@ -57,3 +57,8 @@
 2. Added smooth bubble animation for AI messages
 3. Optimized streaming text animation
 4. Maintained existing streaming functionality while improving UX 
+[2024-03-21 12:09:00] Updated dependencies and released v1.1.9:
+1. Updated flutter_streaming_text_markdown to ^1.1.0
+2. Improved streaming text performance
+3. Enhanced markdown rendering capabilities
+4. Maintained backward compatibility 
