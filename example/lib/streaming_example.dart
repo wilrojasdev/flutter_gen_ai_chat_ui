@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 
 class StreamingExample extends StatefulWidget {
@@ -125,10 +124,11 @@ class _StreamingExampleState extends State<StreamingExample>
 
     String currentText = "";
 
-    // Create initial empty message
+    // Instead of adding empty message, we'll add the first word immediately
+    currentText = words[0];
     _controller.addMessage(
       ChatMessage(
-        text: "",
+        text: currentText,
         user: _aiUser,
         createdAt: DateTime.now(),
         customProperties: {
@@ -139,13 +139,13 @@ class _StreamingExampleState extends State<StreamingExample>
     );
 
     setState(() {
-      _latestMessageId = messageId; // Add this line
+      _latestMessageId = messageId;
     });
 
-    // Stream the words
-    for (final word in words) {
+    // Stream the remaining words
+    for (final word in words.skip(1)) {
       await Future.delayed(const Duration(milliseconds: 50));
-      currentText += "${currentText.isEmpty ? '' : ' '}$word";
+      currentText += " $word";
 
       _controller.updateMessage(
         ChatMessage(
@@ -175,47 +175,6 @@ class _StreamingExampleState extends State<StreamingExample>
     );
   }
 
-  bool _isMessageStreaming(String messageId) {
-    return _isStreaming && messageId == _streamingMessageId;
-  }
-
-  Widget _buildMessage(ChatMessage message) {
-    if (_isMessageStreaming(message.customProperties?['id'])) {
-      return StreamingTextMarkdown(
-        text: message.text,
-        // style: const TextStyle(color: Colors.black),
-      );
-    }
-    return Text(message.text);
-  }
-
-  void _handleNewMessage(String text) {
-    final messageId = DateTime.now().millisecondsSinceEpoch.toString();
-    setState(() {
-      _streamingMessageId = messageId;
-      _isStreaming = true;
-    });
-
-    // Add message to chat with streaming animation
-    _controller.addMessage(ChatMessage(
-      text: text,
-      user: _aiUser,
-      createdAt: DateTime.now(),
-      customProperties: {
-        'id': messageId,
-        'isStreaming': true,
-      },
-    ));
-
-    // When streaming completes:
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isStreaming = false;
-        _streamingMessageId = null;
-      });
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,11 +186,18 @@ class _StreamingExampleState extends State<StreamingExample>
           showTimestamp: true,
           exampleQuestions: _exampleQuestions,
           messageOptions: MessageOptions(
-            containerColor: Theme.of(context).colorScheme.surface,
+            containerColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1E1E1E) // Dark background for AI messages
+                : const Color(0xFFF7F7F8),
             currentUserContainerColor:
-                Theme.of(context).colorScheme.primary.withOpacity(0.1),
-            textColor: Theme.of(context).colorScheme.onSurface,
-            currentUserTextColor: Theme.of(context).colorScheme.onSurface,
+                Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF7B61FF)
+                        .withAlpha(80) // Purple for user messages
+                    : const Color(0xFF10A37F),
+            textColor: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : const Color(0xFF353740),
+            currentUserTextColor: Colors.white,
             messagePadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 12,
@@ -240,9 +206,9 @@ class _StreamingExampleState extends State<StreamingExample>
             showOtherUsersAvatar: false,
             showTime: true,
             currentUserTimeTextColor:
-                Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 179),
             timeTextColor:
-                Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 179),
             messageTextBuilder:
                 (final message, final previousMessage, final nextMessage) {
               final bool isStreaming =
@@ -254,10 +220,10 @@ class _StreamingExampleState extends State<StreamingExample>
 
               return AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
-                opacity: message.text.isEmpty ? 0.0 : 1.0,
+                opacity: 1.0,
                 child: AnimatedBubble(
                   key: ValueKey(message.createdAt.millisecondsSinceEpoch),
-                  animate: false,
+                  animate: !isUser && isLatestMessage,
                   isUser: isUser,
                   child: isStreaming && !isUser
                       ? StreamingTextMarkdown(
@@ -277,7 +243,10 @@ class _StreamingExampleState extends State<StreamingExample>
                           isUser: isUser,
                           isStreaming: isStreaming,
                           style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.grey.shade800,
                             fontSize: 15,
                             height: 1.4,
                           ),

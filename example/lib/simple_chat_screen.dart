@@ -1,4 +1,3 @@
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -156,17 +155,5 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
     _controller.dispose();
     _speech.cancel();
     super.dispose();
-  }
-
-  // Speech recognition permission handler
-  static Future<bool> _requestSpeechPermission() async {
-    // Return true to indicate permission is granted
-    // You can add actual permission request logic here if needed
-    return true;
-  }
-
-  // Speech error handler
-  static void _handleSpeechError(dynamic error) {
-    debugPrint('Speech recognition error: $error');
   }
 }

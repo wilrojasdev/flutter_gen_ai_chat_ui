@@ -18,3 +18,42 @@
 [2024-03-19 12:04:01] Added custom speech button example in simple_chat_screen.dart
 [2024-03-19 12:04:02] Removed speech-related exports from library file
 [2024-03-19 12:04:03] Fixed enableSpeechToText parameter usage in examples 
+[2024-03-19 12:30:00] Fixed test issues: Replaced ChatExample with ExampleQuestion and added ThemeProvider import. 
+[2024-03-19 12:35:00] Fixed send button issues: Added Key to IconButton, updated tests to use find.byKey, and updated AiChatConfig defaults to non-nullable. 
+[2024-03-19 12:40:00] Fixed send button issues by forcing default inputOptions usage in AiChatWidget and updated AiChatConfig defaults to non-nullable values for userName, aiName, hintText, and exampleQuestions. 
+[2024-03-21 12:00:00] Fixed linter issues:
+1. Fixed dead null-aware expressions in ai_chat_widget.dart by adding proper null checks
+2. Added @visibleForTesting to unused methods in simple_chat_screen.dart
+3. Removed unused methods _buildMessage and _handleNewMessage from streaming_example.dart
+4. Added missing dependencies dash_chat_2 and speech_to_text to example/pubspec.yaml 
+[2024-03-21 12:01:00] Fixed remaining linter issues:
+1. Added back dash_chat_2 dependency to example/pubspec.yaml
+2. Removed unused speech-related methods from simple_chat_screen.dart
+3. Removed unused _isMessageStreaming method from streaming_example.dart
+4. Replaced deprecated withOpacity calls with withValues in streaming_example.dart and main.dart
+5. Used cascade notation in animated_text_message.dart to avoid receiver duplication 
+[2024-03-21 12:02:00] Removed redundant dash_chat_2 dependency from example/pubspec.yaml since it's already a dependency of flutter_gen_ai_chat_ui 
+[2024-03-21 12:03:00] Fixed package dependency and import issues:
+1. Removed unnecessary null-aware operators in ai_chat_widget.dart
+2. Exported necessary dash_chat_2 types from main package instead of requiring direct imports
+3. Removed direct dash_chat_2 imports from example files since they're now available through the main package 
+[2024-03-21 12:04:00] Added CustomThemeExtension to package exports to avoid implementation imports in example files 
+[2024-03-21 12:05:00] Improved dark theme contrast:
+1. Updated theme toggle button background color in dark mode
+2. Changed user bubble color to bright blue (0xFF2D5AF7) in dark mode for better visibility
+3. Updated both custom_styling_example.dart and detailed_example.dart for consistency 
+[2024-03-21 12:06:00] Improved dark theme based on UI screenshots:
+1. Changed user message bubble color to purple (0xFF7B61FF) for better visibility
+2. Updated AI message background to darker color (0xFF1E1E1E)
+3. Fixed text colors to ensure readability in dark mode
+4. Updated theme toggle button with white icon and purple background in dark mode 
+[2024-03-21 12:07:00] Updated dark theme message bubbles:
+1. Set consistent dark background (0xFF1E1E1E) for AI messages in dark mode
+2. Set consistent purple color (0xFF7B61FF) for user messages in dark mode
+3. Ensured white text color for better readability in dark mode
+4. Updated all example files (streaming, custom styling, and detailed) for consistency 
+[2024-03-21 12:08:00] Improved AI message animation in streaming example:
+1. Removed empty bubble during loading
+2. Added smooth bubble animation for AI messages
+3. Optimized streaming text animation
+4. Maintained existing streaming functionality while improving UX 

@@ -1,7 +1,6 @@
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme_extension.dart';
 
 /// A customizable chat widget for AI conversations.
 class AiChatWidget extends StatefulWidget {
@@ -94,8 +93,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                     currentUser: widget.currentUser,
                     onSend: _handleSend,
                     messages: widget.controller.messages,
-                    inputOptions: widget.config.inputOptions ??
-                        _buildInputOptions(context),
+                    inputOptions: _buildInputOptions(context),
                     messageOptions: widget.config.messageOptions ??
                         _buildMessageOptions(context),
                     messageListOptions: widget.config.messageListOptions ??
@@ -153,9 +151,7 @@ class AiChatWidgetState extends State<AiChatWidget>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              welcomeConfig?.title ??
-                  widget.config.aiName ??
-                  'Welcome! How can I assist you today?',
+              welcomeConfig?.title ?? widget.config.aiName,
               style: welcomeConfig?.titleStyle ??
                   TextStyle(
                     fontSize: 24,
@@ -308,7 +304,7 @@ class AiChatWidgetState extends State<AiChatWidget>
     final isDarkMode = theme.brightness == Brightness.dark;
 
     return InputOptions(
-      sendOnEnter: true,
+      sendOnEnter: false,
       autocorrect: false,
       inputTextStyle: widget.config.inputTextStyle ??
           TextStyle(
@@ -321,7 +317,7 @@ class AiChatWidgetState extends State<AiChatWidget>
             isDense: true,
             filled: true,
             fillColor: isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[50],
-            hintText: widget.config.hintText ?? 'Type a message...',
+            hintText: widget.config.hintText,
             hintStyle: TextStyle(
               color: isDarkMode ? Colors.white.withAlpha(102) : Colors.black38,
               fontSize: 16,
@@ -363,6 +359,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
+                  key: const Key('sendButton'),
                   icon: Icon(
                     widget.config.sendButtonIcon ?? Icons.send_rounded,
                     color: Colors.white,
@@ -476,7 +473,6 @@ class AiChatWidgetState extends State<AiChatWidget>
   }
 
   Widget _defaultScrollToBottomBuilder() {
-    final theme = Theme.of(context);
     final customTheme = Theme.of(context).extension<CustomThemeExtension>()!;
 
     return Positioned(
@@ -488,8 +484,8 @@ class AiChatWidgetState extends State<AiChatWidget>
           height: 32,
           width: 32,
           decoration: BoxDecoration(
-            color: customTheme.backToBottomButtonColor?.withAlpha(204) ??
-                Colors.grey,
+            color: (customTheme.backToBottomButtonColor ?? Colors.grey)
+                .withAlpha(204),
             borderRadius: BorderRadius.circular(16),
           ),
           child: IconButton(

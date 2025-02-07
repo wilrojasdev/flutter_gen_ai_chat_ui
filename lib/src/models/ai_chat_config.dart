@@ -8,14 +8,14 @@ import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 /// including themes, animations, input styling, and message display options.
 class AiChatConfig {
   const AiChatConfig({
-    this.userName,
-    this.aiName,
-    this.hintText,
+    this.userName = 'User',
+    this.aiName = 'AI',
+    this.hintText = 'Type a message...',
     this.maxWidth,
     this.padding,
     this.enableAnimation = true,
     this.showTimestamp = true,
-    this.exampleQuestions,
+    this.exampleQuestions = const [],
     // Welcome message configuration
     this.welcomeMessageConfig,
     this.exampleQuestionConfig,
@@ -46,13 +46,13 @@ class AiChatConfig {
   });
 
   /// The name of the user in the chat interface.
-  final String? userName;
+  final String userName;
 
   /// The name of the AI assistant in the chat interface.
-  final String? aiName;
+  final String aiName;
 
   /// Placeholder text for the input field.
-  final String? hintText;
+  final String hintText;
 
   /// Maximum width of the chat interface. If null, takes full width.
   final double? maxWidth;

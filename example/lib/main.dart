@@ -34,12 +34,12 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Flutter Gen AI Chat UI Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: Colors.amber,
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
@@ -125,11 +125,13 @@ class _ExamplesNavigatorState extends State<ExamplesNavigator> {
                   widget.isDark
                       ? Icons.light_mode_rounded
                       : Icons.dark_mode_rounded,
-                  color: colorScheme.onSurface,
+                  color: widget.isDark ? Colors.white : colorScheme.onSurface,
                 ),
                 style: IconButton.styleFrom(
-                  backgroundColor:
-                      colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  backgroundColor: widget.isDark
+                      ? const Color(0xFF7B61FF).withAlpha(50)
+                      : colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 26),
                 ),
                 onPressed: widget.onThemeToggle,
               ),

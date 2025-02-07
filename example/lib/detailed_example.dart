@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme_extension.dart';
 
 class DetailedExample extends StatefulWidget {
   const DetailedExample({super.key});
@@ -135,16 +133,16 @@ Would you like to know more about any specific aspect?""",
         CustomThemeExtension(
           chatBackground: Theme.of(context).scaffoldBackgroundColor,
           messageBubbleColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.surface
+              ? const Color(0xFF1E1E1E)
               : const Color(0xFFF7F7F8),
           userBubbleColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.primary
+              ? const Color(0xFF7B61FF)
               : const Color(0xFF10A37F),
           messageTextColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.onSurface
+              ? Colors.white
               : const Color(0xFF353740),
           inputBackgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.surface
+              ? const Color(0xFF1E1E1E)
               : Colors.white,
           inputBorderColor: Theme.of(context).brightness == Brightness.dark
               ? Theme.of(context).colorScheme.outline
@@ -198,14 +196,14 @@ Would you like to know more about any specific aspect?""",
             hintText: 'Send a message',
             messageOptions: MessageOptions(
               containerColor: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.surface
+                  ? const Color(0xFF1E1E1E)
                   : const Color(0xFFF7F7F8),
               currentUserContainerColor:
                   Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.primary
+                      ? const Color(0xFF7B61FF)
                       : const Color(0xFF10A37F),
               textColor: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.onSurface
+                  ? Colors.white
                   : const Color(0xFF353740),
               currentUserTextColor: Colors.white,
               messagePadding: const EdgeInsets.symmetric(

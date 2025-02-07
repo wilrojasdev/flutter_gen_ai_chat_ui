@@ -36,9 +36,9 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 500),
       vsync: this,
-    );
+    )..forward();
     _animation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
@@ -68,8 +68,9 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
   void _startAnimation() {
     _displayText = '';
     _currentIndex = 0;
-    _controller.reset();
-    _controller.forward();
+    _controller
+      ..reset()
+      ..forward();
 
     const duration = Duration(milliseconds: 30);
     _timer?.cancel();

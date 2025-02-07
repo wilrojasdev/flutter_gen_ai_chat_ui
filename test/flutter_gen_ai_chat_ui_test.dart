@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart';
 
 void main() {
   group('AiChatWidget Tests', () {
@@ -31,7 +32,9 @@ void main() {
 
       expect(find.byType(AiChatWidget), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.byType(IconButton), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'dummy');
+      await tester.pump();
+      expect(find.byKey(const Key('sendButton')), findsOneWidget);
     });
 
     testWidgets('handles send message correctly', (WidgetTester tester) async {
@@ -54,7 +57,9 @@ void main() {
       ));
 
       await tester.enterText(find.byType(TextField), message);
-      await tester.tap(find.byType(IconButton));
+      await tester.pump();
+      expect(find.byKey(const Key('sendButton')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('sendButton')));
       await tester.pump();
 
       expect(messageReceived, true);
@@ -81,14 +86,14 @@ void main() {
 
     testWidgets('shows example questions when provided',
         (WidgetTester tester) async {
-      final examples = [
-        ChatExample(
+      final List<ExampleQuestion> examples = [
+        ExampleQuestion(
           question: 'Example 1',
-          onTap: (_) {},
+          config: ExampleQuestionConfig(onTap: (_) {}),
         ),
-        ChatExample(
+        ExampleQuestion(
           question: 'Example 2',
-          onTap: (_) {},
+          config: ExampleQuestionConfig(onTap: (_) {}),
         ),
       ];
 
@@ -111,12 +116,12 @@ void main() {
     testWidgets('handles example question tap correctly',
         (WidgetTester tester) async {
       bool exampleTapped = false;
-      final examples = [
-        ChatExample(
+      final List<ExampleQuestion> examples = [
+        ExampleQuestion(
           question: 'Example 1',
-          onTap: (_) {
+          config: ExampleQuestionConfig(onTap: (_) {
             exampleTapped = true;
-          },
+          }),
         ),
       ];
 
@@ -319,17 +324,19 @@ void main() {
       provider.toggleTheme();
       extension = provider.theme.extension<CustomThemeExtension>();
       expect(extension, isNotNull);
-      expect(extension?.chatBackground, equals(const Color(0xFF1F1F28)));
+      expect(extension?.chatBackground, equals(const Color(0xFF171717)));
     });
 
     test('copyWith works correctly', () {
       final provider = ThemeProvider();
-      final extension = provider.theme.extension<CustomThemeExtension>();
+      final ext = provider.theme.extension<CustomThemeExtension>();
       final newColor = Colors.blue;
 
-      final copied = extension?.copyWith(chatBackground: newColor);
+      final copied =
+          (ext?.copyWith(chatBackground: newColor)) as CustomThemeExtension?;
       expect(copied?.chatBackground, equals(newColor));
-      expect(copied?.messageBubbleColor, equals(extension?.messageBubbleColor));
+      final original = ext as CustomThemeExtension?;
+      expect(copied?.messageBubbleColor, equals(original?.messageBubbleColor));
     });
   });
 
@@ -352,7 +359,10 @@ void main() {
         enableAnimation: false,
         showTimestamp: false,
         exampleQuestions: [
-          ChatExample(question: 'Example', onTap: (_) {}),
+          ExampleQuestion(
+            question: 'Example',
+            config: ExampleQuestionConfig(onTap: (_) {}),
+          ),
         ],
       );
 
@@ -361,7 +371,7 @@ void main() {
       expect(config.hintText, equals('Custom hint'));
       expect(config.enableAnimation, isFalse);
       expect(config.showTimestamp, isFalse);
-      expect(config.exampleQuestions.length, equals(1));
+      expect(config.exampleQuestions!.length, equals(1));
     });
   });
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 class MarkdownExample extends StatefulWidget {

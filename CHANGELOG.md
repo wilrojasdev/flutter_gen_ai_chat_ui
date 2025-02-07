@@ -76,3 +76,14 @@
 * Added dark mode support
 * Added RTL support
 * Added example applications
+
+## 1.1.8
+
+* Improved dark theme contrast and visibility
+* Enhanced AI message animations in streaming example
+* Fixed package dependencies and imports
+* Improved message bubble animations and transitions
+* Updated theme toggle button styling
+* Fixed various linter issues
+* Removed redundant dependencies
+* Added CustomThemeExtension to package exports
