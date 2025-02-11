@@ -62,3 +62,26 @@
 2. Improved streaming text performance
 3. Enhanced markdown rendering capabilities
 4. Maintained backward compatibility 
+[2024-03-21 12:10:00] Updated README.md:
+1. Updated package version to 1.1.9
+2. Added speech-to-text integration information
+3. Simplified configuration examples
+4. Added theme customization section
+5. Improved feature list and documentation structure 
+[2024-03-21 12:11:00] Updated README.md speech-to-text documentation:
+1. Removed references to built-in speech-to-text feature
+2. Added manual integration guide with code examples
+3. Updated platform setup instructions
+4. Added dependency requirements
+5. Added implementation example with proper lifecycle management 
+[2024-02-11 10:30:00] Updated example/README.md: Updated package version to 1.1.9 and added new features documentation including speech-to-text support and permission handling. 
+[2024-02-11 10:35:00] Updated example/README.md: Enhanced documentation for speech-to-text integration, including implementation examples and platform-specific requirements. 
+[2024-02-11 10:40:00] Comprehensively updated example/README.md: Enhanced documentation structure, added detailed platform setup, improved example descriptions, and reorganized customization options for better developer experience. 
+[2024-02-11 10:45:00] Streamlined main README.md: Added table of contents, improved structure, added version compatibility table, and made documentation more concise while maintaining completeness. 
+[2024-02-11 10:50:00] Added comprehensive Speech-to-Text integration guide to README.md with complete implementation example, platform setup, and best practices. 
+[2024-02-11 10:55:00] Removed speech_to_text from main package dependencies since it's now an optional dependency that users should add manually when needed. 
+[2024-02-11 11:00:00] Released version 1.2.0:
+1. Updated version in pubspec.yaml to 1.2.0
+2. Added new version entry in CHANGELOG.md
+3. Updated version numbers in README.md
+4. Verified all documentation is consistent with new version 

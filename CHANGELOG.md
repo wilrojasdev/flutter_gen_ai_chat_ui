@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0] - 2024-02-11
+### Changed
+- Made speech-to-text an optional dependency
+- Updated documentation for optional STT integration
+- Improved example implementation for speech-to-text
+- Streamlined package dependencies
+- Enhanced README structure and clarity
+
+## [1.1.9] - 2024-02-07
+### Added
+- Updated streaming text performance with flutter_streaming_text_markdown
+- Enhanced markdown rendering capabilities
+- Improved dark theme with consistent colors
+- Fixed various bugs and improved performance
+- Added proper null checks and error handling
+- Updated dependencies to latest stable versions
+
 ## [0.1.0] - 2024-10-19
 ### Added
 - Initial release of flutter_gen_ai_chat_ui package.

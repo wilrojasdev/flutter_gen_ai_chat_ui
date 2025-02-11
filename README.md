@@ -3,7 +3,18 @@
 [![pub package](https://img.shields.io/pub/v/flutter_gen_ai_chat_ui.svg)](https://pub.dev/packages/flutter_gen_ai_chat_ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A customizable chat UI for AI applications built with Flutter. This package offers features such as streaming responses, markdown support, animations, and easy integration into your Flutter app.
+A modern, customizable chat UI for AI applications built with Flutter. Features streaming responses, markdown support, and rich customization options.
+
+## Table of Contents
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Advanced Features](#advanced-features)
+- [Platform Support](#platform-specific-features)
+- [Examples](#examples--support)
+- [Contributing](#contributing)
 
 <table>
   <tr>
@@ -21,136 +32,93 @@ A customizable chat UI for AI applications built with Flutter. This package offe
 </table>
 
 ## Features
-- Customizable AI chat interface with theming and animations.
-- Support for streaming responses with markdown rendering using [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown).
-- Example implementations: Simple Chat, Custom Styling, Detailed Example, Markdown, Pagination, and Streaming.
-
-## Installation
-
-Add the following to your `pubspec.yaml` file:
-
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^0.1.0
-```
-
-Then run:
-
-```bash
-flutter pub get
-```
-
-## Usage
-
-Import the package and use one of the provided widgets (e.g. `AiChatWidget`) along with the configuration classes. See the example apps in the `example/` directory for various integrations:
-
-- simple_chat_screen.dart
-- custom_styling_example.dart
-- detailed_example.dart
-- streaming_example.dart
-
-## Release Notes
-
-This release includes:
-- Updated streaming example to use [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown) for improved streaming text rendering.
-- Reverted dash_chat_2 dependency to ^0.0.21 for compatibility.
-- Various bug fixes and improvements in behavior and styling.
-
-## License
-
-[MIT License](LICENSE)
-
-## 🤖 Quick Integration with AI Help
-
-Need help integrating this package with your specific use case? Copy this prompt into ChatGPT:
-
-```
-Help me integrate flutter_gen_ai_chat_ui with my Flutter app.
-
-My app details:
-1. App type: [e.g., AI chatbot, customer support, education app]
-2. Backend: [e.g., OpenAI API, custom API, Firebase]
-3. Features needed: [e.g., streaming responses, markdown support, dark mode]
-4. Current state management: [e.g., Provider, Bloc, GetX]
-
-Please show me:
-1. How to integrate the chat UI
-2. How to connect it with my backend
-3. How to customize the theme to match my app
-4. Best practices for my specific use case
-```
-
-The AI will provide:
-- ✅ Complete integration code
-- ✅ Backend connection setup
-- ✅ Theme customization examples
-- ✅ Performance optimization tips
-- ✅ Use case specific recommendations
-
-## Key Features
 
 ### Core Features
-- 🎨 Dark and light mode support with adaptive theming
-- 💫 Smooth message animations with word-by-word streaming
-- 🔄 Real-time message updates and streaming
-- ✨ Loading indicators with customizable shimmer effect
-- 📱 Responsive layout with configurable max width
-- 🎤 Professional speech-to-text with:
-  - 🌊 Smooth dual-layer pulse animation
-  - 📊 Real-time sound level visualization
-  - 🎨 Adaptive theming for light/dark modes
-  - 🎯 Precise error handling and recovery
-  - 🔄 Automatic language detection
-  - 📱 iOS and Android support (physical devices)
-
-### Message Features
+- 🎨 Dark/light mode with adaptive theming
+- 💫 Word-by-word streaming with animations
 - 📝 Markdown support with syntax highlighting
-- 🎯 Selectable text in messages
-- 🔗 Clickable links and URL handling
-- 📜 Message pagination with custom loading indicators
+- 🎤 Optional speech-to-text integration
+- 📱 Responsive layout with customizable width
 - 🌐 RTL language support
-- ⏱️ Customizable timestamps
-- 🔄 Message streaming with real-time updates
-- 🎨 Custom message bubble styling
+- ⚡ High performance message handling
 
 ### UI Components
-- 👋 Customizable welcome message
-- ⭐️ Example questions widget with tap actions
-- 💬 Custom message bubbles and layouts
-- 🎮 Custom input field with:
-  - 🎨 Customizable styling and decoration
-  - 🎯 Custom send button
-  - 🎤 Integrated speech-to-text
-  - ⌨️ Multi-line input support
-- ⬇️ Smart scroll-to-bottom button
-- 🔄 Loading indicators and shimmer effects
-
-### Advanced Features
-- 🎮 Complete message controller
-- 🔄 Pagination support with custom offset
-- 🎯 Action callbacks for send/clear/stop
-- 🌍 Locale support for speech recognition
-- 🎨 Theme extension for deep customization
-- 📱 Platform-specific optimizations
-- 🔒 Permission handling for speech recognition
-- 🎯 Error handling and recovery
+- 💬 Customizable message bubbles
+- ⌨️ Rich input field options
+- 🔄 Loading indicators with shimmer
+- ⬇️ Smart scroll management
+- 👋 Welcome message widget
+- ❓ Example questions component
 
 ## Quick Start
 
-### 1. Add the dependency
+```dart
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^1.1.6
+AiChatWidget(
+  config: AiChatConfig(
+    hintText: 'Type a message...',
+    enableAnimation: true,
+  ),
+  currentUser: ChatUser(id: '1', firstName: 'User'),
+  aiUser: ChatUser(id: '2', firstName: 'AI'),
+  controller: ChatMessagesController(),
+  onSendMessage: (message) async {
+    // Handle message
+  },
+)
 ```
 
-### 2. Platform Setup
+## Installation
 
-Speech-to-text functionality is optional. If you plan to use it (`enableSpeechToText: true`), you'll need to:
+1. Add dependency:
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^1.2.0
+```
 
-1. Add the required permissions:
+2. Import:
+```dart
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+```
 
-#### iOS - Add to `ios/Runner/Info.plist`:
+Optional: For speech recognition, add:
+```yaml
+dependencies:
+  speech_to_text: ^6.6.0
+```
+
+## Configuration
+
+The `AiChatConfig` class provides extensive customization:
+
+```dart
+AiChatConfig({
+  String? userName,                    // User's display name
+  String? aiName,                      // AI assistant's name
+  String? hintText,                    // Input placeholder
+  double? maxWidth,                    // Maximum chat width
+  bool enableAnimation = true,         // Enable animations
+  bool showTimestamp = true,          // Show timestamps
+  WelcomeMessageConfig? welcomeConfig, // Welcome message
+  MessageOptions? messageOptions,      // Bubble styling
+  InputDecoration? inputDecoration,    // Input styling
+})
+```
+
+## Advanced Features
+
+### Speech-to-Text Integration
+
+1. Add the dependency:
+```yaml
+dependencies:
+  speech_to_text: ^6.6.0
+```
+
+2. Add platform permissions:
+
+iOS (`ios/Runner/Info.plist`):
 ```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>This app needs microphone access for speech recognition</string>
@@ -158,20 +126,14 @@ Speech-to-text functionality is optional. If you plan to use it (`enableSpeechTo
 <string>This app needs speech recognition to convert your voice to text</string>
 ```
 
-#### Android - Add to `android/app/src/main/AndroidManifest.xml`:
+Android (`android/app/src/main/AndroidManifest.xml`):
 ```xml
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
 
-Note: Speech-to-text is only supported on physical devices, not on simulators/emulators.
-
-If you don't plan to use speech-to-text, you can skip this setup and simply set `enableSpeechToText: false` in your `AiChatConfig`.
-
-### 3. Basic Implementation
-
+3. Implement STT in your widget:
 ```dart
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatScreen extends StatefulWidget {
   @override
@@ -179,227 +141,81 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _controller = ChatMessagesController();
-  final _currentUser = ChatUser(id: '1', firstName: 'User');
-  final _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
-  bool _isLoading = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initSpeech();
+  }
+
+  Future<void> _initSpeech() async {
+    await _speech.initialize(
+      onError: (error) => debugPrint('Speech error: $error'),
+      onStatus: (status) => debugPrint('Speech status: $status'),
+    );
+  }
+
+  Future<void> _listen() async {
+    if (!_isListening) {
+      final available = await _speech.initialize();
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            if (result.finalResult) {
+              // Handle the recognized text
+              final message = ChatMessage(
+                text: result.recognizedWords,
+                user: currentUser,
+                createdAt: DateTime.now(),
+              );
+              _handleSendMessage(message);
+              setState(() => _isListening = false);
+            }
+          },
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('AI Chat')),
-      body: AiChatWidget(
-        config: AiChatConfig(
-          enableSpeechToText: true,  // Enable speech recognition
-          hintText: 'Type or speak your message...',
-          enableAnimation: true,
-          // Optional speech-to-text customization
-          speechToTextIcon: Icons.mic_none_rounded,
-          speechToTextActiveIcon: Icons.mic_rounded,
-          onSpeechError: (error) => print('Speech error: $error'),
+    return AiChatWidget(
+      config: AiChatConfig(
+        inputDecoration: InputDecoration(
+          prefixIcon: IconButton(
+            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+            onPressed: _listen,
+          ),
         ),
-        controller: _controller,
-        currentUser: _currentUser,
-        aiUser: _aiUser,
-        onSendMessage: _handleMessage,
-        isLoading: _isLoading,
       ),
+      currentUser: currentUser,
+      aiUser: aiUser,
+      controller: controller,
+      onSendMessage: _handleSendMessage,
     );
   }
 
-  Future<void> _handleMessage(ChatMessage message) async {
-    setState(() => _isLoading = true);
-    try {
-      // Add your AI response logic here
-      await Future.delayed(Duration(seconds: 1));
-      _controller.addMessage(ChatMessage(
-        text: "I received: ${message.text}",
-        user: _aiUser,
-        createdAt: DateTime.now(),
-      ));
-    } finally {
-      setState(() => _isLoading = false);
-    }
+  @override
+  void dispose() {
+    _speech.cancel();
+    super.dispose();
   }
 }
-```
 
-## Configuration Guide
-
-### AiChatConfig Options
-
-The `AiChatConfig` class provides extensive customization options. Here's a comprehensive guide:
-
-#### Basic Configuration
-```dart
-AiChatConfig(
-  // User Interface
-  userName: 'User',            // Name displayed for the user
-  aiName: 'AI Assistant',      // Name displayed for the AI
-  hintText: 'Type a message...', // Input field placeholder
-  maxWidth: 800,              // Maximum width of the chat interface
-  padding: EdgeInsets.all(16), // Padding around the chat interface
-  
-  // Feature Toggles
-  enableAnimation: true,       // Enable/disable message animations
-  showTimestamp: true,        // Show/hide message timestamps
-  readOnly: false,            // Make chat read-only
-  enablePagination: false,    // Enable/disable message pagination
-  
-  // Example Questions
-  exampleQuestions: [
-    ChatExample(
-      question: 'What can you help me with?',
-      onTap: (controller) {
-        controller.handleExampleQuestion(
-          'What can you help me with?',
-          currentUser,
-          aiUser,
-        );
-      },
-    ),
-  ],
-)
-```
-
-#### Speech-to-Text Configuration
-```dart
-AiChatConfig(
-  enableSpeechToText: true,
-  speechToTextIcon: Icons.mic_none_rounded,      // Default mic icon
-  speechToTextActiveIcon: Icons.mic_rounded,     // Icon when active
-  speechToTextLocale: 'en_US',                  // Recognition language
-  
-  // Speech Recognition Callbacks
-  onSpeechStart: () async {
-    // Called when speech recognition starts
-  },
-  onSpeechEnd: () async {
-    // Called when speech recognition ends
-  },
-  onSpeechError: (error) {
-    // Handle speech recognition errors
-  },
-  onRequestSpeechPermission: () async {
-    // Handle permission requests
-    return true; // Return true if permission granted
-  },
-  
-  // Custom Speech Button
-  customSpeechToTextButton: (isListening, onPressed) {
-    return YourCustomButton(
-      isListening: isListening,
-      onPressed: onPressed,
-    );
-  },
-)
-```
-
-#### UI Customization
-```dart
-AiChatConfig(
-  // Input Field Styling
-  inputTextStyle: TextStyle(fontSize: 16),
-  inputDecoration: InputDecoration(
-    border: OutlineInputBorder(),
-    filled: true,
-  ),
-  
-  // Message Display
-  messageBuilder: (message) {
-    return CustomMessageBubble(message: message);
-  },
-  
-  // Send Button
-  sendButtonIcon: Icons.send_rounded,
-  sendButtonIconSize: 24,
-  sendButtonPadding: EdgeInsets.all(8),
-  sendButtonBuilder: (onSend) {
-    return CustomSendButton(onPressed: onSend);
-  },
-  
-  // Scroll Button
-  scrollToBottomBuilder: (controller) {
-    return CustomScrollButton(controller: controller);
-  },
-)
-```
-
-#### Pagination and Loading
-```dart
-AiChatConfig(
-  enablePagination: true,
-  paginationLoadingIndicatorOffset: 100,
-  loadMoreIndicator: ({required bool isLoading}) {
-    return CustomLoadingIndicator(isLoading: isLoading);
-  },
-)
-```
-
-#### Action Callbacks
-```dart
-AiChatConfig(
-  onSendButtonPressed: (message) {
-    // Handle send button press
-  },
-  onClearButtonPressed: () {
-    // Handle clear button press
-  },
-  onStopButtonPressed: () {
-    // Handle stop button press (e.g., stop streaming)
-  },
-)
-```
-
-#### Advanced Message Options
-```dart
-AiChatConfig(
-  // Message Options
-  messageOptions: MessageOptions(
-    showTime: true,
-    timePadding: EdgeInsets.only(top: 4),
-    containerColor: Colors.grey[200],
-    textColor: Colors.black87,
-  ),
-  
-  // Message List Options
-  messageListOptions: MessageListOptions(
-    showDateSeparator: true,
-    scrollPhysics: BouncingScrollPhysics(),
-  ),
-  
-  // Quick Reply Options
-  quickReplyOptions: QuickReplyOptions(
-    quickReplyStyle: BoxDecoration(
-      border: Border.all(),
-      borderRadius: BorderRadius.circular(12),
-    ),
-  ),
-)
-```
-
-## Advanced Features
-
-### 1. Speech Recognition
-The package includes a professional speech-to-text button with:
-- 🌊 Smooth dual-layer pulse animation
-- 📊 Real-time sound level visualization
-- 🎨 Adaptive theming for light/dark modes
-- 🎯 Precise error handling and recovery
-- 🔄 Automatic language detection
-- 📱 iOS and Android support (physical devices only)
-
-### 2. Dark Mode Support
-
+### Dark Mode
 ```dart
 Theme(
   data: Theme.of(context).copyWith(
     extensions: [
       CustomThemeExtension(
-        messageBubbleColor: isDark ? Color(0xFF262626) : Colors.white,
-        userBubbleColor: isDark ? Color(0xFF1A4B8F) : Color(0xFFE3F2FD),
-        messageTextColor: isDark ? Color(0xFFE5E5E5) : Colors.grey[800]!,
-        chatBackground: isDark ? Color(0xFF171717) : Colors.grey[50]!,
+        messageBubbleColor: isDark ? Color(0xFF1E1E1E) : Colors.white,
+        userBubbleColor: isDark ? Color(0xFF7B61FF) : Color(0xFFE3F2FD),
       ),
     ],
   ),
@@ -407,27 +223,66 @@ Theme(
 )
 ```
 
-### 3. Streaming Responses
-
+### Streaming
 ```dart
-Future<void> handleStreamingResponse(String text) async {
-  final response = ChatMessage(
-    text: "",
-    user: aiUser,
-    createdAt: DateTime.now(),
-  );
-  
+void handleStreamingResponse(String text) {
+  final response = ChatMessage(text: "", user: aiUser);
   for (var word in text.split(' ')) {
-    await Future.delayed(Duration(milliseconds: 50));
-    response.text += '${response.text.isEmpty ? '' : ' '}$word';
+    response.text += '$word ';
     controller.updateMessage(response);
   }
 }
 ```
 
+### Speech Recognition
+See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) for complete implementation.
+
+## Platform Support
+
+✅ Android
+- Material Design 3
+- Native permissions
+- Adaptive colors
+
+✅ iOS
+- Cupertino animations
+- Privacy handling
+- Native feel
+
+✅ Web
+- Responsive design
+- Keyboard support
+- Cross-browser
+
+✅ Desktop
+- Window management
+- Keyboard navigation
+- High DPI support
+
 ## Examples & Support
 
-- 📘 Check our [example](example) folder for complete implementations
-- 🐛 File issues on our [GitHub repository](https://github.com/hooshyar/flutter_gen_ai_chat_ui)
-- 💡 Contribute to the project
+- 📘 [Example Directory](example)
+- 🐛 [Issue Tracker](https://github.com/hooshyar/flutter_gen_ai_chat_ui/issues)
+- 💡 [Contribution Guide](CONTRIBUTING.md)
 
+## Dependencies
+
+- [dash_chat_2](https://pub.dev/packages/dash_chat_2) - Chat UI
+- [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown) - Markdown
+- [provider](https://pub.dev/packages/provider) - State
+- [shimmer](https://pub.dev/packages/shimmer) - Effects
+- [google_fonts](https://pub.dev/packages/google_fonts) - Typography
+
+## Version Compatibility
+
+| Flutter Version | Package Version |
+|----------------|-----------------|
+| >=3.0.0        | ^1.2.0         |
+| >=2.5.0        | ^1.1.0         |
+
+## License
+
+[MIT License](LICENSE)
+
+---
+⭐ If you find this package helpful, please star the repository!
