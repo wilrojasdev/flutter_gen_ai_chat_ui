@@ -99,13 +99,10 @@ class AiChatWidgetState extends State<AiChatWidget>
               Column(
                 children: [
                   if (widget.controller.showWelcomeMessage)
-                    Container(
-                      // constraints: const BoxConstraints(maxHeight: 250),
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: widget.welcomeMessageBuilder?.call() ??
-                            _buildWelcomeMessage(context),
-                      ),
+                    SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: widget.welcomeMessageBuilder?.call() ??
+                          _buildWelcomeMessage(context),
                     ),
                   const SizedBox(height: 8),
                   Expanded(
