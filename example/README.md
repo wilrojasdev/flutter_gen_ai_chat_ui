@@ -1,202 +1,154 @@
 # Flutter Gen AI Chat UI Examples
 
-This directory contains example implementations of the `flutter_gen_ai_chat_ui` package.
+This directory contains example implementations of the `flutter_gen_ai_chat_ui` package, demonstrating various features and customization options.
 
 ## Examples
 
-1. **Simple Chat** (`lib/simple_chat_screen.dart`)
-   - Basic implementation with essential features
-   - Shows how to handle messages and configure the UI
-   - Includes speech recognition example
+1. **Basic Chat Example** (`lib/basic_example.dart`)
+   - Minimal setup
+   - Basic message handling
+   - Default styling
 
+2. **Custom Styling Example** (`lib/custom_styling_example.dart`)
+   - Custom theme implementation
+   - Dark mode support
+   - Message bubble customization
+   - Input field styling
+
+3. **Markdown Example** (`lib/markdown_example.dart`)
+   - Markdown message support
+   - Code block highlighting
+   - Custom markdown styling
+   - Streaming text support
+
+4. **Pagination Example** (`lib/pagination_example.dart`)
+   - Message pagination
+   - Loading indicators
+   - Scroll behavior
+   - Message history management
+
+5. **Speech Recognition Example** (`lib/speech_recognition_example.dart`)
+   - Voice input integration
+   - Permission handling
+   - Platform-specific setup
+   - Error handling
+
+## Running the Examples
+
+1. Clone the repository:
+```bash
+git clone https://github.com/hooshyar/flutter_gen_ai_chat_ui.git
+```
+
+2. Navigate to the example directory:
+```bash
+cd flutter_gen_ai_chat_ui/example
+```
+
+3. Get dependencies:
+```bash
+flutter pub get
+```
+
+4. Run the desired example:
+```bash
+flutter run -t lib/basic_example.dart
+```
+
+## Configuration
+
+Each example demonstrates different aspects of the package configuration. Here's a quick overview:
+
+### Basic Example
 ```dart
 AiChatWidget(
   config: AiChatConfig(
     hintText: 'Type a message...',
     enableAnimation: true,
-    inputOptions: InputOptions(
-      alwaysShowSend: true,
-    ),
-    // Custom input decoration with speech button
-    inputDecoration: InputDecoration(
-      prefixIcon: IconButton(
-        icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-        onPressed: _listen,
-      ),
-    ),
   ),
-  currentUser: _currentUser,
-  aiUser: _aiUser,
-  controller: _controller,
-  onSendMessage: _handleSendMessage,
+  currentUser: ChatUser(id: '1', firstName: 'User'),
+  aiUser: ChatUser(id: '2', firstName: 'AI'),
+  controller: ChatMessagesController(),
+  onSendMessage: (message) async {
+    // Handle message
+  },
 )
 ```
 
-2. **Streaming Example** (`lib/streaming_example.dart`)
-   - Demonstrates word-by-word streaming
-   - Shows loading states and animations
-   - Implements markdown support
-
+### Custom Styling
 ```dart
 AiChatWidget(
   config: AiChatConfig(
-    enableAnimation: true,
-    isLoading: _isLoading,
+    inputOptions: InputOptions(
+      alwaysShowSend: true,
+      sendOnEnter: true,
+      margin: EdgeInsets.all(16),
+      inputDecoration: InputDecoration(
+        border: OutlineInputBorder(),
+        filled: true,
+      ),
+    ),
     messageOptions: MessageOptions(
-      containerColor: isDark ? Color(0xFF1E1E1E) : Colors.grey[50],
-      currentUserContainerColor: isDark ? Color(0xFF7B61FF) : Colors.blue,
+      showTime: true,
+      containerColor: Colors.grey[200],
+      userBubbleColor: Colors.blue[100],
+      aiBubbleColor: Colors.grey[100],
     ),
   ),
-  // ... other properties
 )
 ```
 
-3. **Custom Styling** (`lib/custom_styling_example.dart`)
-   - Shows theme customization
-   - Demonstrates message bubble styling
-   - Custom welcome message implementation
-
-4. **Detailed Example** (`lib/detailed_example.dart`)
-   - Comprehensive implementation
-   - Shows all available customization options
-   - Includes error handling and loading states
-
-## Running the Examples
-
-1. Clone the repository
-2. Navigate to the example directory
-3. Run `flutter pub get`
-4. Run `flutter run`
-
-## Configuration Guide
-
-All configurations are now centralized in `AiChatConfig`. Here's how to use different features:
-
-### Basic Configuration
+### Markdown Support
 ```dart
-AiChatConfig(
-  userName: 'User',
-  aiName: 'AI Assistant',
-  hintText: 'Type a message...',
-  enableAnimation: true,
-)
-```
-
-### Message Styling
-```dart
-AiChatConfig(
-  messageOptions: MessageOptions(
-    containerColor: Colors.grey[50],
-    currentUserContainerColor: Colors.blue,
-    textColor: Colors.black,
-    showTime: true,
+AiChatWidget(
+  config: AiChatConfig(
+    messageOptions: MessageOptions(
+      markdownConfig: MarkdownConfig(
+        codeBlockTheme: CodeBlockTheme(
+          backgroundColor: Colors.grey[900],
+          textStyle: TextStyle(
+            color: Colors.white,
+            fontFamily: 'RobotoMono',
+          ),
+        ),
+      ),
+    ),
   ),
 )
 ```
 
-### Input Customization
+### Pagination
 ```dart
-AiChatConfig(
-  inputOptions: InputOptions(
-    alwaysShowSend: true,
-    sendOnEnter: true,
+AiChatWidget(
+  config: AiChatConfig(
+    paginationConfig: PaginationConfig(
+      enabled: true,
+      loadingIndicatorOffset: 100,
+      loadMoreIndicator: ({isLoading}) => CustomLoadingWidget(),
+    ),
   ),
-  inputDecoration: InputDecoration(
-    // Your custom decoration
+  controller: ChatMessagesController(
+    initialMessages: messages.take(20).toList(),
+    onLoadMoreMessages: (lastMessage) async {
+      // Load next page
+      return nextPageOfMessages;
+    },
   ),
 )
 ```
 
-### Loading States
-```dart
-AiChatConfig(
-  isLoading: _isLoading,
-  loadingIndicator: LoadingWidget(
-    texts: ['AI is thinking...', 'Processing...'],
-  ),
-)
-```
+## Platform Support
 
-## Platform Setup
-
-### Speech Recognition
-
-1. iOS (`ios/Runner/Info.plist`):
-```xml
-<key>NSMicrophoneUsageDescription</key>
-<string>This app needs microphone access for speech recognition</string>
-<key>NSSpeechRecognitionUsageDescription</key>
-<string>This app needs speech recognition to convert your voice to text</string>
-```
-
-2. Android (`android/app/src/main/AndroidManifest.xml`):
-```xml
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-```
-
-## Platform-Specific Features
-
-### Android
-- Material Design 3 theming
-- Adaptive colors
-- Native ripple effects
-- Speech recognition integration (requires RECORD_AUDIO permission)
-
-### iOS
-- Cupertino-style animations
-- Native scrolling behavior
-- Adaptive typography
-- Speech recognition integration (requires microphone permission)
-
-### Web
-- Responsive layout
-- Keyboard shortcuts
-- Touch and mouse input support
-- Adaptive UI for different screen sizes
-
-### Desktop (Windows, macOS, Linux)
-- Window resizing support
-- Keyboard navigation
-- Native scrollbar styling
-- High-resolution display support
-
-## Customization
-
-The examples demonstrate various customization options:
-
-- Theme customization
-  - Light/dark mode
-  - Custom colors
-  - Typography
-  - Message bubble styling
-- Input field configuration
-  - Custom decorations
-  - Voice input integration
-  - Multi-line support
-- Message features
-  - Custom bubbles
-  - Markdown support
-  - Link handling
-  - Timestamps
-- Animations
-  - Message transitions
-  - Loading indicators
-  - Streaming effects
-- Platform adaptations
-  - Permission handling
-  - Native features
-  - Responsive design
+All examples are tested and working on:
+- ✅ Android
+- ✅ iOS
+- ✅ Web
+- ✅ Desktop (Windows, macOS, Linux)
 
 ## Contributing
 
-Feel free to contribute to these examples by:
-1. Creating new examples
-2. Improving existing ones
-3. Adding documentation
-4. Fixing bugs
-
-Please ensure your contributions follow our coding standards and include appropriate documentation.
+Feel free to contribute more examples or improvements to existing ones. Please follow the [contribution guidelines](../CONTRIBUTING.md).
 
 ## License
 
-This example project is licensed under the same terms as the main package.
+These examples are licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.

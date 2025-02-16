@@ -36,11 +36,13 @@ A modern, customizable chat UI for AI applications built with Flutter. Features 
 ### Core Features
 - 🎨 Dark/light mode with adaptive theming
 - 💫 Word-by-word streaming with animations
-- 📝 Markdown support with syntax highlighting
+- 📝 Enhanced markdown support with code highlighting
 - 🎤 Optional speech-to-text integration
 - 📱 Responsive layout with customizable width
 - 🌐 RTL language support
 - ⚡ High performance message handling
+- 📊 Improved pagination support
+- 🔄 Centralized configuration
 
 ### UI Components
 - 💬 Customizable message bubbles
@@ -49,6 +51,8 @@ A modern, customizable chat UI for AI applications built with Flutter. Features 
 - ⬇️ Smart scroll management
 - 👋 Welcome message widget
 - ❓ Example questions component
+- 🎨 Enhanced theme customization
+- 📝 Better code block styling
 
 ## Quick Start
 
@@ -62,10 +66,20 @@ AiChatWidget(
     inputOptions: InputOptions(
       alwaysShowSend: true,
       sendOnEnter: true,
+      margin: EdgeInsets.all(16),
     ),
     messageOptions: MessageOptions(
       showTime: true,
       containerColor: Colors.grey[200],
+    ),
+    // New in 1.3.0: Enhanced configuration options
+    paginationConfig: PaginationConfig(
+      enabled: true,
+      loadingIndicatorOffset: 100,
+    ),
+    loadingConfig: LoadingConfig(
+      isLoading: false,
+      typingIndicatorColor: Colors.blue,
     ),
   ),
   currentUser: ChatUser(id: '1', firstName: 'User'),
@@ -96,194 +110,113 @@ dependencies:
   speech_to_text: ^6.6.0
 ```
 
-## Configuration
+## What's New in 1.3.0
 
-All configurations are now centralized in the `AiChatConfig` class:
+### Breaking Changes
+1. All widget-level configurations now flow through `AiChatConfig`
+2. Improved input handling with standalone `InputOptions`
+3. Enhanced pagination with `PaginationConfig`
+4. Better loading states with `LoadingConfig`
+5. Centralized callbacks in `CallbackConfig`
 
-```dart
-AiChatConfig({
-  String userName = 'User',           // User's display name
-  String aiName = 'AI',              // AI assistant's name
-  String hintText = 'Type a message...',
-  double? maxWidth,                  // Maximum chat width
-  bool enableAnimation = true,       // Enable animations
-  bool showTimestamp = true,         // Show timestamps
-  
-  InputOptions? inputOptions,        // Input field options
-  TextStyle? inputTextStyle,         // Input text style
-  InputDecoration? inputDecoration,  // Input field decoration
-  
-  MessageOptions? messageOptions,    // Message bubble styling
-  MessageListOptions? messageListOptions,  // Message list options
-  
-  WelcomeMessageConfig? welcomeMessageConfig,
-  List<ExampleQuestion> exampleQuestions = const [],
-  
-  bool isLoading = false,
-  Widget? loadingIndicator,
-  
-  bool enablePagination = false,
-  bool readOnly = false,
-  // ... and more
-})
-```
+### New Features
+1. Enhanced markdown support with better code block styling
+2. Improved dark theme contrast and readability
+3. Better message bubble animations
+4. Fixed layout overflow issues
+5. Enhanced error handling
 
-### Migration from 1.2.x
-
-If you're upgrading from version 1.2.x, note these changes:
-1. Widget-level properties are now in `AiChatConfig`
-2. Old properties are marked as deprecated
-3. Use the new configuration structure:
+### Migration Guide
+If you're upgrading from version 1.2.x:
 
 ```dart
 // Old way (deprecated)
 AiChatWidget(
   enableAnimation: true,
   loadingIndicator: MyLoadingWidget(),
-  // ...
+  inputDecoration: InputDecoration(...),
 )
 
-// New way
+// New way (1.3.0+)
 AiChatWidget(
   config: AiChatConfig(
     enableAnimation: true,
-    loadingIndicator: MyLoadingWidget(),
-    // ...
+    loadingConfig: LoadingConfig(
+      loadingIndicator: MyLoadingWidget(),
+    ),
+    inputOptions: InputOptions(
+      inputDecoration: InputDecoration(...),
+    ),
   ),
-  // ...
 )
 ```
 
-## Advanced Features
+## Configuration
 
-### Speech-to-Text Integration
+The new configuration system in 1.3.0 provides better organization and type safety:
 
-1. Add the dependency:
-```yaml
-dependencies:
-  speech_to_text: ^6.6.0
-```
-
-2. Add platform permissions:
-
-iOS (`ios/Runner/Info.plist`):
-```xml
-<key>NSMicrophoneUsageDescription</key>
-<string>This app needs microphone access for speech recognition</string>
-<key>NSSpeechRecognitionUsageDescription</key>
-<string>This app needs speech recognition to convert your voice to text</string>
-```
-
-Android (`android/app/src/main/AndroidManifest.xml`):
-```xml
-<uses-permission android:name="android.permission.RECORD_AUDIO"/>
-```
-
-3. Implement STT in your widget:
 ```dart
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-
-class ChatScreen extends StatefulWidget {
-  @override
-  State<ChatScreen> createState() => _ChatScreenState();
-}
-
-class _ChatScreenState extends State<ChatScreen> {
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  bool _isListening = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initSpeech();
-  }
-
-  Future<void> _initSpeech() async {
-    await _speech.initialize(
-      onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
-    );
-  }
-
-  Future<void> _listen() async {
-    if (!_isListening) {
-      final available = await _speech.initialize();
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (result) {
-            if (result.finalResult) {
-              // Handle the recognized text
-              final message = ChatMessage(
-                text: result.recognizedWords,
-                user: currentUser,
-                createdAt: DateTime.now(),
-              );
-              _handleSendMessage(message);
-              setState(() => _isListening = false);
-            }
-          },
-        );
-      }
-    } else {
-      setState(() => _isListening = false);
-      _speech.stop();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AiChatWidget(
-      config: AiChatConfig(
-        inputDecoration: InputDecoration(
-          prefixIcon: IconButton(
-            icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-            onPressed: _listen,
-          ),
-        ),
-      ),
-      currentUser: currentUser,
-      aiUser: aiUser,
-      controller: controller,
-      onSendMessage: _handleSendMessage,
-    );
-  }
-
-  @override
-  void dispose() {
-    _speech.cancel();
-    super.dispose();
-  }
-}
-
-### Dark Mode
-```dart
-Theme(
-  data: Theme.of(context).copyWith(
-    extensions: [
-      CustomThemeExtension(
-        messageBubbleColor: isDark ? Color(0xFF1E1E1E) : Colors.white,
-        userBubbleColor: isDark ? Color(0xFF7B61FF) : Color(0xFFE3F2FD),
-      ),
-    ],
-  ),
-  child: AiChatWidget(...),
+AiChatConfig(
+  // Basic settings
+  userName: 'User',
+  aiName: 'AI',
+  hintText: 'Type a message...',
+  maxWidth: null,
+  
+  // Feature flags
+  enableAnimation: true,
+  showTimestamp: true,
+  
+  // Specialized configs
+  inputOptions: InputOptions(...),
+  messageOptions: MessageOptions(...),
+  paginationConfig: PaginationConfig(...),
+  loadingConfig: LoadingConfig(...),
+  callbackConfig: CallbackConfig(...),
+  
+  // Welcome message
+  welcomeMessageConfig: WelcomeMessageConfig(...),
+  exampleQuestions: [...],
 )
 ```
 
-### Streaming
+### Input Customization
 ```dart
-void handleStreamingResponse(String text) {
-  final response = ChatMessage(text: "", user: aiUser);
-  for (var word in text.split(' ')) {
-    response.text += '$word ';
-    controller.updateMessage(response);
-  }
-}
+InputOptions(
+  // Basic options
+  sendOnEnter: true,
+  alwaysShowSend: true,
+  
+  // Styling
+  margin: EdgeInsets.all(16),
+  inputTextStyle: TextStyle(...),
+  inputDecoration: InputDecoration(...),
+  
+  // Advanced
+  maxLines: 5,
+  textCapitalization: TextCapitalization.sentences,
+  contextMenuBuilder: (context, editableTextState) => ...,
+)
 ```
 
-### Speech Recognition
-See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) for complete implementation.
+### Pagination
+```dart
+PaginationConfig(
+  enabled: true,
+  loadingIndicatorOffset: 100,
+  loadMoreIndicator: ({isLoading}) => CustomLoadingWidget(),
+)
+```
+
+### Loading States
+```dart
+LoadingConfig(
+  isLoading: false,
+  loadingIndicator: CustomLoadingWidget(),
+  typingIndicatorColor: Colors.blue,
+  typingIndicatorSize: 24.0,
+)
+```
 
 ## Platform Support
 
@@ -313,20 +246,12 @@ See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) f
 - 🐛 [Issue Tracker](https://github.com/hooshyar/flutter_gen_ai_chat_ui/issues)
 - 💡 [Contribution Guide](CONTRIBUTING.md)
 
-## Dependencies
-
-- [dash_chat_2](https://pub.dev/packages/dash_chat_2) - Chat UI
-- [flutter_streaming_text_markdown](https://pub.dev/packages/flutter_streaming_text_markdown) - Markdown
-- [provider](https://pub.dev/packages/provider) - State
-- [shimmer](https://pub.dev/packages/shimmer) - Effects
-- [google_fonts](https://pub.dev/packages/google_fonts) - Typography
-
 ## Version Compatibility
 
 | Flutter Version | Package Version |
 |----------------|-----------------|
 | >=3.0.0        | ^1.3.0         |
-| >=2.5.0        | ^1.1.0         |
+| >=2.5.0        | ^1.2.0         |
 
 ## License
 
@@ -334,119 +259,3 @@ See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) f
 
 ---
 ⭐ If you find this package helpful, please star the repository!
-
-## Latest Changes (v1.3.0)
-
-### Breaking Changes
-- All configurations now flow through `AiChatConfig`
-- Deprecated widget-level properties in favor of config-based approach
-- Improved input handling with standalone `InputOptions`
-
-### New Features
-- Full markdown support with dark mode
-- Enhanced input customization
-- Improved pagination
-- Better error handling
-
-## Basic Usage
-
-```dart
-AiChatWidget(
-  config: AiChatConfig(
-    // Basic configuration
-    userName: 'User',
-    aiName: 'AI Assistant',
-    hintText: 'Type a message...',
-    
-    // Input configuration
-    inputOptions: InputOptions(
-      alwaysShowSend: true,
-      sendOnEnter: true,
-      inputTextStyle: TextStyle(...),
-      inputDecoration: InputDecoration(...),
-    ),
-    
-    // Message configuration
-    messageOptions: MessageOptions(
-      showTime: true,
-      containerColor: Colors.grey[200],
-    ),
-    
-    // Pagination configuration
-    paginationConfig: PaginationConfig(
-      enabled: true,
-      loadingIndicatorOffset: 100,
-    ),
-  ),
-  currentUser: ChatUser(id: '1', firstName: 'User'),
-  aiUser: ChatUser(id: '2', firstName: 'AI'),
-  controller: ChatMessagesController(),
-  onSendMessage: (message) async {
-    // Handle message
-  },
-)
-```
-
-## Markdown Support
-
-To enable markdown in messages:
-
-```dart
-// Send markdown message
-ChatMessage(
-  text: '''
-# Title
-**Bold text**
-- List item
-```code
-print('hello')
-```
-''',
-  user: aiUser,
-  isMarkdown: true, // Enable markdown
-);
-```
-
-## Input Customization
-
-Full control over input appearance:
-
-```dart
-InputOptions(
-  // Basic options
-  sendOnEnter: true,
-  alwaysShowSend: true,
-  
-  // Styling
-  inputTextStyle: TextStyle(...),
-  inputDecoration: InputDecoration(...),
-  margin: EdgeInsets.all(20),
-  
-  // Send button
-  sendButtonBuilder: (onSend) => CustomButton(...),
-)
-```
-
-## Pagination
-
-Control message loading with pagination:
-
-```dart
-// Configure pagination
-paginationConfig: PaginationConfig(
-  enabled: true,
-  loadingIndicatorOffset: 100,
-  loadMoreIndicator: ({isLoading}) => CustomLoadingIndicator(),
-),
-
-// Handle message loading
-ChatMessagesController(
-  initialMessages: messages.take(20).toList(),
-  onLoadMoreMessages: (lastMessage) async {
-    // Load next page of messages
-    return nextPageOfMessages;
-  },
-)
-```
-
-For more examples, check the `example` folder in the repository.
