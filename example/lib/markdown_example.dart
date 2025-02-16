@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+/// A comprehensive example demonstrating markdown support in the chat UI.
+/// This example shows various markdown features including:
+/// - Text formatting (bold, italic, strikethrough)
+/// - Headers
+/// - Lists (ordered and unordered)
+/// - Code blocks with syntax highlighting
+/// - Blockquotes
+/// - Links
+/// - Tables
 class MarkdownExample extends StatefulWidget {
   const MarkdownExample({super.key});
 
@@ -10,42 +20,81 @@ class MarkdownExample extends StatefulWidget {
 }
 
 class _MarkdownExampleState extends State<MarkdownExample> {
+  /// Controller for managing chat messages
   late final ChatMessagesController _controller;
+
+  /// Current user instance
   late final ChatUser _currentUser;
+
+  /// AI assistant user instance
   late final ChatUser _aiUser;
+
+  /// Loading state for AI responses
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeChat();
+    _addWelcomeMessage();
+  }
+
+  /// Initialize chat users and controller
+  void _initializeChat() {
     _currentUser = ChatUser(id: '1', firstName: 'User');
     _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
     _controller = ChatMessagesController();
+  }
 
-    // Add initial message demonstrating markdown
+  /// Add initial welcome message with markdown examples
+  void _addWelcomeMessage() {
     _controller.addMessage(ChatMessage(
       text: '''
-Welcome! This chat supports markdown formatting. Here are some examples:
+# Welcome to Markdown Chat! 👋
 
-**Bold text** and *italic text*
+This chat supports rich markdown formatting. Here are some examples:
 
-# Headers
-## Different
-### Sizes
+## Text Formatting
+- **Bold text** for emphasis
+- *Italic text* for subtle emphasis
+- ~~Strikethrough~~ for crossed-out text
+- `inline code` for code snippets
 
-Lists:
-- Item 1
-- Item 2
-  - Nested item
-  
-Code blocks:
+## Lists
+1. Ordered lists
+2. With multiple items
+   - And nested items
+   - Using different markers
+
+## Code Blocks
 ```dart
 void main() {
-  print('Hello, World!');
+  print('Hello, Markdown!');
+  
+  // With syntax highlighting
+  final message = ChatMessage(
+    text: '**Bold** and *italic*',
+    isMarkdown: true,
+  );
 }
 ```
 
-And [links](https://flutter.dev) too!
+## Blockquotes
+> Important information can be highlighted
+> Using blockquotes like this
+
+## Tables
+| Feature | Support |
+|---------|---------|
+| Bold | ✅ |
+| Italic | ✅ |
+| Code | ✅ |
+
+## Links
+Learn more about [Flutter](https://flutter.dev) and [Markdown](https://www.markdownguide.org)
+
+---
+Try sending a message with markdown formatting!
 ''',
       user: _aiUser,
       createdAt: DateTime.now(),
@@ -53,33 +102,64 @@ And [links](https://flutter.dev) too!
     ));
   }
 
+  /// Handle sending a new message
+  /// This includes:
+  /// 1. Adding user message to chat
+  /// 2. Showing loading state
+  /// 3. Simulating AI response with markdown formatting
+  /// 4. Error handling for markdown parsing
   Future<void> _handleSendMessage(ChatMessage message) async {
     setState(() => _isLoading = true);
-    _controller.addMessage(message);
 
     try {
-      // Simulate AI response with markdown
+      // Add user message
+      _controller.addMessage(message);
+
+      // Simulate AI response
       await Future.delayed(const Duration(seconds: 1));
+
+      // Format AI response with markdown
       final response = ChatMessage(
-        text: '''Here's a response with markdown:
+        text: '''### Message Analysis
 
 You said: *${message.text}*
 
-Let me format that in a code block:
+Let me format that in different ways:
+
+1. **Code Block**:
 ```
 ${message.text}
 ```
 
-Need help? Here are some things you can try:
-1. Use **bold** for emphasis
-2. Create lists with - or numbers
-3. Write code with `backticks`
+2. *Blockquote*:
+> ${message.text}
+
+3. **Table**:
+| Type | Content |
+|------|---------|
+| Original | ${message.text} |
+| Uppercase | ${message.text.toUpperCase()} |
+
+---
+**Markdown Tips:**
+- Use `**text**` for **bold**
+- Use `*text*` for *italic*
+- Use ```code``` for code blocks
+- Use `> text` for blockquotes
 ''',
         user: _aiUser,
         createdAt: DateTime.now(),
         isMarkdown: true,
       );
+
       _controller.addMessage(response);
+    } catch (e) {
+      // Handle any errors during message processing
+      _controller.addMessage(ChatMessage(
+        text: '⚠️ Error processing markdown: $e',
+        user: _aiUser,
+        createdAt: DateTime.now(),
+      ));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -88,13 +168,55 @@ Need help? Here are some things you can try:
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Markdown Chat Example'),
+        actions: [
+          // Help button to show markdown syntax
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            onPressed: () => _showMarkdownHelp(context),
+          ),
+        ],
+      ),
       body: AiChatWidget(
         config: AiChatConfig(
+          // Custom hint text showing markdown support
           hintText: 'Try using **markdown** in your message...',
+          // Custom message builder with markdown support
           messageBuilder: (message) => message.isMarkdown == true
               ? MarkdownBody(
                   data: message.text,
-                  // onTapLink: (url) => launch(url),
+                  selectable: true,
+                  onTapLink: (text, href, title) {
+                    if (href != null) {
+                      launchUrl(Uri.parse(href));
+                    }
+                  },
+                  styleSheet: MarkdownStyleSheet(
+                    // Customize markdown styling here
+                    p: const TextStyle(fontSize: 16),
+                    code: const TextStyle(
+                      backgroundColor: Colors.black12,
+                      fontFamily: 'monospace',
+                    ),
+                    h1: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h2: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h3: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    blockquote: const TextStyle(
+                      color: Colors.grey,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    tableBody: const TextStyle(fontSize: 16),
+                  ),
                 )
               : SelectableText(message.text),
         ),
@@ -103,6 +225,79 @@ Need help? Here are some things you can try:
         aiUser: _aiUser,
         onSendMessage: _handleSendMessage,
         isLoading: _isLoading,
+      ),
+    );
+  }
+
+  /// Show a help dialog with markdown syntax examples
+  void _showMarkdownHelp(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Markdown Syntax Help'),
+        content: SingleChildScrollView(
+          child: MarkdownBody(
+            data: '''
+# Markdown Syntax Guide
+
+## Basic Formatting
+**Bold**: `**text**`
+*Italic*: `*text*`
+~~Strikethrough~~: `~~text~~`
+`Code`: `` `code` ``
+
+## Headers
+# H1: `# Header`
+## H2: `## Header`
+### H3: `### Header`
+
+## Lists
+Unordered:
+```
+- Item 1
+- Item 2
+  - Nested
+```
+
+Ordered:
+```
+1. First
+2. Second
+   1. Nested
+```
+
+## Code Blocks
+```language
+code here
+```
+
+## Blockquotes
+> Quote: `> text`
+
+## Links
+[Text](url): `[Text](url)`
+
+## Tables
+```
+| Header | Header |
+|--------|--------|
+| Cell   | Cell   |
+```
+''',
+            styleSheet: MarkdownStyleSheet(
+              code: const TextStyle(
+                backgroundColor: Colors.black12,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }

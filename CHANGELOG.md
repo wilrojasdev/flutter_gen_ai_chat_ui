@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.3.0] - 2024-03-21
+### Breaking Changes
+- Consolidated all widget configurations into `AiChatConfig`
+- Deprecated widget-level properties in favor of config-based approach
+- Improved input handling with standalone `InputOptions`
+- Enhanced configuration structure for better developer experience
+
+### Added
+- Full markdown support with proper styling and dark mode compatibility
+- Enhanced input customization with comprehensive options
+- Improved pagination with better error handling
+- Added markdown syntax help dialog
+- Added proper blockquote and code block styling
+- Added comprehensive error handling for markdown parsing
+
+### Fixed
+- Fixed overflow issues in welcome message layout
+- Improved dark theme contrast and readability
+- Enhanced message bubble animations
+- Fixed input field spacing and margins
+- Resolved all open GitHub issues (#1-#4)
+
 ## [1.2.0] - 2024-02-11
 ### Changed
 - Made speech-to-text an optional dependency

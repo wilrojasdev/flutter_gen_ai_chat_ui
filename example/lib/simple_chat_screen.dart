@@ -20,7 +20,6 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   // Speech recognition
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
-  String? _lastError;
 
   @override
   void initState() {
@@ -57,7 +56,6 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
         onError: (error) {
           debugPrint('Speech error: $error');
           setState(() {
-            _lastError = error.errorMsg;
             _isListening = false;
           });
           _showErrorDialog(error.errorMsg);
@@ -145,7 +143,6 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
         if (available) {
           setState(() {
             _isListening = true;
-            _lastError = null;
           });
 
           await _speech.listen(
@@ -170,7 +167,6 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
         debugPrint('Listen error: $e');
         setState(() {
           _isListening = false;
-          _lastError = e.toString();
         });
         _showErrorDialog('Failed to start listening');
       }

@@ -1,11 +1,10 @@
-import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show TextInputFormatter;
+import 'package:flutter/services.dart';
 
 /// Extended input options for the chat UI.
-/// Provides additional customization options on top of the base DashChat InputOptions.
+/// Provides comprehensive customization options for the input field.
 class InputOptions {
-  const InputOptions({
+  InputOptions({
     // Base options
     this.sendOnEnter = false,
     this.alwaysShowSend = true,
@@ -16,6 +15,9 @@ class InputOptions {
     this.inputDecoration,
     this.sendButtonBuilder,
     this.margin = const EdgeInsets.all(20),
+    this.sendButtonIcon,
+    this.sendButtonIconSize,
+    this.sendButtonPadding,
 
     // Extended options
     this.textCapitalization = TextCapitalization.sentences,
@@ -31,7 +33,7 @@ class InputOptions {
     this.enableSuggestions = true,
     this.enableIMEPersonalizedLearning = true,
     this.readOnly = false,
-    this.toolbarOptions,
+    @Deprecated('Use contextMenuBuilder instead') this.toolbarOptions,
     this.smartDashesType,
     this.smartQuotesType,
     this.selectionControls,
@@ -41,11 +43,23 @@ class InputOptions {
     this.onChanged,
     this.inputFormatters,
     this.mouseCursor,
-    this.contextMenuBuilder,
+    this.contextMenuBuilder = _defaultContextMenuBuilder,
     this.undoController,
     this.spellCheckConfiguration,
     this.magnifierConfiguration,
-  });
+  }) {
+    // If sendButtonIcon is provided but no sendButtonBuilder,
+    // create a default send button builder
+    if (sendButtonIcon != null && sendButtonBuilder == null) {
+      final iconSize = sendButtonIconSize ?? 24.0;
+      final padding = sendButtonPadding ?? const EdgeInsets.all(8.0);
+      _defaultSendButtonBuilder = (onSend) => IconButton(
+            onPressed: onSend,
+            icon: Icon(sendButtonIcon, size: iconSize),
+            padding: padding,
+          );
+    }
+  }
 
   /// Whether to send the message when Enter is pressed.
   final bool sendOnEnter;
@@ -67,6 +81,29 @@ class InputOptions {
 
   /// The margin around the input box.
   final EdgeInsets margin;
+
+  /// @deprecated Use sendButtonBuilder instead
+  final IconData? sendButtonIcon;
+
+  /// @deprecated Use sendButtonBuilder instead
+  final double? sendButtonIconSize;
+
+  /// @deprecated Use sendButtonBuilder instead
+  final EdgeInsets? sendButtonPadding;
+
+  Widget Function(VoidCallback onSend)? _defaultSendButtonBuilder;
+
+  /// Gets the effective send button builder
+  Widget Function(VoidCallback onSend) get effectiveSendButtonBuilder =>
+      sendButtonBuilder ??
+      _defaultSendButtonBuilder ??
+      _defaultIconButtonBuilder;
+
+  static Widget _defaultIconButtonBuilder(VoidCallback onSend) => IconButton(
+        onPressed: onSend,
+        icon: const Icon(Icons.send, size: 24),
+        padding: const EdgeInsets.all(8),
+      );
 
   /// The type of capitalization to use for the text input.
   final TextCapitalization textCapitalization;
@@ -107,7 +144,8 @@ class InputOptions {
   /// Whether the text field is read-only.
   final bool readOnly;
 
-  /// Configuration of toolbar options.
+  /// @deprecated Use contextMenuBuilder instead
+  @Deprecated('Use contextMenuBuilder instead')
   final ToolbarOptions? toolbarOptions;
 
   /// The handling of smart dashes.
@@ -138,7 +176,8 @@ class InputOptions {
   final MouseCursor? mouseCursor;
 
   /// Builds the context menu.
-  final EditableTextContextMenuBuilder? contextMenuBuilder;
+  /// Defaults to [_defaultContextMenuBuilder] which provides standard text editing options.
+  final EditableTextContextMenuBuilder contextMenuBuilder;
 
   /// Controller for undo/redo operations.
   final UndoHistoryController? undoController;
@@ -158,6 +197,9 @@ class InputOptions {
     InputDecoration? inputDecoration,
     Widget Function(VoidCallback)? sendButtonBuilder,
     EdgeInsets? margin,
+    IconData? sendButtonIcon,
+    double? sendButtonIconSize,
+    EdgeInsets? sendButtonPadding,
     TextCapitalization? textCapitalization,
     int? maxLines,
     int? minLines,
@@ -194,6 +236,9 @@ class InputOptions {
         inputDecoration: inputDecoration ?? this.inputDecoration,
         sendButtonBuilder: sendButtonBuilder ?? this.sendButtonBuilder,
         margin: margin ?? this.margin,
+        sendButtonIcon: sendButtonIcon ?? this.sendButtonIcon,
+        sendButtonIconSize: sendButtonIconSize ?? this.sendButtonIconSize,
+        sendButtonPadding: sendButtonPadding ?? this.sendButtonPadding,
         textCapitalization: textCapitalization ?? this.textCapitalization,
         maxLines: maxLines ?? this.maxLines,
         minLines: minLines ?? this.minLines,
@@ -225,4 +270,13 @@ class InputOptions {
         magnifierConfiguration:
             magnifierConfiguration ?? this.magnifierConfiguration,
       );
+
+  static Widget _defaultContextMenuBuilder(
+    BuildContext context,
+    EditableTextState editableTextState,
+  ) {
+    return AdaptiveTextSelectionToolbar.editableText(
+      editableTextState: editableTextState,
+    );
+  }
 }

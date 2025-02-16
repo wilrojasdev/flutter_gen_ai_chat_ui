@@ -1,6 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:dash_chat_2/dash_chat_2.dart' as dash;
+import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+
 import '../models/input_options.dart';
 import 'chat_input.dart';
 
@@ -77,7 +79,7 @@ class AiChatWidgetState extends State<AiChatWidget>
     }
   }
 
-  Future<void> _handleSend(final ChatMessage message) async {
+  void _handleSend(final ChatMessage message) async {
     widget.onSendMessage(message);
   }
 
@@ -115,7 +117,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                         messages: widget.controller.messages,
                         onSend: _handleSend,
                         messageOptions: _buildMessageOptions(context),
-                        inputOptions: dash.InputOptions(
+                        inputOptions: const dash.InputOptions(
                           sendOnEnter: false,
                           alwaysShowSend: false,
                         ),
@@ -150,6 +152,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                                 text: _textController.text,
                                 user: widget.currentUser,
                                 createdAt: DateTime.now(),
+                                isMarkdown: false,
                               ),
                             );
                             _textController.clear();
@@ -359,7 +362,6 @@ class AiChatWidgetState extends State<AiChatWidget>
     final isDarkMode = theme.brightness == Brightness.dark;
 
     // Get the base input options from config or create default
-    final baseOptions = widget.config.inputOptions ?? const InputOptions();
 
     return InputOptions(
       // Apply styling from config or use defaults
@@ -491,10 +493,60 @@ class AiChatWidgetState extends State<AiChatWidget>
                 height: 1.5,
                 letterSpacing: 0.1,
               ),
-              textBuilder: (final text, final style) => SelectableText(
-                text,
-                style: style,
-              ),
+              textBuilder: (final text, final style) {
+                // Check if the message is markdown
+                if (message.isMarkdown == true) {
+                  return MarkdownBody(
+                    data: text,
+                    selectable: true,
+                    styleSheet: MarkdownStyleSheet(
+                      p: style,
+                      code: style.copyWith(
+                        fontFamily: 'monospace',
+                        backgroundColor: isDarkMode
+                            ? Colors.white.withValues(alpha: 26)
+                            : Colors.black.withValues(alpha: 26),
+                        fontSize: style.fontSize,
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 26)
+                            : Colors.black.withValues(alpha: 26),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      blockquote: style,
+                      blockquoteDecoration: BoxDecoration(
+                        color: isDarkMode
+                            ? Colors.white.withValues(alpha: 26)
+                            : Colors.black.withValues(alpha: 26),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border(
+                          left: BorderSide(
+                            color: isDarkMode
+                                ? Colors.white.withValues(alpha: 77)
+                                : Colors.black.withValues(alpha: 77),
+                            width: 4,
+                          ),
+                        ),
+                      ),
+                      h1: style.copyWith(
+                        fontSize: style.fontSize! * 1.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h2: style.copyWith(
+                        fontSize: style.fontSize! * 1.3,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h3: style.copyWith(
+                        fontSize: style.fontSize! * 1.2,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      listBullet: style,
+                    ),
+                  );
+                }
+                return SelectableText(text, style: style);
+              },
             ),
           ),
         );

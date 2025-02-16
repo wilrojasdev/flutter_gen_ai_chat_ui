@@ -334,3 +334,119 @@ See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) f
 
 ---
 ⭐ If you find this package helpful, please star the repository!
+
+## Latest Changes (v1.3.0)
+
+### Breaking Changes
+- All configurations now flow through `AiChatConfig`
+- Deprecated widget-level properties in favor of config-based approach
+- Improved input handling with standalone `InputOptions`
+
+### New Features
+- Full markdown support with dark mode
+- Enhanced input customization
+- Improved pagination
+- Better error handling
+
+## Basic Usage
+
+```dart
+AiChatWidget(
+  config: AiChatConfig(
+    // Basic configuration
+    userName: 'User',
+    aiName: 'AI Assistant',
+    hintText: 'Type a message...',
+    
+    // Input configuration
+    inputOptions: InputOptions(
+      alwaysShowSend: true,
+      sendOnEnter: true,
+      inputTextStyle: TextStyle(...),
+      inputDecoration: InputDecoration(...),
+    ),
+    
+    // Message configuration
+    messageOptions: MessageOptions(
+      showTime: true,
+      containerColor: Colors.grey[200],
+    ),
+    
+    // Pagination configuration
+    paginationConfig: PaginationConfig(
+      enabled: true,
+      loadingIndicatorOffset: 100,
+    ),
+  ),
+  currentUser: ChatUser(id: '1', firstName: 'User'),
+  aiUser: ChatUser(id: '2', firstName: 'AI'),
+  controller: ChatMessagesController(),
+  onSendMessage: (message) async {
+    // Handle message
+  },
+)
+```
+
+## Markdown Support
+
+To enable markdown in messages:
+
+```dart
+// Send markdown message
+ChatMessage(
+  text: '''
+# Title
+**Bold text**
+- List item
+```code
+print('hello')
+```
+''',
+  user: aiUser,
+  isMarkdown: true, // Enable markdown
+);
+```
+
+## Input Customization
+
+Full control over input appearance:
+
+```dart
+InputOptions(
+  // Basic options
+  sendOnEnter: true,
+  alwaysShowSend: true,
+  
+  // Styling
+  inputTextStyle: TextStyle(...),
+  inputDecoration: InputDecoration(...),
+  margin: EdgeInsets.all(20),
+  
+  // Send button
+  sendButtonBuilder: (onSend) => CustomButton(...),
+)
+```
+
+## Pagination
+
+Control message loading with pagination:
+
+```dart
+// Configure pagination
+paginationConfig: PaginationConfig(
+  enabled: true,
+  loadingIndicatorOffset: 100,
+  loadMoreIndicator: ({isLoading}) => CustomLoadingIndicator(),
+),
+
+// Handle message loading
+ChatMessagesController(
+  initialMessages: messages.take(20).toList(),
+  onLoadMoreMessages: (lastMessage) async {
+    // Load next page of messages
+    return nextPageOfMessages;
+  },
+)
+```
+
+For more examples, check the `example` folder in the repository.

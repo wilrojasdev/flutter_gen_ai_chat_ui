@@ -30,24 +30,37 @@ class AiChatConfig {
     this.readOnly = false,
     this.typingUsers,
     // UI options
-    this.inputTextStyle,
+    @Deprecated('Use inputOptions.inputTextStyle instead') this.inputTextStyle,
+    @Deprecated('Use inputOptions.inputDecoration instead')
     this.inputDecoration,
     this.messageBuilder,
     this.scrollToBottomBuilder,
+    @Deprecated('Use inputOptions.sendButtonBuilder instead')
     this.sendButtonBuilder,
+    @Deprecated('Use inputOptions.inputDecoration.suffixIcon instead')
     this.sendButtonIcon,
+    @Deprecated('Configure through inputOptions.inputDecoration.suffixIcon')
     this.sendButtonIconSize,
+    @Deprecated('Configure through inputOptions.inputDecoration.suffixIcon')
     this.sendButtonPadding,
     // Pagination options
-    this.enablePagination = false,
+    @Deprecated('Use paginationConfig instead') this.enablePagination = false,
+    @Deprecated('Use paginationConfig instead')
     this.paginationLoadingIndicatorOffset = 100,
-    this.loadMoreIndicator,
+    @Deprecated('Use paginationConfig instead') this.loadMoreIndicator,
+    this.paginationConfig = const PaginationConfig(),
+    @Deprecated('Use callbackConfig.onSendButtonPressed instead')
     this.onSendButtonPressed,
+    @Deprecated('Use callbackConfig.onClearButtonPressed instead')
     this.onClearButtonPressed,
+    @Deprecated('Use callbackConfig.onStopButtonPressed instead')
     this.onStopButtonPressed,
     // Loading state
-    this.isLoading = false,
+    @Deprecated('Use loadingConfig.isLoading instead') this.isLoading = false,
+    @Deprecated('Use loadingConfig.loadingIndicator instead')
     this.loadingIndicator,
+    this.loadingConfig = const LoadingConfig(),
+    this.callbackConfig = const CallbackConfig(),
   });
 
   /// The name of the user in the chat interface.
@@ -104,10 +117,12 @@ class AiChatConfig {
   /// List of users currently typing.
   final List<ChatUser>? typingUsers;
 
-  /// Custom style for the input text.
+  /// @deprecated Use inputOptions.inputTextStyle instead
+  @Deprecated('Use inputOptions.inputTextStyle instead')
   final TextStyle? inputTextStyle;
 
-  /// Custom decoration for the input field.
+  /// @deprecated Use inputOptions.inputDecoration instead
+  @Deprecated('Use inputOptions.inputDecoration instead')
   final InputDecoration? inputDecoration;
 
   /// Custom builder for message bubbles.
@@ -116,40 +131,61 @@ class AiChatConfig {
   /// Custom builder for the scroll-to-bottom button.
   final Widget Function(ScrollController)? scrollToBottomBuilder;
 
-  /// Custom builder for the send button.
+  /// @deprecated Use inputOptions.sendButtonBuilder instead
+  @Deprecated('Use inputOptions.sendButtonBuilder instead')
   final Widget Function(void Function() onSend)? sendButtonBuilder;
 
-  /// Custom icon for the send button.
+  /// @deprecated Use inputOptions.inputDecoration.suffixIcon instead
+  @Deprecated('Use inputOptions.inputDecoration.suffixIcon instead')
   final IconData? sendButtonIcon;
 
-  /// Custom size for the send button icon.
+  /// @deprecated Configure through inputOptions.inputDecoration.suffixIcon
+  @Deprecated('Configure through inputOptions.inputDecoration.suffixIcon')
   final double? sendButtonIconSize;
 
-  /// Custom padding for the send button.
+  /// @deprecated Configure through inputOptions.inputDecoration.suffixIcon
+  @Deprecated('Configure through inputOptions.inputDecoration.suffixIcon')
   final EdgeInsets? sendButtonPadding;
 
-  /// Whether to enable message pagination. Defaults to false.
+  /// Configuration for pagination
+  final PaginationConfig paginationConfig;
+
+  /// @deprecated Use paginationConfig.enabled instead
+  @Deprecated('Use paginationConfig.enabled instead')
   final bool enablePagination;
 
-  /// Offset to trigger pagination loading.
+  /// @deprecated Use paginationConfig.loadingIndicatorOffset instead
+  @Deprecated('Use paginationConfig.loadingIndicatorOffset instead')
   final double paginationLoadingIndicatorOffset;
 
-  /// Custom builder for the pagination loading indicator.
+  /// @deprecated Use paginationConfig.loadMoreIndicator instead
+  @Deprecated('Use paginationConfig.loadMoreIndicator instead')
   final Widget Function({bool isLoading})? loadMoreIndicator;
 
-  /// Callback function when the send button is pressed
+  /// Configuration for callbacks
+  final CallbackConfig callbackConfig;
+
+  /// @deprecated Use callbackConfig.onSendButtonPressed instead
+  @Deprecated('Use callbackConfig.onSendButtonPressed instead')
   final void Function(String message)? onSendButtonPressed;
 
-  /// Callback function when the clear button is pressed
+  /// @deprecated Use callbackConfig.onClearButtonPressed instead
+  @Deprecated('Use callbackConfig.onClearButtonPressed instead')
   final void Function()? onClearButtonPressed;
 
-  /// Callback function when the stop button is pressed
+  /// @deprecated Use callbackConfig.onStopButtonPressed instead
+  @Deprecated('Use callbackConfig.onStopButtonPressed instead')
   final void Function()? onStopButtonPressed;
 
-  /// Whether the chat is in loading state. Defaults to false.
+  /// Configuration for loading states
+  final LoadingConfig loadingConfig;
+
+  /// @deprecated Use loadingConfig.isLoading instead
+  @Deprecated('Use loadingConfig.isLoading instead')
   final bool isLoading;
 
-  /// Custom loading indicator widget.
+  /// @deprecated Use loadingConfig.loadingIndicator instead
+  @Deprecated('Use loadingConfig.loadingIndicator instead')
   final Widget? loadingIndicator;
 
   /// Creates a copy of this config with the given fields replaced with new values
@@ -187,6 +223,8 @@ class AiChatConfig {
     void Function()? onStopButtonPressed,
     bool? isLoading,
     Widget? loadingIndicator,
+    LoadingConfig? loadingConfig,
+    CallbackConfig? callbackConfig,
   }) =>
       AiChatConfig(
         userName: userName ?? this.userName,
@@ -226,5 +264,129 @@ class AiChatConfig {
         onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
         isLoading: isLoading ?? this.isLoading,
         loadingIndicator: loadingIndicator ?? this.loadingIndicator,
+        loadingConfig: loadingConfig ?? this.loadingConfig,
+        callbackConfig: callbackConfig ?? this.callbackConfig,
+      );
+}
+
+/// Configuration for chat message pagination
+class PaginationConfig {
+  const PaginationConfig({
+    this.enabled = false,
+    this.loadingIndicatorOffset = 100,
+    this.loadMoreIndicator,
+  });
+
+  /// Whether pagination is enabled
+  final bool enabled;
+
+  /// Offset from bottom to trigger pagination loading
+  final double loadingIndicatorOffset;
+
+  /// Custom loading indicator widget builder
+  final Widget Function({bool isLoading})? loadMoreIndicator;
+
+  /// Creates a copy with the given fields replaced with new values
+  PaginationConfig copyWith({
+    bool? enabled,
+    double? loadingIndicatorOffset,
+    Widget Function({bool isLoading})? loadMoreIndicator,
+  }) =>
+      PaginationConfig(
+        enabled: enabled ?? this.enabled,
+        loadingIndicatorOffset:
+            loadingIndicatorOffset ?? this.loadingIndicatorOffset,
+        loadMoreIndicator: loadMoreIndicator ?? this.loadMoreIndicator,
+      );
+}
+
+/// Configuration for loading states in the chat
+class LoadingConfig {
+  const LoadingConfig({
+    this.isLoading = false,
+    this.loadingIndicator,
+    this.typingIndicatorColor,
+    this.typingIndicatorSize = 24.0,
+    this.typingIndicatorSpacing = 4.0,
+  });
+
+  /// Whether the chat is in loading state
+  final bool isLoading;
+
+  /// Custom loading indicator widget
+  final Widget? loadingIndicator;
+
+  /// Color of the typing indicator dots
+  final Color? typingIndicatorColor;
+
+  /// Size of the typing indicator dots
+  final double typingIndicatorSize;
+
+  /// Spacing between typing indicator dots
+  final double typingIndicatorSpacing;
+
+  /// Creates a copy with the given fields replaced with new values
+  LoadingConfig copyWith({
+    bool? isLoading,
+    Widget? loadingIndicator,
+    Color? typingIndicatorColor,
+    double? typingIndicatorSize,
+    double? typingIndicatorSpacing,
+  }) =>
+      LoadingConfig(
+        isLoading: isLoading ?? this.isLoading,
+        loadingIndicator: loadingIndicator ?? this.loadingIndicator,
+        typingIndicatorColor: typingIndicatorColor ?? this.typingIndicatorColor,
+        typingIndicatorSize: typingIndicatorSize ?? this.typingIndicatorSize,
+        typingIndicatorSpacing:
+            typingIndicatorSpacing ?? this.typingIndicatorSpacing,
+      );
+}
+
+/// Configuration for chat callbacks
+class CallbackConfig {
+  const CallbackConfig({
+    this.onSendButtonPressed,
+    this.onClearButtonPressed,
+    this.onStopButtonPressed,
+    this.onMessageLongPress,
+    this.onMessageTap,
+    this.onLoadMore,
+  });
+
+  /// Called when the send button is pressed
+  final void Function(String message)? onSendButtonPressed;
+
+  /// Called when the clear button is pressed
+  final void Function()? onClearButtonPressed;
+
+  /// Called when the stop button is pressed
+  final void Function()? onStopButtonPressed;
+
+  /// Called when a message is long pressed
+  final void Function(ChatMessage message)? onMessageLongPress;
+
+  /// Called when a message is tapped
+  final void Function(ChatMessage message)? onMessageTap;
+
+  /// Called when more messages need to be loaded
+  final Future<void> Function()? onLoadMore;
+
+  /// Creates a copy with the given fields replaced with new values
+  CallbackConfig copyWith({
+    void Function(String message)? onSendButtonPressed,
+    void Function()? onClearButtonPressed,
+    void Function()? onStopButtonPressed,
+    void Function(ChatMessage message)? onMessageLongPress,
+    void Function(ChatMessage message)? onMessageTap,
+    Future<void> Function()? onLoadMore,
+  }) =>
+      CallbackConfig(
+        onSendButtonPressed: onSendButtonPressed ?? this.onSendButtonPressed,
+        onClearButtonPressed: onClearButtonPressed ?? this.onClearButtonPressed,
+        onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
+        onMessageLongPress: onMessageLongPress ?? this.onMessageLongPress,
+        onMessageTap: onMessageTap ?? this.onMessageTap,
+        onLoadMore: onLoadMore ?? this.onLoadMore,
       );
 }
