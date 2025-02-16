@@ -110,3 +110,15 @@
 * Updated flutter_streaming_text_markdown to version 1.1.0
 * Improved streaming text performance and reliability
 * Enhanced markdown rendering capabilities
+
+## [1.3.0] - Unreleased
+### Breaking Changes
+- Moved all widget-level configurations into `AiChatConfig`
+- Added deprecation warnings for widget-level properties
+- Improved configuration structure for better developer experience
+- Enhanced documentation and property descriptions
+
+### Added
+- New loading state configurations in `AiChatConfig`
+- Improved error messages and assertions
+- Better documentation for input options and animations

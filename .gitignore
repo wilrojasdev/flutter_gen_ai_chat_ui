@@ -27,3 +27,30 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 build/
+
+# Logs
+*.log
+
+# Flutter specific
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Generated files
+.dart_tool/
+.packages
+
+# Build outputs
+build/
+
+# Other
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# MacOS
+.DS_Store
+
+# Ignore logger and context files
+logger.txt
+context.md

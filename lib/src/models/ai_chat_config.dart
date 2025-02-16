@@ -6,6 +6,8 @@ import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 ///
 /// This class provides extensive customization options for the chat UI,
 /// including themes, animations, input styling, and message display options.
+/// All configurations should be passed through this class to maintain
+/// a single source of configuration.
 class AiChatConfig {
   const AiChatConfig({
     this.userName = 'User',
@@ -43,6 +45,9 @@ class AiChatConfig {
     this.onSendButtonPressed,
     this.onClearButtonPressed,
     this.onStopButtonPressed,
+    // Loading state
+    this.isLoading = false,
+    this.loadingIndicator,
   });
 
   /// The name of the user in the chat interface.
@@ -61,6 +66,7 @@ class AiChatConfig {
   final EdgeInsets? padding;
 
   /// Whether to enable message animations. Defaults to true.
+  /// This controls both message appearance and typing animations.
   final bool enableAnimation;
 
   /// Whether to show message timestamps. Defaults to true.
@@ -76,6 +82,8 @@ class AiChatConfig {
   final ExampleQuestionConfig? exampleQuestionConfig;
 
   /// Custom options for the input field.
+  /// Use this to customize the input behavior and appearance.
+  /// For example: alwaysShowSend, sendOnEnter, etc.
   final InputOptions? inputOptions;
 
   /// Custom options for message display.
@@ -138,6 +146,12 @@ class AiChatConfig {
   /// Callback function when the stop button is pressed
   final void Function()? onStopButtonPressed;
 
+  /// Whether the chat is in loading state. Defaults to false.
+  final bool isLoading;
+
+  /// Custom loading indicator widget.
+  final Widget? loadingIndicator;
+
   /// Creates a copy of this config with the given fields replaced with new values
   AiChatConfig copyWith({
     String? userName,
@@ -171,6 +185,8 @@ class AiChatConfig {
     void Function(String message)? onSendButtonPressed,
     void Function()? onClearButtonPressed,
     void Function()? onStopButtonPressed,
+    bool? isLoading,
+    Widget? loadingIndicator,
   }) =>
       AiChatConfig(
         userName: userName ?? this.userName,
@@ -208,5 +224,7 @@ class AiChatConfig {
         onSendButtonPressed: onSendButtonPressed ?? this.onSendButtonPressed,
         onClearButtonPressed: onClearButtonPressed ?? this.onClearButtonPressed,
         onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
+        isLoading: isLoading ?? this.isLoading,
+        loadingIndicator: loadingIndicator ?? this.loadingIndicator,
       );
 }

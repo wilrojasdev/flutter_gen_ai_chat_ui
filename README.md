@@ -59,6 +59,14 @@ AiChatWidget(
   config: AiChatConfig(
     hintText: 'Type a message...',
     enableAnimation: true,
+    inputOptions: InputOptions(
+      alwaysShowSend: true,
+      sendOnEnter: true,
+    ),
+    messageOptions: MessageOptions(
+      showTime: true,
+      containerColor: Colors.grey[200],
+    ),
   ),
   currentUser: ChatUser(id: '1', firstName: 'User'),
   aiUser: ChatUser(id: '2', firstName: 'AI'),
@@ -74,7 +82,7 @@ AiChatWidget(
 1. Add dependency:
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.2.0
+  flutter_gen_ai_chat_ui: ^1.3.0
 ```
 
 2. Import:
@@ -90,20 +98,60 @@ dependencies:
 
 ## Configuration
 
-The `AiChatConfig` class provides extensive customization:
+All configurations are now centralized in the `AiChatConfig` class:
 
 ```dart
 AiChatConfig({
-  String? userName,                    // User's display name
-  String? aiName,                      // AI assistant's name
-  String? hintText,                    // Input placeholder
-  double? maxWidth,                    // Maximum chat width
-  bool enableAnimation = true,         // Enable animations
-  bool showTimestamp = true,          // Show timestamps
-  WelcomeMessageConfig? welcomeConfig, // Welcome message
-  MessageOptions? messageOptions,      // Bubble styling
-  InputDecoration? inputDecoration,    // Input styling
+  String userName = 'User',           // User's display name
+  String aiName = 'AI',              // AI assistant's name
+  String hintText = 'Type a message...',
+  double? maxWidth,                  // Maximum chat width
+  bool enableAnimation = true,       // Enable animations
+  bool showTimestamp = true,         // Show timestamps
+  
+  InputOptions? inputOptions,        // Input field options
+  TextStyle? inputTextStyle,         // Input text style
+  InputDecoration? inputDecoration,  // Input field decoration
+  
+  MessageOptions? messageOptions,    // Message bubble styling
+  MessageListOptions? messageListOptions,  // Message list options
+  
+  WelcomeMessageConfig? welcomeMessageConfig,
+  List<ExampleQuestion> exampleQuestions = const [],
+  
+  bool isLoading = false,
+  Widget? loadingIndicator,
+  
+  bool enablePagination = false,
+  bool readOnly = false,
+  // ... and more
 })
+```
+
+### Migration from 1.2.x
+
+If you're upgrading from version 1.2.x, note these changes:
+1. Widget-level properties are now in `AiChatConfig`
+2. Old properties are marked as deprecated
+3. Use the new configuration structure:
+
+```dart
+// Old way (deprecated)
+AiChatWidget(
+  enableAnimation: true,
+  loadingIndicator: MyLoadingWidget(),
+  // ...
+)
+
+// New way
+AiChatWidget(
+  config: AiChatConfig(
+    enableAnimation: true,
+    loadingIndicator: MyLoadingWidget(),
+    // ...
+  ),
+  // ...
+)
 ```
 
 ## Advanced Features
@@ -277,7 +325,7 @@ See [example/lib/simple_chat_screen.dart](example/lib/simple_chat_screen.dart) f
 
 | Flutter Version | Package Version |
 |----------------|-----------------|
-| >=3.0.0        | ^1.2.0         |
+| >=3.0.0        | ^1.3.0         |
 | >=2.5.0        | ^1.1.0         |
 
 ## License

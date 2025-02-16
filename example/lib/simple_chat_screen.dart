@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:dash_chat_2/dash_chat_2.dart' show InputOptions;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class SimpleChatScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
   // Speech recognition
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
+  String? _lastError;
 
   @override
   void initState() {
@@ -48,37 +50,133 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
     _initSpeech();
   }
 
-  // Initialize speech recognition
+  // Initialize speech recognition with proper error handling
   Future<void> _initSpeech() async {
-    await _speech.initialize(
-      onError: (error) => debugPrint('Speech error: $error'),
-      onStatus: (status) => debugPrint('Speech status: $status'),
+    try {
+      final available = await _speech.initialize(
+        onError: (error) {
+          debugPrint('Speech error: $error');
+          setState(() {
+            _lastError = error.errorMsg;
+            _isListening = false;
+          });
+          _showErrorDialog(error.errorMsg);
+        },
+        onStatus: (status) {
+          debugPrint('Speech status: $status');
+          if (status == 'notListening') {
+            setState(() => _isListening = false);
+          }
+        },
+        finalTimeout: const Duration(milliseconds: 5000),
+      );
+
+      if (!available) {
+        _showErrorDialog('Speech recognition not available on this device');
+      }
+    } catch (e) {
+      debugPrint('Speech initialization error: $e');
+      _showErrorDialog('Failed to initialize speech recognition');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Speech Recognition Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _requestPermissions();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
     );
   }
 
-  // Toggle listening
+  Future<void> _requestPermissions() async {
+    try {
+      if (Theme.of(context).platform == TargetPlatform.iOS) {
+        // Open iOS settings - no direct method, use system settings
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permissions Required'),
+            content: const Text(
+                'Please enable microphone and speech recognition permissions in Settings.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // For Android, request permissions directly
+        final status = await _speech.hasPermission;
+        if (!status) {
+          // The package only provides hasPermission check
+          // Permissions must be requested through the initialize method
+          await _speech.initialize();
+        }
+      }
+    } catch (e) {
+      debugPrint('Permission request error: $e');
+    }
+  }
+
+  // Improved listen method with error handling
   Future<void> _listen() async {
     if (!_isListening) {
-      final available = await _speech.initialize();
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (result) {
-            if (result.finalResult && result.recognizedWords.isNotEmpty) {
-              final message = ChatMessage(
-                text: result.recognizedWords,
-                user: _currentUser,
-                createdAt: DateTime.now(),
-              );
-              _handleSendMessage(message);
-              setState(() => _isListening = false);
-            }
-          },
-        );
+      try {
+        final available = await _speech.initialize();
+        if (available) {
+          setState(() {
+            _isListening = true;
+            _lastError = null;
+          });
+
+          await _speech.listen(
+            onResult: (result) {
+              if (result.finalResult) {
+                final message = ChatMessage(
+                  text: result.recognizedWords,
+                  user: _currentUser,
+                  createdAt: DateTime.now(),
+                );
+                _handleSendMessage(message);
+                setState(() => _isListening = false);
+              }
+            },
+            cancelOnError: true,
+            listenMode: stt.ListenMode.confirmation,
+          );
+        } else {
+          _showErrorDialog('Speech recognition not available');
+        }
+      } catch (e) {
+        debugPrint('Listen error: $e');
+        setState(() {
+          _isListening = false;
+          _lastError = e.toString();
+        });
+        _showErrorDialog('Failed to start listening');
       }
     } else {
       setState(() => _isListening = false);
-      _speech.stop();
+      await _speech.stop();
     }
   }
 
@@ -96,7 +194,7 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
 
       // Create and add AI response
       final aiMessage = ChatMessage(
-        text: "This is a demo response to: ${message.text}",
+        text: "This is a simulated AI response to: ${message.text}",
         user: _aiUser,
         createdAt: DateTime.now(),
       );
@@ -112,13 +210,44 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
     return Scaffold(
       body: AiChatWidget(
         config: AiChatConfig(
+          // Basic settings
+          userName: 'User',
+          aiName: 'AI Assistant',
           hintText: 'Type a message...',
           enableAnimation: true,
+
+          // Input configuration
+          inputOptions: const InputOptions(
+            alwaysShowSend: true,
+            sendOnEnter: true,
+          ),
+          inputDecoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            prefixIcon: IconButton(
+              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+              onPressed: _listen,
+            ),
+          ),
+
+          // Message display
+          messageOptions: MessageOptions(
+            showTime: true,
+            containerColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF1E1E1E)
+                : Colors.grey[50]!,
+            currentUserContainerColor:
+                Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF7B61FF)
+                    : Colors.blue,
+          ),
+
+          // Welcome message
           welcomeMessageConfig: const WelcomeMessageConfig(
             title: 'Welcome to Simple Chat!',
             questionsSectionTitle: 'Try asking these questions:',
           ),
-          aiName: 'AI Assistant',
           exampleQuestions: const [
             ExampleQuestion(
               question: 'What is the weather in Tokyo?',
@@ -130,22 +259,20 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
               question: 'What is the capital of Japan?',
             ),
           ],
-          // Custom input decoration with speech button
-          inputDecoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            prefixIcon: IconButton(
-              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-              onPressed: _listen,
-            ),
+
+          // Loading state
+          isLoading: _isLoading,
+          loadingIndicator: const LoadingWidget(
+            texts: [
+              'AI is thinking...',
+              'Processing your message...',
+            ],
           ),
         ),
         currentUser: _currentUser,
         aiUser: _aiUser,
         controller: _controller,
         onSendMessage: _handleSendMessage,
-        isLoading: _isLoading,
       ),
     );
   }

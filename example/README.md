@@ -1,27 +1,127 @@
 # Flutter Gen AI Chat UI Examples
 
-This directory contains several examples demonstrating different features and use cases of the `flutter_gen_ai_chat_ui` package.
+This directory contains example implementations of the `flutter_gen_ai_chat_ui` package.
 
-## Getting Started
+## Examples
 
-1. Install dependencies:
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^1.1.9  # Latest version
-  speech_to_text: ^6.6.0  # Optional: Only if you need speech recognition
-```
+1. **Simple Chat** (`lib/simple_chat_screen.dart`)
+   - Basic implementation with essential features
+   - Shows how to handle messages and configure the UI
+   - Includes speech recognition example
 
-2. Import the package:
 ```dart
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-// Optional: For speech recognition
-import 'package:speech_to_text/speech_to_text.dart' as stt;
+AiChatWidget(
+  config: AiChatConfig(
+    hintText: 'Type a message...',
+    enableAnimation: true,
+    inputOptions: InputOptions(
+      alwaysShowSend: true,
+    ),
+    // Custom input decoration with speech button
+    inputDecoration: InputDecoration(
+      prefixIcon: IconButton(
+        icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+        onPressed: _listen,
+      ),
+    ),
+  ),
+  currentUser: _currentUser,
+  aiUser: _aiUser,
+  controller: _controller,
+  onSendMessage: _handleSendMessage,
+)
 ```
 
-3. Platform Setup (Optional - Only for speech recognition)
+2. **Streaming Example** (`lib/streaming_example.dart`)
+   - Demonstrates word-by-word streaming
+   - Shows loading states and animations
+   - Implements markdown support
 
-#### iOS
-Add to `ios/Runner/Info.plist`:
+```dart
+AiChatWidget(
+  config: AiChatConfig(
+    enableAnimation: true,
+    isLoading: _isLoading,
+    messageOptions: MessageOptions(
+      containerColor: isDark ? Color(0xFF1E1E1E) : Colors.grey[50],
+      currentUserContainerColor: isDark ? Color(0xFF7B61FF) : Colors.blue,
+    ),
+  ),
+  // ... other properties
+)
+```
+
+3. **Custom Styling** (`lib/custom_styling_example.dart`)
+   - Shows theme customization
+   - Demonstrates message bubble styling
+   - Custom welcome message implementation
+
+4. **Detailed Example** (`lib/detailed_example.dart`)
+   - Comprehensive implementation
+   - Shows all available customization options
+   - Includes error handling and loading states
+
+## Running the Examples
+
+1. Clone the repository
+2. Navigate to the example directory
+3. Run `flutter pub get`
+4. Run `flutter run`
+
+## Configuration Guide
+
+All configurations are now centralized in `AiChatConfig`. Here's how to use different features:
+
+### Basic Configuration
+```dart
+AiChatConfig(
+  userName: 'User',
+  aiName: 'AI Assistant',
+  hintText: 'Type a message...',
+  enableAnimation: true,
+)
+```
+
+### Message Styling
+```dart
+AiChatConfig(
+  messageOptions: MessageOptions(
+    containerColor: Colors.grey[50],
+    currentUserContainerColor: Colors.blue,
+    textColor: Colors.black,
+    showTime: true,
+  ),
+)
+```
+
+### Input Customization
+```dart
+AiChatConfig(
+  inputOptions: InputOptions(
+    alwaysShowSend: true,
+    sendOnEnter: true,
+  ),
+  inputDecoration: InputDecoration(
+    // Your custom decoration
+  ),
+)
+```
+
+### Loading States
+```dart
+AiChatConfig(
+  isLoading: _isLoading,
+  loadingIndicator: LoadingWidget(
+    texts: ['AI is thinking...', 'Processing...'],
+  ),
+)
+```
+
+## Platform Setup
+
+### Speech Recognition
+
+1. iOS (`ios/Runner/Info.plist`):
 ```xml
 <key>NSMicrophoneUsageDescription</key>
 <string>This app needs microphone access for speech recognition</string>
@@ -29,94 +129,10 @@ Add to `ios/Runner/Info.plist`:
 <string>This app needs speech recognition to convert your voice to text</string>
 ```
 
-#### Android
-Add to `android/app/src/main/AndroidManifest.xml`:
+2. Android (`android/app/src/main/AndroidManifest.xml`):
 ```xml
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
-
-Note: Speech recognition is only supported on physical devices.
-
-## Examples
-
-### 1. Simple Chat Screen (`simple_chat_screen.dart`)
-Basic implementation with minimal configuration, including:
-- Core chat functionality
-- Optional speech-to-text integration
-- Custom input decoration
-- Basic error handling
-
-```dart
-// Basic chat implementation
-AiChatWidget(
-  config: AiChatConfig(
-    hintText: 'Type a message...',
-    enableAnimation: true,
-    welcomeMessageConfig: const WelcomeMessageConfig(
-      title: 'Welcome to Simple Chat!',
-      questionsSectionTitle: 'Try asking these questions:',
-    ),
-  ),
-  currentUser: ChatUser(id: '1', firstName: 'User'),
-  aiUser: ChatUser(id: '2', firstName: 'AI'),
-  controller: ChatMessagesController(),
-  onSendMessage: (message) {
-    // Handle message
-  },
-)
-
-// Optional: Speech-to-text integration
-final speech = stt.SpeechToText();
-await speech.initialize(
-  onError: (error) => print('Speech error: $error'),
-  onStatus: (status) => print('Speech status: $status'),
-);
-
-// Add speech button to input decoration
-inputDecoration: InputDecoration(
-  prefixIcon: IconButton(
-    icon: Icon(isListening ? Icons.mic : Icons.mic_none),
-    onPressed: listen,
-  ),
-),
-```
-
-### 2. Custom Styling (`custom_styling_example.dart`)
-Demonstrates theme customization including:
-- Dark mode support
-- Custom message bubble colors
-- Custom typography
-- Adaptive theme colors
-
-### 3. Detailed Example (`detailed_example.dart`)
-Shows advanced features including:
-- Custom message bubbles
-- Loading animations with shimmer effect
-- Pagination with custom offset
-- Example questions with tap actions
-- Responsive design
-- Theme extension usage
-
-### 4. Streaming Example (`streaming_example.dart`)
-Demonstrates:
-- Word-by-word text streaming
-- Smooth message animations
-- Real-time updates
-- Markdown rendering during streaming
-
-### 5. Markdown Example (`markdown_example.dart`)
-Shows:
-- Markdown rendering capabilities
-- Code syntax highlighting
-- Custom markdown styling
-- Link handling
-
-### 6. Pagination Example (`pagination_example.dart`)
-Demonstrates:
-- Historical message loading
-- Custom loading indicators
-- Scroll position management
-- Efficient message rendering
 
 ## Platform-Specific Features
 
@@ -143,13 +159,6 @@ Demonstrates:
 - Keyboard navigation
 - Native scrollbar styling
 - High-resolution display support
-
-## Running the Examples
-
-1. Clone the repository
-2. Navigate to the example directory
-3. Run `flutter pub get`
-4. Run `flutter run`
 
 ## Customization
 

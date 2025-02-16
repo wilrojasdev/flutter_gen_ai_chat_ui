@@ -1,6 +1,8 @@
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
+import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import '../models/input_options.dart';
+import 'chat_input.dart';
 
 /// A customizable chat widget for AI conversations.
 class AiChatWidget extends StatefulWidget {
@@ -11,19 +13,26 @@ class AiChatWidget extends StatefulWidget {
     required this.aiUser,
     required this.controller,
     required this.onSendMessage,
-    this.loadingIndicator,
+    @Deprecated('Use config.loadingIndicator instead') this.loadingIndicator,
+    @Deprecated('Use config.enableAnimation instead')
     this.enableAnimation = true,
+    @Deprecated('Use config.welcomeMessageBuilder instead')
     this.welcomeMessageBuilder,
-    this.isLoading = false,
+    @Deprecated('Use config.isLoading instead') this.isLoading = false,
   });
+
   final AiChatConfig config;
   final ChatUser currentUser;
   final ChatUser aiUser;
   final ChatMessagesController controller;
-  final Widget? loadingIndicator;
-  final bool enableAnimation;
   final void Function(ChatMessage message) onSendMessage;
+  @Deprecated('Use config.loadingIndicator instead')
+  final Widget? loadingIndicator;
+  @Deprecated('Use config.enableAnimation instead')
+  final bool enableAnimation;
+  @Deprecated('Use config.welcomeMessageBuilder instead')
   final Widget Function()? welcomeMessageBuilder;
+  @Deprecated('Use config.isLoading instead')
   final bool isLoading;
 
   @override
@@ -35,6 +44,8 @@ class AiChatWidgetState extends State<AiChatWidget>
   final ScrollController _scrollController = ScrollController();
   bool _showScrollToBottom = false;
   late AnimationController _animationController;
+  final TextEditingController _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -81,33 +92,74 @@ class AiChatWidgetState extends State<AiChatWidget>
         builder: (final context, final child) => Container(
           width: widget.config.maxWidth ?? double.infinity,
           padding: widget.config.padding,
-          child: Column(
+          child: Stack(
             children: [
-              if (widget.controller.showWelcomeMessage)
-                widget.welcomeMessageBuilder?.call() ??
-                    _buildWelcomeMessage(context),
-              Expanded(
-                child: Material(
-                  type: MaterialType.transparency,
-                  child: DashChat(
-                    currentUser: widget.currentUser,
-                    onSend: _handleSend,
-                    messages: widget.controller.messages,
-                    inputOptions: _buildInputOptions(context),
-                    messageOptions: widget.config.messageOptions ??
-                        _buildMessageOptions(context),
-                    messageListOptions: widget.config.messageListOptions ??
-                        _buildMessageListOptions(),
-                    quickReplyOptions: widget.config.quickReplyOptions ??
-                        const QuickReplyOptions(),
-                    scrollToBottomOptions:
-                        widget.config.scrollToBottomOptions ??
-                            _buildScrollOptions(),
-                    readOnly: widget.config.readOnly,
-                    typingUsers: widget.config.typingUsers,
+              Column(
+                children: [
+                  if (widget.controller.showWelcomeMessage)
+                    Container(
+                      // constraints: const BoxConstraints(maxHeight: 250),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: widget.welcomeMessageBuilder?.call() ??
+                            _buildWelcomeMessage(context),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 80), // Add bottom padding for input box
+                      child: dash.DashChat(
+                        currentUser: widget.currentUser,
+                        messages: widget.controller.messages,
+                        onSend: _handleSend,
+                        messageOptions: _buildMessageOptions(context),
+                        inputOptions: dash.InputOptions(
+                          sendOnEnter: false,
+                          alwaysShowSend: false,
+                        ),
+                        typingUsers: widget.config.typingUsers,
+                        messageListOptions: _buildMessageListOptions(context),
+                        readOnly: true,
+                        quickReplyOptions: _buildQuickReplyOptions(context),
+                        scrollToBottomOptions:
+                            _buildScrollToBottomOptions(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (!widget.config.readOnly)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Material(
+                    elevation: 8,
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: ChatInput(
+                        controller: _textController,
+                        focusNode: _focusNode,
+                        onSend: () {
+                          if (_textController.text.trim().isNotEmpty) {
+                            widget.onSendMessage(
+                              dash.ChatMessage(
+                                text: _textController.text,
+                                user: widget.currentUser,
+                                createdAt: DateTime.now(),
+                              ),
+                            );
+                            _textController.clear();
+                          }
+                        },
+                        options: _buildInputOptions(context),
+                      ),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -127,9 +179,9 @@ class AiChatWidgetState extends State<AiChatWidget>
         margin: welcomeConfig?.containerMargin ??
             const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 12,
+              vertical: 8,
             ),
-        padding: welcomeConfig?.containerPadding ?? const EdgeInsets.all(24),
+        padding: welcomeConfig?.containerPadding ?? const EdgeInsets.all(16),
         decoration: welcomeConfig?.containerDecoration ??
             BoxDecoration(
               color: isDarkMode ? const Color(0xFF141414) : Colors.white,
@@ -290,12 +342,15 @@ class AiChatWidgetState extends State<AiChatWidget>
   }
 
   // Helper methods to build various options
-  ScrollToBottomOptions _buildScrollOptions() => ScrollToBottomOptions(
-        disabled: !_showScrollToBottom,
-        onScrollToBottomPress: _scrollToBottom,
-        scrollToBottomBuilder: widget.config.scrollToBottomBuilder ??
-            (final scrollController) => _defaultScrollToBottomBuilder(),
-      );
+  dash.ScrollToBottomOptions _buildScrollToBottomOptions(
+      final BuildContext context) {
+    return dash.ScrollToBottomOptions(
+      disabled: !_showScrollToBottom,
+      onScrollToBottomPress: _scrollToBottom,
+      scrollToBottomBuilder: widget.config.scrollToBottomBuilder ??
+          (final scrollController) => _defaultScrollToBottomBuilder(),
+    );
+  }
 
   InputOptions _buildInputOptions(final BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -303,15 +358,21 @@ class AiChatWidgetState extends State<AiChatWidget>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
+    // Get the base input options from config or create default
+    final baseOptions = widget.config.inputOptions ?? const InputOptions();
+
     return InputOptions(
-      sendOnEnter: false,
-      autocorrect: false,
+      // Apply styling from config or use defaults
       inputTextStyle: widget.config.inputTextStyle ??
           TextStyle(
             color: isDarkMode ? Colors.white : Colors.black87,
             fontSize: 16,
             height: 1.5,
           ),
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 4,
+      ),
       inputDecoration: widget.config.inputDecoration ??
           InputDecoration(
             isDense: true,
@@ -323,8 +384,8 @@ class AiChatWidgetState extends State<AiChatWidget>
               fontSize: 16,
             ),
             contentPadding: EdgeInsets.symmetric(
-              horizontal: isTablet ? 24 : 20,
-              vertical: isTablet ? 16 : 14,
+              horizontal: isTablet ? 20 : 16,
+              vertical: isTablet ? 14 : 12,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -332,6 +393,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                 color: isDarkMode
                     ? Colors.white.withAlpha(26)
                     : Colors.black.withAlpha(13),
+                width: 1,
               ),
             ),
             enabledBorder: OutlineInputBorder(
@@ -340,6 +402,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                 color: isDarkMode
                     ? Colors.white.withAlpha(26)
                     : Colors.black.withAlpha(13),
+                width: 1,
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -350,7 +413,6 @@ class AiChatWidgetState extends State<AiChatWidget>
               ),
             ),
           ),
-      leading: null,
       sendButtonBuilder: widget.config.sendButtonBuilder ??
           (final onSend) => Container(
                 margin: const EdgeInsets.only(left: 8, right: 4),
@@ -363,7 +425,7 @@ class AiChatWidgetState extends State<AiChatWidget>
                   icon: Icon(
                     widget.config.sendButtonIcon ?? Icons.send_rounded,
                     color: Colors.white,
-                    size: 20,
+                    size: widget.config.sendButtonIconSize ?? 20,
                   ),
                   onPressed: onSend,
                 ),
@@ -371,7 +433,7 @@ class AiChatWidgetState extends State<AiChatWidget>
     );
   }
 
-  MessageOptions _buildMessageOptions(final BuildContext context) {
+  dash.MessageOptions _buildMessageOptions(final BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
     final theme = Theme.of(context);
@@ -381,7 +443,7 @@ class AiChatWidgetState extends State<AiChatWidget>
         isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[50]!;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
 
-    return MessageOptions(
+    return dash.MessageOptions(
       containerColor: backgroundColor,
       currentUserContainerColor: theme.primaryColor.withAlpha(26),
       currentUserTextColor: textColor,
@@ -440,11 +502,11 @@ class AiChatWidgetState extends State<AiChatWidget>
     );
   }
 
-  MessageListOptions _buildMessageListOptions() {
+  dash.MessageListOptions _buildMessageListOptions(final BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isTablet = size.width > 600;
 
-    return MessageListOptions(
+    return dash.MessageListOptions(
       dateSeparatorBuilder: (final date) => Padding(
         padding: EdgeInsets.symmetric(
           vertical: isTablet ? 24 : 20,
@@ -470,6 +532,10 @@ class AiChatWidgetState extends State<AiChatWidget>
           : null,
       loadEarlierBuilder: const LoadingWidget(),
     );
+  }
+
+  dash.QuickReplyOptions _buildQuickReplyOptions(BuildContext context) {
+    return widget.config.quickReplyOptions ?? const dash.QuickReplyOptions();
   }
 
   Widget _defaultScrollToBottomBuilder() {
@@ -506,6 +572,8 @@ class AiChatWidgetState extends State<AiChatWidget>
   void dispose() {
     _scrollController.dispose();
     _animationController.dispose();
+    _textController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }
