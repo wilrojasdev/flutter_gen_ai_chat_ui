@@ -8,6 +8,7 @@ export 'package:dash_chat_2/dash_chat_2.dart'
 export 'src/controllers/chat_messages_controller.dart';
 export 'src/models/ai_chat_config.dart';
 export 'src/models/example_question_config.dart';
+export 'src/models/input_options.dart';
 export 'src/models/welcome_message_config.dart';
 export 'src/theme/custom_theme_extension.dart';
 export 'src/widgets/ai_chat_widget.dart';

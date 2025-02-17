@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart' show InputOptions;
+import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class SimpleChatScreen extends StatefulWidget {
@@ -213,17 +213,17 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
           enableAnimation: true,
 
           // Input configuration
-          inputOptions: const InputOptions(
+          inputOptions: dash.InputOptions(
             alwaysShowSend: true,
             sendOnEnter: true,
-          ),
-          inputDecoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            prefixIcon: IconButton(
-              icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-              onPressed: _listen,
+            inputDecoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              prefixIcon: IconButton(
+                icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
+                onPressed: _listen,
+              ),
             ),
           ),
 

@@ -255,3 +255,18 @@
 - google_fonts updated from ^6.1.0 to ^6.2.1 (Latest stable version)
 - url_launcher updated from ^6.3.1 to ^6.2.5 (Latest stable version)
 All other packages are at their latest stable versions. 
+[2024-03-19 14:45:00] Updated main README.md and example/README.md for v1.3.0:
+- Added new features and breaking changes documentation
+- Updated configuration examples
+- Improved platform support documentation
+- Added migration guide
+- Reorganized content structure
+- Verified all code examples are up to date 
+[2024-03-19 17:45:00] Fixed deprecated inputTextStyle usage in custom_styling_example.dart:
+- Moved input styling to InputOptions
+- Maintained same styling and functionality
+- Removed deprecated property usage 
+[2024-03-19 14:45:00] Added InputOptions export to main package file to fix import issues in examples. 
+[2024-03-19 17:50:00] Fixed InputOptions naming conflict by using dash prefix for dash_chat_2 imports in example files. 
+[2024-03-19 17:55:00] Fixed deprecated inputDecoration usage by moving it into inputOptions in simple_chat_screen.dart. 
+[2024-03-19 18:00:00] Fixed ambiguous imports in ai_chat_config.dart by adding dash prefix to dash_chat_2 types and removed deprecated ToolbarOptions usage. 

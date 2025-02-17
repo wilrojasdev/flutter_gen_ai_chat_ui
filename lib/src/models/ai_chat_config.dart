@@ -1,4 +1,4 @@
-import 'package:dash_chat_2/dash_chat_2.dart';
+import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 
@@ -97,19 +97,19 @@ class AiChatConfig {
   /// Custom options for the input field.
   /// Use this to customize the input behavior and appearance.
   /// For example: alwaysShowSend, sendOnEnter, etc.
-  final InputOptions? inputOptions;
+  final dash.InputOptions? inputOptions;
 
   /// Custom options for message display.
-  final MessageOptions? messageOptions;
+  final dash.MessageOptions? messageOptions;
 
   /// Custom options for the message list.
-  final MessageListOptions? messageListOptions;
+  final dash.MessageListOptions? messageListOptions;
 
   /// Custom options for quick replies.
-  final QuickReplyOptions? quickReplyOptions;
+  final dash.QuickReplyOptions? quickReplyOptions;
 
   /// Custom options for the scroll-to-bottom button.
-  final ScrollToBottomOptions? scrollToBottomOptions;
+  final dash.ScrollToBottomOptions? scrollToBottomOptions;
 
   /// Whether the chat is in read-only mode. Defaults to false.
   final bool readOnly;
@@ -200,11 +200,11 @@ class AiChatConfig {
     List<ExampleQuestion>? exampleQuestions,
     WelcomeMessageConfig? welcomeMessageConfig,
     ExampleQuestionConfig? exampleQuestionConfig,
-    InputOptions? inputOptions,
-    MessageOptions? messageOptions,
-    MessageListOptions? messageListOptions,
-    QuickReplyOptions? quickReplyOptions,
-    ScrollToBottomOptions? scrollToBottomOptions,
+    dash.InputOptions? inputOptions,
+    dash.MessageOptions? messageOptions,
+    dash.MessageListOptions? messageListOptions,
+    dash.QuickReplyOptions? quickReplyOptions,
+    dash.ScrollToBottomOptions? scrollToBottomOptions,
     bool? readOnly,
     List<ChatUser>? typingUsers,
     TextStyle? inputTextStyle,

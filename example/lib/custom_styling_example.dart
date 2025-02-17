@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomStylingExample extends StatefulWidget {
   const CustomStylingExample({super.key});
@@ -12,22 +13,50 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
   late final ChatMessagesController _controller;
   late final ChatUser _currentUser;
   late final ChatUser _aiUser;
-
   bool _isLoading = false;
+
+  // Custom theme options
+  int _selectedColorScheme = 0;
+
+  // Predefined color schemes for demonstration
+  final List<(Color, String)> _colorSchemes = [
+    (const Color(0xFF7B61FF), 'Modern Purple'), // Modern Purple
+    (const Color(0xFF2E7D32), 'Elegant Green'), // Elegant Green
+    (const Color(0xFF0277BD), 'Ocean Blue'), // Ocean Blue
+  ];
 
   @override
   void initState() {
     super.initState();
-    _currentUser = ChatUser(id: "user1", firstName: "User");
-    _aiUser = ChatUser(id: "ai", firstName: "AI Assistant");
+    _currentUser = ChatUser(
+      id: "user1",
+      firstName: "User",
+      profileImage: "https://i.pravatar.cc/150?img=1", // Example avatar
+    );
+    _aiUser = ChatUser(
+      id: "ai",
+      firstName: "AI Assistant",
+      profileImage: "https://i.pravatar.cc/150?img=2", // Example avatar
+    );
     _controller = ChatMessagesController();
 
     // Add initial welcome message
     _controller.addMessage(ChatMessage(
-      text:
-          "Hi! I'm your AI assistant. I can help you with various tasks and answer your questions. Try the dark mode toggle in the top right!",
+      text: """# Welcome to Custom Styling Demo! 🎨
+
+This example showcases various styling options available in the package:
+
+• Custom color schemes
+• Message bubble styling
+• Input field customization
+• Avatar customization
+• Typography options
+• And more!
+
+Try the color scheme selector in the top right to switch between themes.""",
       user: _aiUser,
       createdAt: DateTime.now(),
+      isMarkdown: true,
     ));
   }
 
@@ -36,31 +65,43 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
     _controller.addMessage(message);
 
     try {
-      // Simulate AI response delay
       await Future.delayed(const Duration(seconds: 1));
 
-      // Example responses based on user's message
       String response = '';
-      if (message.text.toLowerCase().contains('hello') ||
-          message.text.toLowerCase().contains('hi')) {
-        response = "Hello! How can I help you today?";
-      } else if (message.text.toLowerCase().contains('style') ||
-          message.text.toLowerCase().contains('theme')) {
-        response =
-            "The chat interface is styled to match ChatGPT's design, with support for both light and dark modes. The light mode uses ChatGPT's signature green color (#10A37F) and clean, minimal design.";
-      } else if (message.text.toLowerCase().contains('dark mode') ||
-          message.text.toLowerCase().contains('light mode')) {
-        response =
-            "The theme automatically adapts to your system's dark/light mode preference. In dark mode, it uses your app's theme colors, while in light mode it uses ChatGPT's signature styling.";
+      if (message.text.toLowerCase().contains('theme') ||
+          message.text.toLowerCase().contains('style')) {
+        response = """# Styling Features 🎨
+
+This chat UI demonstrates:
+
+1. **Color Schemes**
+   • Modern Purple
+   • Elegant Green
+   • Ocean Blue
+
+2. **Message Styling**
+   • Custom colors
+   • Rounded corners
+   • Avatar support
+   • Time stamps
+
+3. **Input Field**
+   • Custom borders
+   • Themed colors
+   • Send button styling
+
+Try the color scheme selector in the top right!""";
       } else {
         response =
-            "I understand you're asking about '${message.text}'. This is an example response to demonstrate the chat interface styling. Feel free to ask about the styling, themes, or try different messages!";
+            "Your message: '${message.text}' demonstrates our custom styling. Notice the themed colors and clean design!";
       }
 
       final aiMessage = ChatMessage(
         text: response,
         user: _aiUser,
         createdAt: DateTime.now(),
+        isMarkdown: message.text.toLowerCase().contains('theme') ||
+            message.text.toLowerCase().contains('style'),
       );
       _controller.addMessage(aiMessage);
     } finally {
@@ -72,178 +113,132 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context).copyWith(
-      extensions: [
-        CustomThemeExtension(
-          chatBackground: Theme.of(context).scaffoldBackgroundColor,
-          messageBubbleColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
-              : const Color(0xFFF7F7F8),
-          userBubbleColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF7B61FF)
-              : const Color(0xFF10A37F),
-          messageTextColor: Theme.of(context).brightness == Brightness.dark
-              ? Colors.white
-              : const Color(0xFF353740),
-          inputBackgroundColor: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF1E1E1E)
-              : Colors.white,
-          inputBorderColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.outline
-              : const Color(0xFFD9D9E3),
-          inputTextColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.onSurface
-              : const Color(0xFF353740),
-          hintTextColor: const Color(0xFF8E8EA0),
-          backToBottomButtonColor:
-              Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.primary
-                  : const Color(0xFF10A37F),
-          sendButtonColor: Colors.transparent,
-          sendButtonIconColor: Theme.of(context).brightness == Brightness.dark
-              ? Theme.of(context).colorScheme.primary
-              : const Color(0xFF10A37F),
-        ),
-      ],
-    );
+    final currentColor = _colorSchemes[_selectedColorScheme].$1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Theme(
-      data: Theme.of(context),
-      child: Scaffold(
-        body: Theme(
-          data: theme,
-          child: AiChatWidget(
-            config: AiChatConfig(
-              hintText: 'Type a message...',
-              enableAnimation: true,
-              welcomeMessageConfig: const WelcomeMessageConfig(
-                title: 'Welcome to Simple Chat!',
-                questionsSectionTitle: 'Try asking these questions:',
-              ),
-              aiName: 'AI Assistant',
-              messageOptions: MessageOptions(
-                containerColor: Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF1E1E1E)
-                    : const Color(0xFFF7F7F8),
-                currentUserContainerColor:
-                    Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF7B61FF)
-                        : const Color(0xFF10A37F),
-                textColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : const Color(0xFF353740),
-                currentUserTextColor: Colors.white,
-                messagePadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                showCurrentUserAvatar: false,
-                showOtherUsersAvatar: true,
-                showTime: true,
-                timeTextColor: const Color(0xFF8E8EA0),
-                currentUserTimeTextColor: const Color(0xFF8E8EA0),
-                borderRadius: 12,
-              ),
-              inputDecoration: InputDecoration(
-                hintText: 'Send a message',
-                hintStyle: const TextStyle(
-                  color: Color(0xFF8E8EA0),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).brightness == Brightness.dark
-                    ? Theme.of(context).colorScheme.surface
-                    : Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Theme.of(context).colorScheme.outline
-                        : const Color(0xFFD9D9E3),
-                    width: 1,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Theme.of(context).colorScheme.outline
-                        : const Color(0xFFD9D9E3),
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Theme.of(context).colorScheme.primary
-                        : const Color(0xFF10A37F),
-                    width: 1.5,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              sendButtonIcon: Icons.send_rounded,
-              sendButtonIconSize: 24,
-              sendButtonPadding: const EdgeInsets.all(8),
-              sendButtonBuilder: (onSend) => Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  icon: Icon(
-                    Icons.send_rounded,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Theme.of(context).colorScheme.primary
-                        : const Color(0xFF10A37F),
-                    size: 24,
-                  ),
-                  onPressed: onSend,
-                ),
-              ),
-              exampleQuestions: [
-                ExampleQuestion(
-                  question: 'How does the styling work?',
-                  config: ExampleQuestionConfig(
-                    onTap: (question) {
-                      _controller.handleExampleQuestion(
-                        question,
-                        _currentUser,
-                        _aiUser,
-                      );
-                    },
-                  ),
-                ),
-                ExampleQuestion(
-                  question: 'Show me dark mode features',
-                  config: ExampleQuestionConfig(
-                    onTap: (question) {
-                      _controller.handleExampleQuestion(
-                        question,
-                        _currentUser,
-                        _aiUser,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-            controller: _controller,
-            currentUser: _currentUser,
-            aiUser: _aiUser,
-            onSendMessage: _handleSendMessage,
-            isLoading: _isLoading,
-            loadingIndicator: LoadingWidget(
-              texts: const ['Loading...', 'Please wait...', 'Almost there...'],
-              interval: const Duration(seconds: 2),
-              textStyle: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
+      data: Theme.of(context).copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: currentColor,
+          brightness: Theme.of(context).brightness,
         ),
+      ),
+      child: Builder(
+        builder: (context) {
+          return Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                hintText: 'Type a message...',
+                enableAnimation: true,
+                welcomeMessageConfig: const WelcomeMessageConfig(
+                  title: 'Custom Styling Demo',
+                  questionsSectionTitle: 'Try these style-related questions:',
+                ),
+                aiName: 'Style Assistant',
+                messageOptions: MessageOptions(
+                  containerColor: isDark
+                      ? Theme.of(context).colorScheme.surface
+                      : Theme.of(context)
+                          .colorScheme
+                          .surfaceVariant
+                          .withOpacity(0.5),
+                  currentUserContainerColor:
+                      currentColor.withOpacity(isDark ? 0.8 : 1),
+                  textColor: Theme.of(context).colorScheme.onSurface,
+                  currentUserTextColor: Colors.white,
+                  messagePadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  showCurrentUserAvatar: true,
+                  showOtherUsersAvatar: true,
+                  showTime: true,
+                  timeTextColor:
+                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                  currentUserTimeTextColor: Colors.white.withOpacity(0.8),
+                  borderRadius: 16,
+                ),
+                inputOptions: InputOptions(
+                  inputTextStyle: GoogleFonts.inter(),
+                  inputDecoration: InputDecoration(
+                    hintText: 'Send a message',
+                    hintStyle: GoogleFonts.inter(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withOpacity(0.6),
+                    ),
+                    filled: true,
+                    fillColor: isDark
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(context)
+                            .colorScheme
+                            .surface
+                            .withOpacity(0.9),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 1,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).colorScheme.outline,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: currentColor,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                exampleQuestions: [
+                  ExampleQuestion(
+                    question: 'Tell me about the styling features',
+                    config: ExampleQuestionConfig(
+                      onTap: (question) {
+                        final message = ChatMessage(
+                          text: question,
+                          user: _currentUser,
+                          createdAt: DateTime.now(),
+                        );
+                        _handleSendMessage(message);
+                      },
+                    ),
+                  ),
+                  ExampleQuestion(
+                    question: 'Show different themes',
+                    config: ExampleQuestionConfig(
+                      onTap: (question) {
+                        final message = ChatMessage(
+                          text: question,
+                          user: _currentUser,
+                          createdAt: DateTime.now(),
+                        );
+                        _handleSendMessage(message);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              controller: _controller,
+              currentUser: _currentUser,
+              aiUser: _aiUser,
+              onSendMessage: _handleSendMessage,
+              isLoading: _isLoading,
+            ),
+          );
+        },
       ),
     );
   }
