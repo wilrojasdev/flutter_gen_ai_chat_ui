@@ -1,60 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme.dart';
+import 'custom_theme_extension.dart';
 
 /// Provider class for theme-related functionality
 class ThemeProvider extends ChangeNotifier {
-  ThemeMode _themeMode = ThemeMode.system;
+  bool _isDark = false;
+  bool get isDark => _isDark;
 
-  ThemeMode get themeMode => _themeMode;
+  ThemeData get theme => _isDark ? darkTheme : lightTheme;
 
-  bool get isDarkMode => _themeMode == ThemeMode.dark;
-
-  void toggleTheme() {
-    _themeMode =
-        _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-    notifyListeners();
-  }
-
-  void setThemeMode(ThemeMode mode) {
-    if (_themeMode != mode) {
-      _themeMode = mode;
-      notifyListeners();
-    }
-  }
-
-  static ThemeData get lightTheme => ThemeData.light().copyWith(
-        extensions: [
-          CustomThemeExtension(
+  static ThemeData get lightTheme =>
+      ThemeData.light(useMaterial3: true).copyWith(
+        extensions: <ThemeExtension<dynamic>>[
+          const CustomThemeExtension(
             chatBackground: Colors.white,
-            backToBottomButtonColor: Colors.grey[800]!,
-            messageBubbleColor: const Color(0xFFF7F7F8),
-            userBubbleColor: const Color(0xFF10A37F),
-            messageTextColor: const Color(0xFF353740),
+            messageBubbleColor: Colors.white,
+            userBubbleColor: Color(0xFFE3F2FD),
+            messageTextColor: Colors.black87,
             inputBackgroundColor: Colors.white,
-            inputBorderColor: const Color(0xFFD9D9E3),
-            inputTextColor: const Color(0xFF353740),
-            hintTextColor: const Color(0xFF8E8EA0),
-            sendButtonColor: Colors.transparent,
-            sendButtonIconColor: const Color(0xFF10A37F),
-          ),
-        ],
-      );
-
-  static ThemeData get darkTheme => ThemeData.dark().copyWith(
-        extensions: [
-          CustomThemeExtension(
-            chatBackground: const Color(0xFF1A1A1A),
-            backToBottomButtonColor: Colors.grey[300]!,
-            messageBubbleColor: const Color(0xFF2A2A2A),
-            userBubbleColor: Colors.blue,
-            messageTextColor: Colors.white,
-            inputBackgroundColor: const Color(0xFF2A2A2A),
-            inputBorderColor: Colors.grey[700]!,
-            inputTextColor: Colors.white,
-            hintTextColor: Colors.grey[400]!,
+            inputBorderColor: Color(0xFFE0E0E0),
+            inputTextColor: Colors.black87,
+            hintTextColor: Colors.black54,
+            backToBottomButtonColor: Colors.blue,
             sendButtonColor: Colors.transparent,
             sendButtonIconColor: Colors.blue,
           ),
         ],
       );
+
+  static ThemeData get darkTheme => ThemeData.dark(useMaterial3: true).copyWith(
+        extensions: <ThemeExtension<dynamic>>[
+          const CustomThemeExtension(
+            chatBackground: Color(0xFF171717),
+            messageBubbleColor: Color(0xFF262626),
+            userBubbleColor: Color(0xFF1A4B8F),
+            messageTextColor: Color(0xFFE5E5E5),
+            inputBackgroundColor: Color(0xFF262626),
+            inputBorderColor: Color(0xFF404040),
+            inputTextColor: Colors.white,
+            hintTextColor: Color(0xFF9CA3AF),
+            backToBottomButtonColor: Color(0xFF60A5FA),
+            sendButtonColor: Colors.transparent,
+            sendButtonIconColor: Color(0xFF60A5FA),
+          ),
+        ],
+      );
+
+  void toggleTheme() {
+    _isDark = !_isDark;
+    notifyListeners();
+  }
 }

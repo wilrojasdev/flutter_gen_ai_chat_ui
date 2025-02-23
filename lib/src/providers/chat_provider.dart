@@ -1,13 +1,22 @@
-import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
+import '../models/chat/chat_message.dart';
+import '../models/chat/chat_user.dart';
 
 class ChatProvider with ChangeNotifier {
   ChatProvider() {
     _createNewSession();
   }
   final List<ChatMessage> _messages = [];
-  final ChatUser _user = ChatUser(id: '1', firstName: 'User');
-  final ChatUser _aiUser = ChatUser(id: '2', firstName: 'AI');
+  final ChatUser _user = const ChatUser(
+    id: '1',
+    name: 'User',
+    avatar: 'https://ui-avatars.com/api/?name=User',
+  );
+  final ChatUser _aiUser = const ChatUser(
+    id: '2',
+    name: 'AI',
+    avatar: 'https://ui-avatars.com/api/?name=AI&background=10A37F&color=fff',
+  );
   bool _showWelcomeMessage = true;
   String _currentSessionId = '';
 

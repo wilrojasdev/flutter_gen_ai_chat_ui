@@ -41,8 +41,8 @@ class _MarkdownExampleState extends State<MarkdownExample> {
 
   /// Initialize chat users and controller
   void _initializeChat() {
-    _currentUser = ChatUser(id: '1', firstName: 'User');
-    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+    _currentUser = const ChatUser(id: '1', name: 'User');
+    _aiUser = const ChatUser(id: '2', name: 'AI Assistant');
     _controller = ChatMessagesController();
   }
 
@@ -168,20 +168,15 @@ ${message.text}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Markdown Chat Example'),
-        actions: [
-          // Help button to show markdown syntax
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            onPressed: () => _showMarkdownHelp(context),
-          ),
-        ],
-      ),
       body: AiChatWidget(
         config: AiChatConfig(
+          aiName: 'AI Assistant',
           // Custom hint text showing markdown support
           hintText: 'Try using **markdown** in your message...',
+          // Loading configuration
+          loadingConfig: LoadingConfig(
+            isLoading: _isLoading,
+          ),
           // Custom message builder with markdown support
           messageBuilder: (message) => message.isMarkdown == true
               ? MarkdownBody(
@@ -224,80 +219,6 @@ ${message.text}
         currentUser: _currentUser,
         aiUser: _aiUser,
         onSendMessage: _handleSendMessage,
-        isLoading: _isLoading,
-      ),
-    );
-  }
-
-  /// Show a help dialog with markdown syntax examples
-  void _showMarkdownHelp(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Markdown Syntax Help'),
-        content: SingleChildScrollView(
-          child: MarkdownBody(
-            data: '''
-# Markdown Syntax Guide
-
-## Basic Formatting
-**Bold**: `**text**`
-*Italic*: `*text*`
-~~Strikethrough~~: `~~text~~`
-`Code`: `` `code` ``
-
-## Headers
-# H1: `# Header`
-## H2: `## Header`
-### H3: `### Header`
-
-## Lists
-Unordered:
-```
-- Item 1
-- Item 2
-  - Nested
-```
-
-Ordered:
-```
-1. First
-2. Second
-   1. Nested
-```
-
-## Code Blocks
-```language
-code here
-```
-
-## Blockquotes
-> Quote: `> text`
-
-## Links
-[Text](url): `[Text](url)`
-
-## Tables
-```
-| Header | Header |
-|--------|--------|
-| Cell   | Cell   |
-```
-''',
-            styleSheet: MarkdownStyleSheet(
-              code: const TextStyle(
-                backgroundColor: Colors.black12,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

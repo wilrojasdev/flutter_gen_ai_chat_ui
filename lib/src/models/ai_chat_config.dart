@@ -1,6 +1,10 @@
-import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:flutter/material.dart';
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+
+import 'chat/models.dart';
+import 'example_question_config.dart';
+import 'input_options.dart';
+import 'welcome_message_config.dart';
 
 /// Configuration class for customizing the AI chat interface.
 ///
@@ -11,8 +15,8 @@ import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 class AiChatConfig {
   const AiChatConfig({
     this.userName = 'User',
-    this.aiName = 'AI',
-    this.hintText = 'Type a message...',
+    required this.aiName,
+    this.hintText,
     this.maxWidth,
     this.padding,
     this.enableAnimation = true,
@@ -21,8 +25,8 @@ class AiChatConfig {
     // Welcome message configuration
     this.welcomeMessageConfig,
     this.exampleQuestionConfig,
-    // DashChat options
-    this.inputOptions,
+    // Chat options
+    InputOptions? inputOptions,
     this.messageOptions,
     this.messageListOptions,
     this.quickReplyOptions,
@@ -44,24 +48,15 @@ class AiChatConfig {
     @Deprecated('Configure through inputOptions.inputDecoration.suffixIcon')
     this.sendButtonPadding,
     // Pagination options
-    @Deprecated('Use paginationConfig instead') this.enablePagination = false,
-    @Deprecated('Use paginationConfig instead')
-    this.paginationLoadingIndicatorOffset = 100,
-    @Deprecated('Use paginationConfig instead') this.loadMoreIndicator,
     this.paginationConfig = const PaginationConfig(),
-    @Deprecated('Use callbackConfig.onSendButtonPressed instead')
-    this.onSendButtonPressed,
-    @Deprecated('Use callbackConfig.onClearButtonPressed instead')
-    this.onClearButtonPressed,
-    @Deprecated('Use callbackConfig.onStopButtonPressed instead')
-    this.onStopButtonPressed,
-    // Loading state
-    @Deprecated('Use loadingConfig.isLoading instead') this.isLoading = false,
-    @Deprecated('Use loadingConfig.loadingIndicator instead')
-    this.loadingIndicator,
-    this.loadingConfig = const LoadingConfig(),
+    // Callbacks
     this.callbackConfig = const CallbackConfig(),
-  });
+    // Loading state
+    this.loadingConfig = const LoadingConfig(),
+    this.enableMarkdownStreaming = true,
+    this.streamingDuration = const Duration(milliseconds: 30),
+    this.markdownStyleSheet,
+  }) : inputOptions = inputOptions ?? const InputOptions();
 
   /// The name of the user in the chat interface.
   final String userName;
@@ -70,7 +65,7 @@ class AiChatConfig {
   final String aiName;
 
   /// Placeholder text for the input field.
-  final String hintText;
+  final String? hintText;
 
   /// Maximum width of the chat interface. If null, takes full width.
   final double? maxWidth;
@@ -97,19 +92,19 @@ class AiChatConfig {
   /// Custom options for the input field.
   /// Use this to customize the input behavior and appearance.
   /// For example: alwaysShowSend, sendOnEnter, etc.
-  final dash.InputOptions? inputOptions;
+  final InputOptions inputOptions;
 
   /// Custom options for message display.
-  final dash.MessageOptions? messageOptions;
+  final MessageOptions? messageOptions;
 
   /// Custom options for the message list.
-  final dash.MessageListOptions? messageListOptions;
+  final MessageListOptions? messageListOptions;
 
   /// Custom options for quick replies.
-  final dash.QuickReplyOptions? quickReplyOptions;
+  final QuickReplyOptions? quickReplyOptions;
 
   /// Custom options for the scroll-to-bottom button.
-  final dash.ScrollToBottomOptions? scrollToBottomOptions;
+  final ScrollToBottomOptions? scrollToBottomOptions;
 
   /// Whether the chat is in read-only mode. Defaults to false.
   final bool readOnly;
@@ -150,43 +145,15 @@ class AiChatConfig {
   /// Configuration for pagination
   final PaginationConfig paginationConfig;
 
-  /// @deprecated Use paginationConfig.enabled instead
-  @Deprecated('Use paginationConfig.enabled instead')
-  final bool enablePagination;
-
-  /// @deprecated Use paginationConfig.loadingIndicatorOffset instead
-  @Deprecated('Use paginationConfig.loadingIndicatorOffset instead')
-  final double paginationLoadingIndicatorOffset;
-
-  /// @deprecated Use paginationConfig.loadMoreIndicator instead
-  @Deprecated('Use paginationConfig.loadMoreIndicator instead')
-  final Widget Function({bool isLoading})? loadMoreIndicator;
-
   /// Configuration for callbacks
   final CallbackConfig callbackConfig;
-
-  /// @deprecated Use callbackConfig.onSendButtonPressed instead
-  @Deprecated('Use callbackConfig.onSendButtonPressed instead')
-  final void Function(String message)? onSendButtonPressed;
-
-  /// @deprecated Use callbackConfig.onClearButtonPressed instead
-  @Deprecated('Use callbackConfig.onClearButtonPressed instead')
-  final void Function()? onClearButtonPressed;
-
-  /// @deprecated Use callbackConfig.onStopButtonPressed instead
-  @Deprecated('Use callbackConfig.onStopButtonPressed instead')
-  final void Function()? onStopButtonPressed;
 
   /// Configuration for loading states
   final LoadingConfig loadingConfig;
 
-  /// @deprecated Use loadingConfig.isLoading instead
-  @Deprecated('Use loadingConfig.isLoading instead')
-  final bool isLoading;
-
-  /// @deprecated Use loadingConfig.loadingIndicator instead
-  @Deprecated('Use loadingConfig.loadingIndicator instead')
-  final Widget? loadingIndicator;
+  final bool enableMarkdownStreaming;
+  final Duration streamingDuration;
+  final MarkdownStyleSheet? markdownStyleSheet;
 
   /// Creates a copy of this config with the given fields replaced with new values
   AiChatConfig copyWith({
@@ -200,11 +167,11 @@ class AiChatConfig {
     List<ExampleQuestion>? exampleQuestions,
     WelcomeMessageConfig? welcomeMessageConfig,
     ExampleQuestionConfig? exampleQuestionConfig,
-    dash.InputOptions? inputOptions,
-    dash.MessageOptions? messageOptions,
-    dash.MessageListOptions? messageListOptions,
-    dash.QuickReplyOptions? quickReplyOptions,
-    dash.ScrollToBottomOptions? scrollToBottomOptions,
+    InputOptions? inputOptions,
+    MessageOptions? messageOptions,
+    MessageListOptions? messageListOptions,
+    QuickReplyOptions? quickReplyOptions,
+    ScrollToBottomOptions? scrollToBottomOptions,
     bool? readOnly,
     List<ChatUser>? typingUsers,
     TextStyle? inputTextStyle,
@@ -215,16 +182,12 @@ class AiChatConfig {
     IconData? sendButtonIcon,
     double? sendButtonIconSize,
     EdgeInsets? sendButtonPadding,
-    bool? enablePagination,
-    double? paginationLoadingIndicatorOffset,
-    Widget Function({bool isLoading})? loadMoreIndicator,
-    void Function(String message)? onSendButtonPressed,
-    void Function()? onClearButtonPressed,
-    void Function()? onStopButtonPressed,
-    bool? isLoading,
-    Widget? loadingIndicator,
-    LoadingConfig? loadingConfig,
+    PaginationConfig? paginationConfig,
     CallbackConfig? callbackConfig,
+    LoadingConfig? loadingConfig,
+    bool? enableMarkdownStreaming,
+    Duration? streamingDuration,
+    MarkdownStyleSheet? markdownStyleSheet,
   }) =>
       AiChatConfig(
         userName: userName ?? this.userName,
@@ -255,49 +218,134 @@ class AiChatConfig {
         sendButtonIcon: sendButtonIcon ?? this.sendButtonIcon,
         sendButtonIconSize: sendButtonIconSize ?? this.sendButtonIconSize,
         sendButtonPadding: sendButtonPadding ?? this.sendButtonPadding,
-        enablePagination: enablePagination ?? this.enablePagination,
-        paginationLoadingIndicatorOffset: paginationLoadingIndicatorOffset ??
-            this.paginationLoadingIndicatorOffset,
-        loadMoreIndicator: loadMoreIndicator ?? this.loadMoreIndicator,
-        onSendButtonPressed: onSendButtonPressed ?? this.onSendButtonPressed,
-        onClearButtonPressed: onClearButtonPressed ?? this.onClearButtonPressed,
-        onStopButtonPressed: onStopButtonPressed ?? this.onStopButtonPressed,
-        isLoading: isLoading ?? this.isLoading,
-        loadingIndicator: loadingIndicator ?? this.loadingIndicator,
-        loadingConfig: loadingConfig ?? this.loadingConfig,
+        paginationConfig: paginationConfig ?? this.paginationConfig,
         callbackConfig: callbackConfig ?? this.callbackConfig,
+        loadingConfig: loadingConfig ?? this.loadingConfig,
+        enableMarkdownStreaming:
+            enableMarkdownStreaming ?? this.enableMarkdownStreaming,
+        streamingDuration: streamingDuration ?? this.streamingDuration,
+        markdownStyleSheet: markdownStyleSheet ?? this.markdownStyleSheet,
       );
 }
 
-/// Configuration for chat message pagination
+/// Configuration for pagination behavior
 class PaginationConfig {
   const PaginationConfig({
-    this.enabled = false,
-    this.loadingIndicatorOffset = 100,
-    this.loadMoreIndicator,
+    this.enabled = true,
+    this.messagesPerPage = 20,
+    this.loadingDelay = const Duration(milliseconds: 500),
+    this.scrollThreshold = 0.9,
+    this.loadEarlierBuilder,
+    this.noMoreMessagesBuilder,
+    this.loadingBuilder,
+    this.loadEarlierButtonStyle,
+    this.loadEarlierIcon = const Icon(Icons.history),
+    this.loadEarlierText = 'Load Earlier Messages',
+    this.noMoreMessagesText = 'No more messages',
+    this.loadingText = 'Loading more messages...',
+    this.retryText = 'Retry loading messages',
+    this.errorBuilder,
+    this.cacheExtent = 1000.0,
+    this.keepAliveMessages = true,
+    this.reverseOrder = true,
   });
 
   /// Whether pagination is enabled
   final bool enabled;
 
-  /// Offset from bottom to trigger pagination loading
-  final double loadingIndicatorOffset;
+  /// Number of messages to load per page
+  final int messagesPerPage;
 
-  /// Custom loading indicator widget builder
-  final Widget Function({bool isLoading})? loadMoreIndicator;
+  /// Delay between loading pages
+  final Duration loadingDelay;
 
-  /// Creates a copy with the given fields replaced with new values
+  /// Scroll threshold to trigger loading (0.0 to 1.0)
+  final double scrollThreshold;
+
+  /// Custom builder for the load earlier button
+  final Widget Function(BuildContext context, VoidCallback onLoad)?
+      loadEarlierBuilder;
+
+  /// Custom builder for the no more messages indicator
+  final Widget Function(BuildContext context)? noMoreMessagesBuilder;
+
+  /// Custom builder for the loading indicator
+  final Widget Function(BuildContext context)? loadingBuilder;
+
+  /// Custom builder for error states
+  final Widget Function(
+      BuildContext context, String error, VoidCallback onRetry)? errorBuilder;
+
+  /// Style for the load earlier button
+  final ButtonStyle? loadEarlierButtonStyle;
+
+  /// Icon for the load earlier button
+  final Widget loadEarlierIcon;
+
+  /// Text for the load earlier button
+  final String loadEarlierText;
+
+  /// Text shown when there are no more messages
+  final String noMoreMessagesText;
+
+  /// Text shown while loading messages
+  final String loadingText;
+
+  /// Text shown for retry button
+  final String retryText;
+
+  /// Cache extent for ListView
+  final double cacheExtent;
+
+  /// Whether to keep messages alive when scrolled out of view
+  final bool keepAliveMessages;
+
+  /// Whether to show messages in reverse order (newest first)
+  final bool reverseOrder;
+
   PaginationConfig copyWith({
     bool? enabled,
-    double? loadingIndicatorOffset,
-    Widget Function({bool isLoading})? loadMoreIndicator,
-  }) =>
-      PaginationConfig(
-        enabled: enabled ?? this.enabled,
-        loadingIndicatorOffset:
-            loadingIndicatorOffset ?? this.loadingIndicatorOffset,
-        loadMoreIndicator: loadMoreIndicator ?? this.loadMoreIndicator,
-      );
+    int? messagesPerPage,
+    Duration? loadingDelay,
+    double? scrollThreshold,
+    Widget Function(BuildContext context, VoidCallback onLoad)?
+        loadEarlierBuilder,
+    Widget Function(BuildContext context)? noMoreMessagesBuilder,
+    Widget Function(BuildContext context)? loadingBuilder,
+    Widget Function(BuildContext context, String error, VoidCallback onRetry)?
+        errorBuilder,
+    ButtonStyle? loadEarlierButtonStyle,
+    Widget? loadEarlierIcon,
+    String? loadEarlierText,
+    String? noMoreMessagesText,
+    String? loadingText,
+    String? retryText,
+    double? cacheExtent,
+    bool? keepAliveMessages,
+    bool? reverseOrder,
+  }) {
+    return PaginationConfig(
+      enabled: enabled ?? this.enabled,
+      messagesPerPage: messagesPerPage ?? this.messagesPerPage,
+      loadingDelay: loadingDelay ?? this.loadingDelay,
+      scrollThreshold: scrollThreshold ?? this.scrollThreshold,
+      loadEarlierBuilder: loadEarlierBuilder ?? this.loadEarlierBuilder,
+      noMoreMessagesBuilder:
+          noMoreMessagesBuilder ?? this.noMoreMessagesBuilder,
+      loadingBuilder: loadingBuilder ?? this.loadingBuilder,
+      errorBuilder: errorBuilder ?? this.errorBuilder,
+      loadEarlierButtonStyle:
+          loadEarlierButtonStyle ?? this.loadEarlierButtonStyle,
+      loadEarlierIcon: loadEarlierIcon ?? this.loadEarlierIcon,
+      loadEarlierText: loadEarlierText ?? this.loadEarlierText,
+      noMoreMessagesText: noMoreMessagesText ?? this.noMoreMessagesText,
+      loadingText: loadingText ?? this.loadingText,
+      retryText: retryText ?? this.retryText,
+      cacheExtent: cacheExtent ?? this.cacheExtent,
+      keepAliveMessages: keepAliveMessages ?? this.keepAliveMessages,
+      reverseOrder: reverseOrder ?? this.reverseOrder,
+    );
+  }
 }
 
 /// Configuration for loading states in the chat

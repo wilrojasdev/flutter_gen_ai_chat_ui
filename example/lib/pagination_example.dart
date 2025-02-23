@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'dart:math' as Math;
 
-/// A comprehensive example demonstrating pagination in the chat UI.
-/// This example shows:
-/// - Loading historical messages with pagination
-/// - Proper loading states and indicators
-/// - Error handling for failed loads
+/// A modern example demonstrating pagination in the chat UI.
+/// Features:
+/// - Automatic message loading when scrolling up
+/// - Efficient message loading with pagination
+/// - Proper state management
+/// - Enhanced error handling
+/// - Modern UI with loading states
 /// - Customizable pagination settings
 class PaginationExample extends StatefulWidget {
   const PaginationExample({super.key});
@@ -15,192 +18,372 @@ class PaginationExample extends StatefulWidget {
 }
 
 class _PaginationExampleState extends State<PaginationExample> {
+  // Constants
+  static const int _messagesPerPage = 10;
+  static const Duration _loadingDelay = Duration(milliseconds: 500);
+  static const double _scrollThreshold =
+      200.0; // Changed to pixels for better control
+
+  // Controllers and Data
   late final ChatMessagesController _controller;
   final List<ChatMessage> _mockHistoricalMessages = [];
+  final ScrollController _scrollController = ScrollController();
+
+  // State Management
   bool _isLoading = false;
   bool _hasError = false;
   String? _errorMessage;
-  static const int _messagesPerPage = 20;
+  bool _hasMoreMessages = true;
+  bool _isLoadingMore = false;
+
+  // Users
   late final ChatUser _currentUser;
   late final ChatUser _aiUser;
 
   @override
   void initState() {
     super.initState();
-    _currentUser = ChatUser(id: "user1", firstName: "User");
-    _aiUser = ChatUser(id: "ai", firstName: "AI Assistant");
-
+    _initializeUsers();
     _generateMockMessages();
-    _controller = ChatMessagesController(
-      initialMessages: _mockHistoricalMessages.take(_messagesPerPage).toList(),
-      onLoadMoreMessages: _loadMoreMessages,
+    _initializeController();
+    _setupScrollController();
+  }
+
+  void _setupScrollController() {
+    _scrollController.addListener(() {
+      // Load more when we're near the top (for chronological order)
+      if (_scrollController.position.pixels <= _scrollThreshold &&
+          !_isLoadingMore &&
+          _hasMoreMessages) {
+        _loadMoreMessages();
+      }
+    });
+  }
+
+  void _initializeUsers() {
+    _currentUser = const ChatUser(
+      id: "user1",
+      name: "User",
+      avatar: "https://ui-avatars.com/api/?name=User",
+    );
+    _aiUser = const ChatUser(
+      id: "ai",
+      name: "AI Assistant",
+      avatar: "https://ui-avatars.com/api/?name=AI&background=10A37F&color=fff",
     );
   }
 
-  /// Generates mock historical messages for demonstration
   void _generateMockMessages() {
-    for (int i = 0; i < 100; i++) {
+    final topics = [
+      'project updates',
+      'meeting schedule',
+      'task progress',
+      'code review',
+      'design feedback'
+    ];
+
+    // Generate messages from 1 to 100
+    for (int i = 1; i <= 100; i++) {
+      final topic = topics[(i - 1) % topics.length];
+      final isUser = i % 2 == 0;
+
+      final text = isUser
+          ? 'Message #$i: Can you provide an update on $topic?'
+          : 'Message #$i: Here\'s the latest update on $topic:\n\n'
+              '• Progress is on track\n'
+              '• Key milestones achieved\n'
+              '• Next steps planned\n\n'
+              'Would you like more specific details?';
+
       _mockHistoricalMessages.add(
         ChatMessage(
-          user: i % 2 == 0 ? _currentUser : _aiUser,
-          text:
-              "Historical message ${100 - i} - This is a longer message to demonstrate how pagination handles messages of different lengths. Some messages might contain more content than others.",
-          createdAt: DateTime.now().subtract(Duration(days: i)),
+          user: isUser ? _currentUser : _aiUser,
+          text: text,
+          createdAt: DateTime.now().subtract(Duration(minutes: 100 - i)),
+          customProperties: {
+            'id': 'msg_$i',
+            'messageNumber': i,
+            'topic': topic,
+          },
         ),
       );
     }
   }
 
-  /// Handles sending a new message
-  /// Shows proper loading states and error handling
+  void _initializeController() {
+    // Start with the latest messages (90-100)
+    final initialMessages = _getLatestMessages();
+    _controller = ChatMessagesController(
+      initialMessages: initialMessages,
+      paginationConfig: PaginationConfig(
+        enabled: true,
+        messagesPerPage: _messagesPerPage,
+        loadingDelay: _loadingDelay,
+        reverseOrder: false, // Show in chronological order
+        scrollThreshold: _scrollThreshold,
+      ),
+    );
+  }
+
+  List<ChatMessage> _getLatestMessages() {
+    final startIndex =
+        Math.max(0, _mockHistoricalMessages.length - _messagesPerPage);
+    final endIndex = _mockHistoricalMessages.length;
+    return _mockHistoricalMessages.sublist(startIndex, endIndex);
+  }
+
   Future<void> _handleSendMessage(ChatMessage message) async {
+    if (_isLoading) return;
+
     setState(() {
       _isLoading = true;
-      _hasError = false;
-      _errorMessage = null;
+      _clearError();
     });
 
     try {
-      _controller.addMessage(message);
+      final userMessage = _createMessage(
+        message.text,
+        _currentUser,
+        _mockHistoricalMessages.length + 1,
+      );
+      _controller.addMessage(userMessage);
+      _mockHistoricalMessages.add(userMessage);
+
       await Future.delayed(const Duration(seconds: 1));
 
-      final response = ChatMessage(
-        text:
-            "Response to: ${message.text}\n\nThis is a detailed response to demonstrate message handling. Try scrolling up to load more historical messages!",
-        user: _aiUser,
-        createdAt: DateTime.now(),
+      final aiMessage = _createMessage(
+        _generateAIResponse(message.text),
+        _aiUser,
+        _mockHistoricalMessages.length + 1,
       );
-      _controller.addMessage(response);
+      _controller.addMessage(aiMessage);
+      _mockHistoricalMessages.add(aiMessage);
     } catch (e) {
-      setState(() {
-        _hasError = true;
-        _errorMessage = "Failed to send message: $e";
-      });
+      _showError("Failed to send message: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  /// Loads more historical messages when scrolling up
-  /// Includes error handling and proper loading states
-  Future<List<ChatMessage>> _loadMoreMessages(ChatMessage? lastMessage) async {
-    if (lastMessage == null) return [];
+  ChatMessage _createMessage(String text, ChatUser user, int number) {
+    return ChatMessage(
+      text: text,
+      user: user,
+      createdAt: DateTime.now(),
+      customProperties: {'id': 'msg_$number'},
+    );
+  }
+
+  String _generateAIResponse(String userMessage) {
+    return 'Thank you for your message: "$userMessage"\n\n'
+        'I\'ve processed your request and here\'s a detailed response:\n\n'
+        '1. Your message has been analyzed\n'
+        '2. Context has been considered\n'
+        '3. Appropriate response generated\n\n'
+        'Would you like to know more about any specific aspect?';
+  }
+
+  Future<void> _loadMoreMessages() async {
+    if (_isLoadingMore || !_hasMoreMessages) return;
+
+    setState(() {
+      _isLoadingMore = true;
+      _clearError();
+    });
 
     try {
-      // Find the index of the last message
-      final lastIndex = _mockHistoricalMessages.indexWhere(
-        (msg) => msg.createdAt == lastMessage.createdAt,
-      );
-      if (lastIndex == -1) return [];
+      final currentMessages = _controller.messages;
+      if (currentMessages.isEmpty) return;
 
-      // Get next page of messages
-      final nextIndex = lastIndex + 1;
-      if (nextIndex >= _mockHistoricalMessages.length) return [];
+      // Find the oldest message number we have
+      final oldestMessage = currentMessages.last; // Changed from first to last
+      final oldestMessageNumber =
+          oldestMessage.customProperties?['messageNumber'] as int?;
+      if (oldestMessageNumber == null) return;
 
-      // Simulate loading delay
-      await Future.delayed(const Duration(seconds: 1));
+      // Calculate the range for next batch
+      final endIndex = oldestMessageNumber - 1;
+      final startIndex = Math.max(0, endIndex - _messagesPerPage + 1);
 
-      return _mockHistoricalMessages
-          .skip(nextIndex)
-          .take(_messagesPerPage)
-          .toList();
-    } catch (e) {
+      if (startIndex >= endIndex) {
+        setState(() => _hasMoreMessages = false);
+        return;
+      }
+
+      await Future.delayed(_loadingDelay);
+
+      // Get older messages
+      final olderMessages =
+          _mockHistoricalMessages.getRange(startIndex, endIndex + 1).toList();
+
+      _controller.addMessages(olderMessages);
+
       setState(() {
-        _hasError = true;
-        _errorMessage = "Failed to load more messages: $e";
+        _hasMoreMessages = startIndex > 0;
       });
-      return [];
+    } catch (e) {
+      _showError("Failed to load more messages: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+      }
     }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _hasError = true;
+      _errorMessage = message;
+    });
+    _scheduleErrorClear();
+  }
+
+  void _clearError() {
+    _hasError = false;
+    _errorMessage = null;
+  }
+
+  void _scheduleErrorClear() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) setState(() => _clearError());
+    });
+  }
+
+  void _resetChat() {
+    setState(() {
+      _hasMoreMessages = true;
+      _clearError();
+      _controller.clearMessages();
+      _controller.setMessages(_getLatestMessages());
+    });
+  }
+
+  Widget _buildLoadingIndicator() {
+    if (!_isLoadingMore) return const SizedBox.shrink();
+
+    return const Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 8),
+            Text(
+              'Loading more messages...',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoMoreMessages() {
+    if (_hasMoreMessages) return const SizedBox.shrink();
+
+    return const Padding(
+      padding: EdgeInsets.all(8.0),
+      child: Text(
+        'No more messages',
+        style: TextStyle(
+          color: Colors.grey,
+          fontSize: 12,
+          fontStyle: FontStyle.italic,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pagination Example'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _resetChat,
+            tooltip: 'Reset Chat',
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          if (_hasError && _errorMessage != null)
-            Container(
-              padding: const EdgeInsets.all(8),
-              color: Colors.red.withValues(alpha: 26),
-              child: Row(
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => setState(() {
-                      _hasError = false;
-                      _errorMessage = null;
-                    }),
-                  ),
-                ],
-              ),
-            ),
+          if (_hasError && _errorMessage != null) _buildErrorBar(),
+          if (_isLoadingMore) _buildLoadingIndicator(),
+          if (!_hasMoreMessages) _buildNoMoreMessages(),
           Expanded(
             child: AiChatWidget(
               config: AiChatConfig(
-                hintText: 'Type a message...',
-                // Pagination configuration
+                aiName: 'AI Assistant',
+                messageOptions: MessageOptions(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF1E1E1E)
+                        : const Color(0xFFF7F7F8),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF353740),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
                 paginationConfig: PaginationConfig(
                   enabled: true,
-                  loadingIndicatorOffset: 100,
-                  loadMoreIndicator: ({bool isLoading = false}) => isLoading
-                      ? const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CircularProgressIndicator(),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Loading more messages...',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(),
+                  messagesPerPage: _messagesPerPage,
+                  loadingDelay: _loadingDelay,
+                  scrollThreshold: _scrollThreshold,
+                  reverseOrder: false,
                 ),
-                // Message display configuration
-                messageOptions: MessageOptions(
-                  showTime: true,
-                  containerColor:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF1E1E1E)
-                          : const Color(0xFFF7F7F8),
-                  currentUserContainerColor:
-                      Theme.of(context).brightness == Brightness.dark
-                          ? const Color(0xFF7B61FF)
-                          : const Color(0xFF10A37F),
-                  textColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white
-                      : const Color(0xFF353740),
-                  currentUserTextColor: Colors.white,
-                ),
-                // Welcome message configuration
-                welcomeMessageConfig: const WelcomeMessageConfig(
-                  title: 'Pagination Example',
-                  questionsSectionTitle:
-                      'Try scrolling up to load more historical messages!',
+                loadingConfig: LoadingConfig(
+                  isLoading: _isLoading,
                 ),
               ),
               controller: _controller,
               currentUser: _currentUser,
               aiUser: _aiUser,
               onSendMessage: _handleSendMessage,
-              isLoading: _isLoading,
+              scrollController: _scrollController,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorBar() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      color: Colors.red.withOpacity(0.1),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadMoreMessages,
+            tooltip: 'Retry',
+          ),
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => setState(() => _clearError()),
           ),
         ],
       ),
@@ -209,6 +392,7 @@ class _PaginationExampleState extends State<PaginationExample> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _controller.dispose();
     super.dispose();
   }

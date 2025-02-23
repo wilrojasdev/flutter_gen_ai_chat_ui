@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart' as dash;
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class SimpleChatScreen extends StatefulWidget {
@@ -26,25 +25,18 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
     super.initState();
 
     // Initialize chat participants
-    _currentUser = ChatUser(id: '1', firstName: 'User');
-    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+    _currentUser = const ChatUser(
+      id: '1',
+      name: 'User',
+      avatar: 'https://ui-avatars.com/api/?name=User',
+    );
+    _aiUser = const ChatUser(
+      id: '2',
+      name: 'AI Assistant',
+      avatar: 'https://ui-avatars.com/api/?name=AI&background=10A37F&color=fff',
+    );
 
-    // // Optional: Pre-populate chat with initial messages
-    // final initialMessages = [
-    //   ChatMessage(
-    //     text: "Hello! How can I help you today?",
-    //     user: _aiUser,
-    //     createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    //   ),
-    //   ChatMessage(
-    //     text: "I have a question about Flutter",
-    //     user: _currentUser,
-    //     createdAt: DateTime.now().subtract(const Duration(days: 1)),
-    //   ),
-    //   // Add more messages as needed
-    // ];
-
-    // Initialize controller with optional initial messages
+    // Initialize controller
     _controller = ChatMessagesController();
     _initSpeech();
   }
@@ -157,6 +149,8 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
                 setState(() => _isListening = false);
               }
             },
+            listenFor: const Duration(seconds: 30),
+            pauseFor: const Duration(seconds: 3),
             cancelOnError: true,
             listenMode: stt.ListenMode.confirmation,
           );
@@ -178,97 +172,62 @@ class _SimpleChatScreenState extends State<SimpleChatScreen> {
 
   // Handle new messages and AI responses
   Future<void> _handleSendMessage(ChatMessage message) async {
-    // Show loading indicator while processing
     setState(() => _isLoading = true);
 
-    // Add user message to chat immediately
-    _controller.addMessage(message);
+    // Simulate API delay
+    await Future.delayed(const Duration(seconds: 1));
 
-    try {
-      // Simulate AI processing time - Replace with actual AI integration
-      await Future.delayed(const Duration(seconds: 1));
+    final response = ChatMessage(
+      text: 'I received your message: ${message.text}',
+      user: const ChatUser(id: '2', name: 'AI'),
+      createdAt: DateTime.now(),
+      customProperties: {
+        'isMarkdown': false, // Regular text
+        'isStreaming': false, // No streaming for simple responses
+      },
+    );
 
-      // Create and add AI response
-      final aiMessage = ChatMessage(
-        text: "This is a simulated AI response to: ${message.text}",
-        user: _aiUser,
-        createdAt: DateTime.now(),
-      );
-      _controller.addMessage(aiMessage);
-    } finally {
-      // Hide loading indicator
-      if (mounted) setState(() => _isLoading = false);
-    }
+    _controller.addMessage(response);
+    setState(() => _isLoading = false);
+  }
+
+  void _handleExampleQuestion(String question) {
+    final message = ChatMessage(
+      text: question,
+      user: const ChatUser(id: '1', name: 'User'),
+      createdAt: DateTime.now(),
+    );
+    _handleSendMessage(message);
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      appBar: AppBar(title: const Text('Simple Chat')),
       body: AiChatWidget(
         config: AiChatConfig(
-          // Basic settings
-          userName: 'User',
-          aiName: 'AI Assistant',
-          hintText: 'Type a message...',
-          enableAnimation: true,
-
-          // Input configuration
-          inputOptions: dash.InputOptions(
+          aiName: 'AI',
+          enableAnimation: true, // Enable animations
+          inputOptions: const InputOptions(
+            margin: EdgeInsets.all(16),
             alwaysShowSend: true,
-            sendOnEnter: true,
-            inputDecoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+          ),
+          exampleQuestions: [
+            ExampleQuestion(
+              question: 'What can you do?',
+              config: ExampleQuestionConfig(
+                onTap: (question) => _handleExampleQuestion(question),
               ),
-              prefixIcon: IconButton(
-                icon: Icon(_isListening ? Icons.mic : Icons.mic_none),
-                onPressed: _listen,
-              ),
-            ),
-          ),
-
-          // Message display
-          messageOptions: MessageOptions(
-            showTime: true,
-            containerColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E1E1E)
-                : Colors.grey[50]!,
-            currentUserContainerColor:
-                Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF7B61FF)
-                    : Colors.blue,
-          ),
-
-          // Welcome message
-          welcomeMessageConfig: const WelcomeMessageConfig(
-            title: 'Welcome to Simple Chat!',
-            questionsSectionTitle: 'Try asking these questions:',
-          ),
-          exampleQuestions: const [
-            ExampleQuestion(
-              question: 'What is the weather in Tokyo?',
-            ),
-            ExampleQuestion(
-              question: 'What is the capital of France?',
-            ),
-            ExampleQuestion(
-              question: 'What is the capital of Japan?',
             ),
           ],
-
-          // Loading state
-          isLoading: _isLoading,
-          loadingIndicator: const LoadingWidget(
-            texts: [
-              'AI is thinking...',
-              'Processing your message...',
-            ],
-          ),
         ),
-        currentUser: _currentUser,
-        aiUser: _aiUser,
+        currentUser: const ChatUser(id: '1', name: 'User'),
+        aiUser: const ChatUser(id: '2', name: 'AI'),
         controller: _controller,
         onSendMessage: _handleSendMessage,
+        isLoading: _isLoading,
       ),
     );
   }

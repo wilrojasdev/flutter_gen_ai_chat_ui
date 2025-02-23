@@ -39,7 +39,6 @@ dependencies:
   google_fonts: ^6.1.0
   flutter_streaming_text_markdown: ^1.1.0
   speech_to_text: ^6.6.1
-  dash_chat_2: ^0.0.21
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

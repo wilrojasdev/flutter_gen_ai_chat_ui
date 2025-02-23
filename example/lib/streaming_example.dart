@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class StreamingExample extends StatefulWidget {
   const StreamingExample({super.key});
@@ -24,8 +25,16 @@ class _StreamingExampleState extends State<StreamingExample>
   @override
   void initState() {
     super.initState();
-    _currentUser = ChatUser(id: '1', firstName: 'User');
-    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+    _currentUser = const ChatUser(
+      id: '1',
+      name: 'User',
+      avatar: 'https://ui-avatars.com/api/?name=User',
+    );
+    _aiUser = const ChatUser(
+      id: '2',
+      name: 'AI Assistant',
+      avatar: 'https://ui-avatars.com/api/?name=AI&background=10A37F&color=fff',
+    );
     _controller = ChatMessagesController();
     _exampleQuestions = _createExampleQuestions();
     _loadingAnimationController = AnimationController(
@@ -58,7 +67,7 @@ class _StreamingExampleState extends State<StreamingExample>
         ),
       ),
       ExampleQuestion(
-        question: 'Show me streaming responses',
+        question: 'Can you demonstrate streaming responses?',
         config: ExampleQuestionConfig(
           onTap: (question) {
             final message = ChatMessage(
@@ -124,7 +133,7 @@ class _StreamingExampleState extends State<StreamingExample>
 
     String currentText = "";
 
-    // Instead of adding empty message, we'll add the first word immediately
+    // Add initial message with first word
     currentText = words[0];
     _controller.addMessage(
       ChatMessage(
@@ -135,6 +144,27 @@ class _StreamingExampleState extends State<StreamingExample>
           'id': messageId,
           'isStreaming': true,
         },
+        customBuilder: (context, message) {
+          final bool isStreaming =
+              message.customProperties?['isStreaming'] == true &&
+                  message.customProperties?['id'] == _streamingMessageId;
+
+          return StreamingTextMarkdown(
+            key: ValueKey(
+                '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
+            text: message.text,
+            typingSpeed: const Duration(milliseconds: 50),
+            fadeInEnabled: true,
+            styleSheet: MarkdownStyleSheet(
+              p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 15,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+            ),
+          );
+        },
       ),
     );
 
@@ -142,8 +172,9 @@ class _StreamingExampleState extends State<StreamingExample>
       _latestMessageId = messageId;
     });
 
-    // Stream the remaining words
+    // Stream remaining words
     for (final word in words.skip(1)) {
+      if (!mounted) return;
       await Future.delayed(const Duration(milliseconds: 50));
       currentText += " $word";
 
@@ -156,11 +187,33 @@ class _StreamingExampleState extends State<StreamingExample>
             'id': messageId,
             'isStreaming': true,
           },
+          customBuilder: (context, message) {
+            final bool isStreaming =
+                message.customProperties?['isStreaming'] == true &&
+                    message.customProperties?['id'] == _streamingMessageId;
+
+            return StreamingTextMarkdown(
+              key: ValueKey(
+                  '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
+              text: message.text,
+              typingSpeed: const Duration(milliseconds: 50),
+              fadeInEnabled: true,
+              styleSheet: MarkdownStyleSheet(
+                p: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontSize: 15,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black87,
+                    ),
+              ),
+            );
+          },
         ),
       );
     }
 
-    // Final message
+    // Final message without streaming
+    if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 50));
     _controller.updateMessage(
       ChatMessage(
@@ -177,96 +230,71 @@ class _StreamingExampleState extends State<StreamingExample>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
+      appBar: AppBar(title: const Text('Streaming Example')),
       body: AiChatWidget(
         config: AiChatConfig(
-          hintText: 'Type a message...',
-          typingUsers: null,
+          aiName: 'AI',
           enableAnimation: true,
-          showTimestamp: true,
-          exampleQuestions: _exampleQuestions,
-          messageOptions: MessageOptions(
-            containerColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF1E1E1E) // Dark background for AI messages
-                : const Color(0xFFF7F7F8),
-            currentUserContainerColor:
-                Theme.of(context).brightness == Brightness.dark
-                    ? const Color(0xFF7B61FF)
-                        .withAlpha(80) // Purple for user messages
-                    : const Color(0xFF10A37F),
-            textColor: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xFF353740),
-            currentUserTextColor: Colors.white,
-            messagePadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+          enableMarkdownStreaming: true,
+          streamingDuration: const Duration(milliseconds: 30),
+          exampleQuestions: [
+            ExampleQuestion(
+              question: 'Tell me about markdown with code example',
+              config: ExampleQuestionConfig(
+                onTap: (question) => _handleExampleQuestion(question),
+              ),
             ),
-            showCurrentUserAvatar: false,
-            showOtherUsersAvatar: false,
-            showTime: true,
-            currentUserTimeTextColor:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 179),
-            timeTextColor:
-                Theme.of(context).colorScheme.onSurface.withValues(alpha: 179),
-            messageTextBuilder:
-                (final message, final previousMessage, final nextMessage) {
-              final bool isStreaming =
-                  message.customProperties?['isStreaming'] == true &&
-                      message.customProperties?['id'] == _streamingMessageId;
-              final bool isUser = message.user.id == _currentUser.id;
-              final bool isLatestMessage =
-                  message.customProperties?['id'] == _latestMessageId;
-
-              return AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: 1.0,
-                child: AnimatedBubble(
-                  key: ValueKey(message.createdAt.millisecondsSinceEpoch),
-                  animate: !isUser && isLatestMessage,
-                  isUser: isUser,
-                  child: isStreaming && !isUser
-                      ? StreamingTextMarkdown(
-                          key: ValueKey(
-                              '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
-                          text: message.text,
-                          typingSpeed: const Duration(milliseconds: 50),
-                          fadeInEnabled: true,
-                        )
-                      : AnimatedTextMessage(
-                          key: ValueKey(
-                              '${message.createdAt.millisecondsSinceEpoch}_${message.text.length}'),
-                          text: message.text,
-                          animate: !isStreaming &&
-                              !isUser &&
-                              isLatestMessage, // Update this line
-                          isUser: isUser,
-                          isStreaming: isStreaming,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.white
-                                    : Colors.grey.shade800,
-                            fontSize: 15,
-                            height: 1.4,
-                          ),
-                        ),
-                ),
-              );
-            },
-          ),
-        ),
-        loadingIndicator: LoadingWidget(
-          texts: const ['Loading...', 'Please wait...', 'Almost there...'],
-          interval: const Duration(seconds: 2),
-          textStyle: Theme.of(context).textTheme.bodyLarge,
+            ExampleQuestion(
+              question: 'Show me a long response with streaming',
+              config: ExampleQuestionConfig(
+                onTap: (question) => _handleExampleQuestion(question),
+              ),
+            ),
+          ],
         ),
         currentUser: _currentUser,
         aiUser: _aiUser,
         controller: _controller,
         onSendMessage: _handleSendMessage,
-        isLoading: _isLoading || _isStreaming,
+        isLoading: _isStreaming,
       ),
+    );
+  }
+
+  Widget _buildAnimatedBubble({
+    required Key key,
+    required bool animate,
+    required bool isUser,
+    required Widget child,
+  }) {
+    return Container(
+      key: key,
+      padding: const EdgeInsets.all(8),
+      child: child,
+    );
+  }
+
+  Widget _buildAnimatedTextMessage({
+    required Key key,
+    required String text,
+    required bool animate,
+    required bool isUser,
+    required bool isStreaming,
+    required TextStyle style,
+  }) {
+    return Text(
+      text,
+      key: key,
+      style: style,
+    );
+  }
+
+  Widget _buildLoadingWidget() {
+    return const Center(
+      child: CircularProgressIndicator(),
     );
   }
 
@@ -275,5 +303,14 @@ class _StreamingExampleState extends State<StreamingExample>
     _loadingAnimationController.dispose();
     _controller.dispose();
     super.dispose();
+  }
+
+  void _handleExampleQuestion(String question) {
+    final message = ChatMessage(
+      text: question,
+      user: const ChatUser(id: '1', name: 'User'),
+      createdAt: DateTime.now(),
+    );
+    _handleSendMessage(message);
   }
 }

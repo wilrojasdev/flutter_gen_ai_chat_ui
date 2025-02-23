@@ -26,15 +26,15 @@ class ChatInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: options.margin,
+      padding: options.margin?.resolve(TextDirection.ltr) ?? EdgeInsets.zero,
       child: Row(
         children: [
           Expanded(
             child: TextField(
               controller: controller,
               focusNode: focusNode,
-              style: options.inputTextStyle,
-              decoration: options.inputDecoration,
+              style: options.textStyle,
+              decoration: options.decoration,
               textCapitalization: options.textCapitalization,
               maxLines: options.maxLines,
               minLines: options.minLines,
@@ -65,8 +65,8 @@ class ChatInput extends StatelessWidget {
               onTapOutside: (event) => FocusScope.of(context).unfocus(),
             ),
           ),
-          if (options.sendButtonBuilder != null)
-            options.sendButtonBuilder!(onSend),
+          if (options.alwaysShowSend || controller.text.isNotEmpty)
+            options.effectiveSendButtonBuilder(onSend),
         ],
       ),
     );

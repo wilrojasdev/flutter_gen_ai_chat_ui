@@ -18,8 +18,8 @@ class _DetailedExampleState extends State<DetailedExample> {
   @override
   void initState() {
     super.initState();
-    _currentUser = ChatUser(id: '1', firstName: 'User');
-    _aiUser = ChatUser(id: '2', firstName: 'AI Assistant');
+    _currentUser = const ChatUser(id: '1', name: 'User');
+    _aiUser = const ChatUser(id: '2', name: 'AI Assistant');
 
     final initialMessages = [
       ChatMessage(
@@ -32,31 +32,36 @@ class _DetailedExampleState extends State<DetailedExample> {
 
     messagesController = ChatMessagesController(
       initialMessages: initialMessages,
-      onLoadMoreMessages: _loadMoreMessages,
+      paginationConfig: const PaginationConfig(
+        enabled: true,
+        messagesPerPage: 10,
+        loadingDelay: Duration(seconds: 1),
+      ),
     );
     exampleQuestions = _createExampleQuestions();
-  }
 
-  Future<List<ChatMessage>> _loadMoreMessages(ChatMessage? lastMessage) async {
-    setState(() => _isLoading = true);
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      return List.generate(10, (index) {
-        final isUser = index.isEven;
-        final daysAgo = index ~/ 2 + 1;
-        return ChatMessage(
-          text: isUser
-              ? "This is a historical user message from $daysAgo days ago."
-              : "This is a historical AI response with detailed information and formatting examples.",
-          user: isUser ? _currentUser : _aiUser,
-          createdAt: DateTime.now().subtract(Duration(days: daysAgo)),
-        );
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+    // Setup pagination callback
+    messagesController.loadMore(() async {
+      setState(() => _isLoading = true);
+      try {
+        await Future.delayed(const Duration(seconds: 1));
+        return List.generate(10, (index) {
+          final isUser = index.isEven;
+          final daysAgo = index ~/ 2 + 1;
+          return ChatMessage(
+            text: isUser
+                ? "This is a historical user message from $daysAgo days ago."
+                : "This is a historical AI response with detailed information and formatting examples.",
+            user: isUser ? _currentUser : _aiUser,
+            createdAt: DateTime.now().subtract(Duration(days: daysAgo)),
+          );
+        });
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
       }
-    }
+    });
   }
 
   Future<void> _handleSendMessage(ChatMessage message) async {
@@ -171,93 +176,75 @@ Would you like to know more about any specific aspect?""",
           aiUser: _aiUser,
           controller: messagesController,
           onSendMessage: _handleSendMessage,
-          isLoading: _isLoading,
-          loadingIndicator: LoadingWidget(
-            texts: const [
-              'AI is thinking...',
-              'Processing your message...',
-              'Generating response...',
-              'Almost there...',
-            ],
-            interval: const Duration(seconds: 2),
-            textStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.1,
-            ),
-            shimmerBaseColor: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withValues(alpha: 128),
-            shimmerHighlightColor: Theme.of(context).colorScheme.surface,
-          ),
           config: AiChatConfig(
+            aiName: 'AI Assistant',
             hintText: 'Send a message',
+            loadingConfig: LoadingConfig(
+              isLoading: _isLoading,
+            ),
             messageOptions: MessageOptions(
-              containerColor: Theme.of(context).brightness == Brightness.dark
-                  ? const Color(0xFF1E1E1E)
-                  : const Color(0xFFF7F7F8),
-              currentUserContainerColor:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF7B61FF)
-                      : const Color(0xFF10A37F),
-              textColor: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : const Color(0xFF353740),
-              currentUserTextColor: Colors.white,
-              messagePadding: const EdgeInsets.symmetric(
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xFF1E1E1E)
+                    : const Color(0xFFF7F7F8),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              textStyle: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : const Color(0xFF353740),
+              ),
+              padding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
-              showCurrentUserAvatar: false,
-              showOtherUsersAvatar: true,
-              showTime: true,
-              timeTextColor: const Color(0xFF8E8EA0),
-              currentUserTimeTextColor: const Color(0xFF8E8EA0),
-              borderRadius: 12,
+              timeTextStyle: const TextStyle(
+                color: Color(0xFF8E8EA0),
+              ),
             ),
             enableAnimation: true,
             showTimestamp: true,
-            inputDecoration: InputDecoration(
-              hintText: 'Send a message',
-              hintStyle: const TextStyle(
-                color: Color(0xFF8E8EA0),
-              ),
-              filled: true,
-              fillColor: Theme.of(context).brightness == Brightness.dark
-                  ? Theme.of(context).colorScheme.surface
-                  : Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.outline
-                      : const Color(0xFFD9D9E3),
-                  width: 1,
+            inputOptions: InputOptions(
+              decoration: InputDecoration(
+                hintText: 'Send a message',
+                hintStyle: const TextStyle(
+                  color: Color(0xFF8E8EA0),
                 ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.outline
-                      : const Color(0xFFD9D9E3),
-                  width: 1,
+                filled: true,
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).colorScheme.surface
+                    : Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.outline
+                        : const Color(0xFFD9D9E3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Theme.of(context).colorScheme.primary
-                      : const Color(0xFF10A37F),
-                  width: 1.5,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.outline
+                        : const Color(0xFFD9D9E3),
+                    width: 1,
+                  ),
                 ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).colorScheme.primary
+                        : const Color(0xFF10A37F),
+                    width: 2,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
             ),
             sendButtonIcon: Icons.send_rounded,

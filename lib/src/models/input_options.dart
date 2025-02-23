@@ -4,83 +4,26 @@ import 'package:flutter/services.dart';
 /// Extended input options for the chat UI.
 /// Provides comprehensive customization options for the input field.
 class InputOptions {
-  InputOptions({
-    // Base options
-    this.sendOnEnter = false,
-    this.alwaysShowSend = true,
-    this.autocorrect = true,
+  /// Style for the input text
+  final TextStyle? textStyle;
 
-    // Style options
-    this.inputTextStyle,
-    this.inputDecoration,
-    this.sendButtonBuilder,
-    this.margin = const EdgeInsets.all(20),
-    this.sendButtonIcon,
-    this.sendButtonIconSize,
-    this.sendButtonPadding,
+  /// Decoration for the input field
+  final InputDecoration? decoration;
 
-    // Extended options
-    this.textCapitalization = TextCapitalization.sentences,
-    this.maxLines = 5,
-    this.minLines = 1,
-    this.textInputAction = TextInputAction.newline,
-    this.keyboardType = TextInputType.multiline,
-    this.cursorColor,
-    this.cursorHeight,
-    this.cursorWidth = 2.0,
-    this.cursorRadius,
-    this.showCursor = true,
-    this.enableSuggestions = true,
-    this.enableIMEPersonalizedLearning = true,
-    this.readOnly = false,
-    @Deprecated('Use contextMenuBuilder instead') this.toolbarOptions,
-    this.smartDashesType,
-    this.smartQuotesType,
-    this.selectionControls,
-    this.onTap,
-    this.onEditingComplete,
-    this.onSubmitted,
-    this.onChanged,
-    this.inputFormatters,
-    this.mouseCursor,
-    this.contextMenuBuilder = _defaultContextMenuBuilder,
-    this.undoController,
-    this.spellCheckConfiguration,
-    this.magnifierConfiguration,
-  }) {
-    // If sendButtonIcon is provided but no sendButtonBuilder,
-    // create a default send button builder
-    if (sendButtonIcon != null && sendButtonBuilder == null) {
-      final iconSize = sendButtonIconSize ?? 24.0;
-      final padding = sendButtonPadding ?? const EdgeInsets.all(8.0);
-      _defaultSendButtonBuilder = (onSend) => IconButton(
-            onPressed: onSend,
-            icon: Icon(sendButtonIcon, size: iconSize),
-            padding: padding,
-          );
-    }
-  }
+  /// Margin around the input field
+  final EdgeInsets? margin;
 
-  /// Whether to send the message when Enter is pressed.
+  /// Builder for the send button
+  final Widget Function(VoidCallback onSend)? sendButtonBuilder;
+
+  /// Whether to send on enter key press
   final bool sendOnEnter;
 
-  /// Whether to always show the send button.
+  /// Whether to always show the send button
   final bool alwaysShowSend;
 
   /// Whether to enable autocorrect.
   final bool autocorrect;
-
-  /// The style to use for the text being edited.
-  final TextStyle? inputTextStyle;
-
-  /// The decoration to show around the text field.
-  final InputDecoration? inputDecoration;
-
-  /// Builder for the send button.
-  final Widget Function(VoidCallback onSend)? sendButtonBuilder;
-
-  /// The margin around the input box.
-  final EdgeInsets margin;
 
   /// @deprecated Use sendButtonBuilder instead
   final IconData? sendButtonIcon;
@@ -91,19 +34,19 @@ class InputOptions {
   /// @deprecated Use sendButtonBuilder instead
   final EdgeInsets? sendButtonPadding;
 
-  Widget Function(VoidCallback onSend)? _defaultSendButtonBuilder;
-
-  /// Gets the effective send button builder
   Widget Function(VoidCallback onSend) get effectiveSendButtonBuilder =>
-      sendButtonBuilder ??
-      _defaultSendButtonBuilder ??
-      _defaultIconButtonBuilder;
+      sendButtonBuilder ?? _buildDefaultSendButton;
 
-  static Widget _defaultIconButtonBuilder(VoidCallback onSend) => IconButton(
+  static Widget _buildDefaultSendButton(VoidCallback onSend) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: IconButton(
         onPressed: onSend,
         icon: const Icon(Icons.send, size: 24),
         padding: const EdgeInsets.all(8),
-      );
+      ),
+    );
+  }
 
   /// The type of capitalization to use for the text input.
   final TextCapitalization textCapitalization;
@@ -143,10 +86,6 @@ class InputOptions {
 
   /// Whether the text field is read-only.
   final bool readOnly;
-
-  /// @deprecated Use contextMenuBuilder instead
-  @Deprecated('Use contextMenuBuilder instead')
-  final ToolbarOptions? toolbarOptions;
 
   /// The handling of smart dashes.
   final SmartDashesType? smartDashesType;
@@ -188,15 +127,70 @@ class InputOptions {
   /// Configuration for the magnifier.
   final TextMagnifierConfiguration? magnifierConfiguration;
 
-  /// Creates a copy of this InputOptions with the given fields replaced with new values.
+  const InputOptions({
+    this.textStyle,
+    this.decoration = const InputDecoration(
+      hintText: 'Type a message...',
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(width: 2),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      filled: true,
+    ),
+    this.margin = const EdgeInsets.all(20),
+    this.sendButtonBuilder,
+    this.sendOnEnter = false,
+    this.alwaysShowSend = true,
+    this.autocorrect = true,
+    this.sendButtonIcon,
+    this.sendButtonIconSize,
+    this.sendButtonPadding,
+    this.textCapitalization = TextCapitalization.sentences,
+    this.maxLines = 5,
+    this.minLines = 1,
+    this.textInputAction = TextInputAction.newline,
+    this.keyboardType = TextInputType.multiline,
+    this.cursorColor,
+    this.cursorHeight,
+    this.cursorWidth = 2.0,
+    this.cursorRadius,
+    this.showCursor = true,
+    this.enableSuggestions = true,
+    this.enableIMEPersonalizedLearning = true,
+    this.readOnly = false,
+    this.smartDashesType,
+    this.smartQuotesType,
+    this.selectionControls,
+    this.onTap,
+    this.onEditingComplete,
+    this.onSubmitted,
+    this.onChanged,
+    this.inputFormatters,
+    this.mouseCursor,
+    this.contextMenuBuilder = _defaultContextMenuBuilder,
+    this.undoController,
+    this.spellCheckConfiguration,
+    this.magnifierConfiguration,
+  });
+
+  /// Creates a copy of this options with the given fields replaced with new values
   InputOptions copyWith({
+    TextStyle? textStyle,
+    InputDecoration? decoration,
+    EdgeInsets? margin,
+    Widget Function(VoidCallback onSend)? sendButtonBuilder,
     bool? sendOnEnter,
     bool? alwaysShowSend,
     bool? autocorrect,
-    TextStyle? inputTextStyle,
-    InputDecoration? inputDecoration,
-    Widget Function(VoidCallback)? sendButtonBuilder,
-    EdgeInsets? margin,
     IconData? sendButtonIcon,
     double? sendButtonIconSize,
     EdgeInsets? sendButtonPadding,
@@ -213,7 +207,6 @@ class InputOptions {
     bool? enableSuggestions,
     bool? enableIMEPersonalizedLearning,
     bool? readOnly,
-    ToolbarOptions? toolbarOptions,
     SmartDashesType? smartDashesType,
     SmartQuotesType? smartQuotesType,
     TextSelectionControls? selectionControls,
@@ -229,13 +222,13 @@ class InputOptions {
     TextMagnifierConfiguration? magnifierConfiguration,
   }) =>
       InputOptions(
+        textStyle: textStyle ?? this.textStyle,
+        decoration: decoration ?? this.decoration,
+        margin: margin ?? this.margin,
+        sendButtonBuilder: sendButtonBuilder ?? this.sendButtonBuilder,
         sendOnEnter: sendOnEnter ?? this.sendOnEnter,
         alwaysShowSend: alwaysShowSend ?? this.alwaysShowSend,
         autocorrect: autocorrect ?? this.autocorrect,
-        inputTextStyle: inputTextStyle ?? this.inputTextStyle,
-        inputDecoration: inputDecoration ?? this.inputDecoration,
-        sendButtonBuilder: sendButtonBuilder ?? this.sendButtonBuilder,
-        margin: margin ?? this.margin,
         sendButtonIcon: sendButtonIcon ?? this.sendButtonIcon,
         sendButtonIconSize: sendButtonIconSize ?? this.sendButtonIconSize,
         sendButtonPadding: sendButtonPadding ?? this.sendButtonPadding,
@@ -253,7 +246,6 @@ class InputOptions {
         enableIMEPersonalizedLearning:
             enableIMEPersonalizedLearning ?? this.enableIMEPersonalizedLearning,
         readOnly: readOnly ?? this.readOnly,
-        toolbarOptions: toolbarOptions ?? this.toolbarOptions,
         smartDashesType: smartDashesType ?? this.smartDashesType,
         smartQuotesType: smartQuotesType ?? this.smartQuotesType,
         selectionControls: selectionControls ?? this.selectionControls,

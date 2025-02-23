@@ -16,7 +16,7 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
   bool _isLoading = false;
 
   // Custom theme options
-  int _selectedColorScheme = 0;
+  final int _selectedColorScheme = 0;
 
   // Predefined color schemes for demonstration
   final List<(Color, String)> _colorSchemes = [
@@ -28,15 +28,15 @@ class _CustomStylingExampleState extends State<CustomStylingExample> {
   @override
   void initState() {
     super.initState();
-    _currentUser = ChatUser(
+    _currentUser = const ChatUser(
       id: "user1",
-      firstName: "User",
-      profileImage: "https://i.pravatar.cc/150?img=1", // Example avatar
+      name: "User",
+      avatar: "https://i.pravatar.cc/150?img=1", // Example avatar
     );
-    _aiUser = ChatUser(
+    _aiUser = const ChatUser(
       id: "ai",
-      firstName: "AI Assistant",
-      profileImage: "https://i.pravatar.cc/150?img=2", // Example avatar
+      name: "AI Assistant",
+      avatar: "https://i.pravatar.cc/150?img=2", // Example avatar
     );
     _controller = ChatMessagesController();
 
@@ -136,37 +136,38 @@ Try the color scheme selector in the top right!""";
                 ),
                 aiName: 'Style Assistant',
                 messageOptions: MessageOptions(
-                  containerColor: isDark
-                      ? Theme.of(context).colorScheme.surface
-                      : Theme.of(context)
-                          .colorScheme
-                          .surfaceVariant
-                          .withOpacity(0.5),
-                  currentUserContainerColor:
-                      currentColor.withOpacity(isDark ? 0.8 : 1),
-                  textColor: Theme.of(context).colorScheme.onSurface,
-                  currentUserTextColor: Colors.white,
-                  messagePadding: const EdgeInsets.symmetric(
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Theme.of(context).colorScheme.surface
+                        : Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 128),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  textStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  showCurrentUserAvatar: true,
-                  showOtherUsersAvatar: true,
-                  showTime: true,
-                  timeTextColor:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                  currentUserTimeTextColor: Colors.white.withOpacity(0.8),
-                  borderRadius: 16,
+                  timeTextStyle: TextStyle(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 153),
+                  ),
                 ),
                 inputOptions: InputOptions(
-                  inputTextStyle: GoogleFonts.inter(),
-                  inputDecoration: InputDecoration(
+                  textStyle: GoogleFonts.inter(),
+                  decoration: InputDecoration(
                     hintText: 'Send a message',
                     hintStyle: GoogleFonts.inter(
                       color: Theme.of(context)
                           .colorScheme
                           .onSurface
-                          .withOpacity(0.6),
+                          .withValues(alpha: 153),
                     ),
                     filled: true,
                     fillColor: isDark
@@ -174,7 +175,7 @@ Try the color scheme selector in the top right!""";
                         : Theme.of(context)
                             .colorScheme
                             .surface
-                            .withOpacity(0.9),
+                            .withValues(alpha: 230),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
@@ -230,12 +231,14 @@ Try the color scheme selector in the top right!""";
                     ),
                   ),
                 ],
+                loadingConfig: LoadingConfig(
+                  isLoading: _isLoading,
+                ),
               ),
               controller: _controller,
               currentUser: _currentUser,
               aiUser: _aiUser,
               onSendMessage: _handleSendMessage,
-              isLoading: _isLoading,
             ),
           );
         },

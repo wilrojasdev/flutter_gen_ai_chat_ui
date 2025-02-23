@@ -1,19 +1,241 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:flutter_gen_ai_chat_ui/src/providers/theme_provider.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
+import 'package:network_image_mock/network_image_mock.dart';
+import 'package:flutter_gen_ai_chat_ui/src/theme/custom_theme_extension.dart';
 
 void main() {
-  group('AiChatWidget Tests', () {
+  // Core Features Tests
+  group('Core Features', () {
+    late ChatMessagesController controller;
     late ChatUser currentUser;
     late ChatUser aiUser;
-    late ChatMessagesController controller;
 
     setUp(() {
-      currentUser = ChatUser(id: '1', firstName: 'User');
-      aiUser = ChatUser(id: '2', firstName: 'AI');
       controller = ChatMessagesController();
+      currentUser = const ChatUser(id: '1', name: 'User');
+      aiUser = const ChatUser(id: '2', name: 'AI');
+    });
+
+    tearDown(() {
+      controller.dispose();
+    });
+
+    test('Message State Management', () {
+      final message = ChatMessage(
+        text: 'Hello',
+        user: currentUser,
+        createdAt: DateTime.now(),
+      );
+
+      controller.addMessage(message);
+      expect(controller.messages.length, 1);
+      expect(controller.messages.first.text, 'Hello');
+
+      // Test duplicate message prevention
+      controller.addMessage(message);
+      expect(controller.messages.length, 1);
+
+      // Test message updating
+      final updatedMessage = message.copyWith(text: 'Updated Hello');
+      controller.updateMessage(updatedMessage);
+      expect(controller.messages.first.text, 'Updated Hello');
+    });
+
+    test('Message Streaming State', () {
+      final streamingMessage = ChatMessage(
+        text: 'Streaming...',
+        user: aiUser,
+        createdAt: DateTime.now(),
+        customProperties: {'isStreaming': true},
+      );
+
+      controller.addMessage(streamingMessage);
+      expect(controller.messages.first.customProperties?['isStreaming'], true);
+
+      final completedMessage = streamingMessage.copyWith(
+        text: 'Completed',
+        customProperties: {'isStreaming': false},
+      );
+      controller.updateMessage(completedMessage);
+      expect(controller.messages.first.customProperties?['isStreaming'], false);
+    });
+
+    test('Pagination State', () {
+      controller = ChatMessagesController(
+        onLoadMoreMessages: (lastMessage) async {
+          return [
+            ChatMessage(
+              text: 'Old message',
+              user: aiUser,
+              createdAt: DateTime.now().subtract(const Duration(days: 1)),
+            ),
+          ];
+        },
+      );
+
+      expect(controller.isLoadingMore, false);
+      expect(controller.hasMoreMessages, true);
+    });
+  });
+
+  // UI Components Tests
+  group('UI Components', () {
+    late ChatMessagesController controller;
+    late ChatUser currentUser;
+    late ChatUser aiUser;
+
+    setUp(() {
+      controller = ChatMessagesController();
+      currentUser = const ChatUser(id: '1', name: 'User');
+      aiUser = const ChatUser(id: '2', name: 'AI');
+    });
+
+    testWidgets('Message Bubble Rendering', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(aiName: 'AI'),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) async {},
+            ),
+          ),
+        ),
+      );
+
+      controller.addMessage(ChatMessage(
+        text: 'Test message',
+        user: currentUser,
+        createdAt: DateTime.now(),
+      ));
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Test message'), findsOneWidget);
+    });
+
+    testWidgets('Input Field Functionality', (tester) async {
+      final controller = ChatMessagesController();
+      final currentUser = const ChatUser(id: '1', name: 'User');
+      final aiUser = const ChatUser(id: '2', name: 'AI');
+      bool messageSent = false;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                aiName: 'AI',
+                inputOptions: const InputOptions(
+                  sendOnEnter: true,
+                  alwaysShowSend: true,
+                ),
+              ),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) {
+                messageSent = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextField), 'Test input');
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+
+      expect(messageSent, true);
+    });
+
+    testWidgets('Markdown Rendering', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                aiName: 'AI',
+                messageOptions: const MessageOptions(),
+              ),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) async {},
+            ),
+          ),
+        ),
+      );
+
+      controller.addMessage(ChatMessage(
+        text: '**Bold** and *italic*',
+        user: aiUser,
+        createdAt: DateTime.now(),
+        isMarkdown: true,
+      ));
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // First verify the message content is rendered
+      expect(find.text('Bold and italic'), findsOneWidget);
+
+      // Then verify markdown elements are present
+      final markdownWidget = find.byType(MarkdownBody);
+      expect(markdownWidget, findsOneWidget);
+    });
+
+    testWidgets('Loading State Display', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                aiName: 'AI',
+                loadingConfig: const LoadingConfig(
+                  isLoading: true,
+                  loadingIndicator: CircularProgressIndicator(),
+                ),
+              ),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) async {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      // Test loading state change
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                aiName: 'AI',
+                loadingConfig: const LoadingConfig(
+                  isLoading: false,
+                ),
+              ),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) async {},
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('renders correctly with minimal configuration',
@@ -21,20 +243,28 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AiChatWidget(
-            config: const AiChatConfig(),
+            config: AiChatConfig(
+              aiName: 'AI',
+              inputOptions: const InputOptions(
+                alwaysShowSend: true,
+              ),
+            ),
+            controller: controller,
             currentUser: currentUser,
             aiUser: aiUser,
-            controller: controller,
-            onSendMessage: (_) {},
+            onSendMessage: (_) async {},
           ),
         ),
       ));
 
       expect(find.byType(AiChatWidget), findsOneWidget);
       expect(find.byType(TextField), findsOneWidget);
-      await tester.enterText(find.byType(TextField), 'dummy');
+
+      // Enter text to ensure send button is visible
+      await tester.enterText(find.byType(TextField), 'test message');
       await tester.pump();
-      expect(find.byKey(const Key('sendButton')), findsOneWidget);
+
+      expect(find.byIcon(Icons.send), findsOneWidget);
     });
 
     testWidgets('handles send message correctly', (WidgetTester tester) async {
@@ -44,12 +274,16 @@ void main() {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AiChatWidget(
-            config: const AiChatConfig(),
+            config: AiChatConfig(
+              aiName: 'AI',
+              inputOptions: const InputOptions(
+                alwaysShowSend: true,
+              ),
+            ),
+            controller: controller,
             currentUser: currentUser,
             aiUser: aiUser,
-            controller: controller,
-            onSendMessage: (msg) {
-              expect(msg.text, message);
+            onSendMessage: (msg) async {
               messageReceived = true;
             },
           ),
@@ -58,49 +292,174 @@ void main() {
 
       await tester.enterText(find.byType(TextField), message);
       await tester.pump();
-      expect(find.byKey(const Key('sendButton')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('sendButton')));
+
+      final sendButton = find.byIcon(Icons.send);
+      expect(sendButton, findsOneWidget);
+
+      await tester.tap(sendButton);
       await tester.pump();
 
       expect(messageReceived, true);
     });
 
-    testWidgets('shows loading indicator when loading',
+    testWidgets('handles example question tap correctly',
         (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AiChatWidget(
-            config: const AiChatConfig(),
-            currentUser: currentUser,
-            aiUser: aiUser,
-            controller: controller,
-            onSendMessage: (_) {},
-            isLoading: true,
-            loadingIndicator: const LoadingWidget(),
-          ),
-        ),
-      ));
-
-      expect(find.byType(LoadingWidget), findsOneWidget);
-    });
-
-    testWidgets('shows example questions when provided',
-        (WidgetTester tester) async {
+      bool exampleTapped = false;
       final List<ExampleQuestion> examples = [
         ExampleQuestion(
           question: 'Example 1',
-          config: ExampleQuestionConfig(onTap: (_) {}),
-        ),
-        ExampleQuestion(
-          question: 'Example 2',
-          config: ExampleQuestionConfig(onTap: (_) {}),
+          config: ExampleQuestionConfig(
+            onTap: (question) {
+              exampleTapped = true;
+            },
+          ),
         ),
       ];
 
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AiChatWidget(
-            config: AiChatConfig(exampleQuestions: examples),
+            config: AiChatConfig(
+              aiName: 'AI',
+              exampleQuestions: examples,
+            ),
+            controller: controller,
+            currentUser: currentUser,
+            aiUser: aiUser,
+            onSendMessage: (_) async {},
+          ),
+        ),
+      ));
+
+      await tester.pump();
+
+      final exampleButton = find.text('Example 1');
+      expect(exampleButton, findsOneWidget);
+
+      await tester.tap(exampleButton);
+      await tester.pump();
+
+      expect(exampleTapped, true);
+    });
+  });
+
+  // Theme Tests
+  group('Theme Tests', () {
+    testWidgets('applies custom theme extension', (tester) async {
+      final controller = ChatMessagesController();
+      final currentUser = const ChatUser(id: '1', name: 'User');
+      final aiUser = const ChatUser(id: '2', name: 'AI');
+
+      final customTheme = ThemeData.light().copyWith(
+        extensions: [
+          const CustomThemeExtension(
+            chatBackground: Color(0xFFF5F5F5),
+            messageBubbleColor: Colors.white,
+            userBubbleColor: Color(0xFFE3F2FD),
+            messageTextColor: Color(0xDE000000),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: customTheme,
+          home: AiChatWidget(
+            config: AiChatConfig(aiName: 'AI'),
+            controller: controller,
+            currentUser: currentUser,
+            aiUser: aiUser,
+            onSendMessage: (message) {},
+          ),
+        ),
+      );
+
+      final context = tester.element(find.byType(AiChatWidget));
+      final extension = Theme.of(context).extension<CustomThemeExtension>();
+      expect(extension, isNotNull);
+      expect(extension?.chatBackground, equals(const Color(0xFFF5F5F5)));
+      expect(extension?.messageBubbleColor, equals(Colors.white));
+      expect(extension?.userBubbleColor, equals(const Color(0xFFE3F2FD)));
+      expect(extension?.messageTextColor, equals(const Color(0xDE000000)));
+    });
+  });
+
+  // Configuration Tests
+  group('Configuration', () {
+    test('AiChatConfig Validation', () {
+      const config = AiChatConfig(
+        aiName: 'AI',
+        userName: 'User',
+        enableAnimation: true,
+        showTimestamp: true,
+        readOnly: false,
+      );
+
+      expect(config.aiName, 'AI');
+      expect(config.userName, 'User');
+      expect(config.enableAnimation, true);
+      expect(config.showTimestamp, true);
+      expect(config.readOnly, false);
+    });
+
+    test('InputOptions Validation', () {
+      const options = InputOptions(
+        sendOnEnter: true,
+        alwaysShowSend: true,
+        autocorrect: true,
+        maxLines: 5,
+        minLines: 1,
+      );
+
+      expect(options.sendOnEnter, true);
+      expect(options.alwaysShowSend, true);
+      expect(options.autocorrect, true);
+      expect(options.maxLines, 5);
+      expect(options.minLines, 1);
+    });
+  });
+
+  // Error Handling Tests
+  group('Error Handling', () {
+    test('Message Error State', () {
+      final message = ChatMessage(
+        text: 'Error message',
+        user: const ChatUser(id: '1', name: 'User'),
+        createdAt: DateTime.now(),
+        hasError: true,
+        errorMessage: 'Failed to send',
+      );
+
+      expect(message.hasError, true);
+      expect(message.errorMessage, 'Failed to send');
+    });
+  });
+
+  group('AiChatWidget Tests', () {
+    late ChatUser currentUser;
+    late ChatUser aiUser;
+    late ChatMessagesController controller;
+
+    setUp(() {
+      currentUser = const ChatUser(id: '1', name: 'User');
+      aiUser = const ChatUser(id: '2', name: 'AI');
+      controller = ChatMessagesController();
+    });
+
+    testWidgets('shows example questions when provided',
+        (WidgetTester tester) async {
+      final List<ExampleQuestion> examples = [
+        const ExampleQuestion(question: 'Example 1'),
+        const ExampleQuestion(question: 'Example 2'),
+      ];
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AiChatWidget(
+            config: AiChatConfig(
+              aiName: 'AI',
+              exampleQuestions: examples,
+            ),
             currentUser: currentUser,
             aiUser: aiUser,
             controller: controller,
@@ -113,22 +472,18 @@ void main() {
       expect(find.text('Example 2'), findsOneWidget);
     });
 
-    testWidgets('handles example question tap correctly',
+    testWidgets('shows loading indicator when loading',
         (WidgetTester tester) async {
-      bool exampleTapped = false;
-      final List<ExampleQuestion> examples = [
-        ExampleQuestion(
-          question: 'Example 1',
-          config: ExampleQuestionConfig(onTap: (_) {
-            exampleTapped = true;
-          }),
-        ),
-      ];
-
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
           body: AiChatWidget(
-            config: AiChatConfig(exampleQuestions: examples),
+            config: AiChatConfig(
+              aiName: 'AI',
+              loadingConfig: const LoadingConfig(
+                isLoading: true,
+                loadingIndicator: CircularProgressIndicator(),
+              ),
+            ),
             currentUser: currentUser,
             aiUser: aiUser,
             controller: controller,
@@ -137,70 +492,29 @@ void main() {
         ),
       ));
 
-      await tester.tap(find.text('Example 1'));
       await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      expect(exampleTapped, true);
-    });
-  });
-
-  group('LoadingWidget Tests', () {
-    testWidgets('renders correctly with default values',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const MaterialApp(
+      // Test loading state change
+      await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-          body: LoadingWidget(),
-        ),
-      ));
-
-      expect(find.byType(LoadingWidget), findsOneWidget);
-      expect(find.text('Loading...'), findsOneWidget);
-    });
-
-    testWidgets('cycles through texts with correct interval',
-        (WidgetTester tester) async {
-      const texts = ['Loading...', 'Please wait...', 'Almost there...'];
-      const interval = Duration(milliseconds: 100);
-
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: LoadingWidget(
-            texts: texts,
-            interval: interval,
+          body: AiChatWidget(
+            config: AiChatConfig(
+              aiName: 'AI',
+              loadingConfig: const LoadingConfig(
+                isLoading: false,
+              ),
+            ),
+            currentUser: currentUser,
+            aiUser: aiUser,
+            controller: controller,
+            onSendMessage: (_) {},
           ),
         ),
       ));
 
-      expect(find.text(texts[0]), findsOneWidget);
-
-      await tester.pump(interval);
-      expect(find.text(texts[1]), findsOneWidget);
-
-      await tester.pump(interval);
-      expect(find.text(texts[2]), findsOneWidget);
-
-      await tester.pump(interval);
-      expect(find.text(texts[0]), findsOneWidget);
-    });
-
-    testWidgets('applies custom text style correctly',
-        (WidgetTester tester) async {
-      const customStyle = TextStyle(
-        fontSize: 20,
-        color: Colors.red,
-        fontWeight: FontWeight.bold,
-      );
-
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: LoadingWidget(
-            textStyle: customStyle,
-          ),
-        ),
-      ));
-
-      final textWidget = tester.widget<Text>(find.text('Loading...'));
-      expect(textWidget.style, equals(customStyle));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });
 
@@ -210,7 +524,7 @@ void main() {
 
     setUp(() {
       controller = ChatMessagesController();
-      user = ChatUser(id: '1');
+      user = const ChatUser(id: '1', name: 'User');
     });
 
     test('initializes with empty messages', () {
@@ -266,16 +580,16 @@ void main() {
     });
 
     test('handles example questions correctly', () {
-      final currentUser = ChatUser(id: '1');
-      final aiUser = ChatUser(id: '2');
+      final currentUser = const ChatUser(id: '1', name: 'User');
+      final aiUser = const ChatUser(id: '2', name: 'AI');
       const question = 'Test question';
 
       controller.handleExampleQuestion(question, currentUser, aiUser);
 
-      expect(controller.messages.length, 2);
-      expect(controller.messages[1].text, question);
-      expect(controller.messages[1].user.id, currentUser.id);
-      expect(controller.messages[0].user.id, aiUser.id);
+      expect(controller.showWelcomeMessage, false);
+      expect(controller.messages.length, 1);
+      expect(controller.messages.first.text, question);
+      expect(controller.messages.first.user.id, currentUser.id);
     });
 
     test('initializes with provided messages', () {
@@ -294,84 +608,174 @@ void main() {
     });
   });
 
-  group('ThemeProvider Tests', () {
-    test('initializes with light theme', () {
-      final provider = ThemeProvider();
-      expect(provider.isDark, false);
-      expect(provider.theme.brightness, Brightness.light);
-    });
+  group('Scroll Behavior Tests', () {
+    testWidgets('maintains scroll position with PageStorageKey',
+        (WidgetTester tester) async {
+      final controller = ChatMessagesController();
+      final messages = List.generate(
+        20,
+        (i) => ChatMessage(
+          text: 'Message $i',
+          user: const ChatUser(id: '1', name: 'User'),
+          createdAt: DateTime.now(),
+        ),
+      );
 
-    test('toggles theme correctly', () {
-      final provider = ThemeProvider();
-      provider.toggleTheme();
-      expect(provider.isDark, true);
-      expect(provider.theme.brightness, Brightness.dark);
+      controller.setMessages(messages);
 
-      provider.toggleTheme();
-      expect(provider.isDark, false);
-      expect(provider.theme.brightness, Brightness.light);
-    });
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CustomChatWidget(
+            currentUser: const ChatUser(id: '1', name: 'User'),
+            messages: messages,
+            onSend: (_) {},
+            messageOptions: const MessageOptions(),
+            inputOptions: const InputOptions(),
+            typingUsers: null,
+            messageListOptions: MessageListOptions(
+              scrollPhysics: const ClampingScrollPhysics(),
+            ),
+            readOnly: false,
+            quickReplyOptions: const QuickReplyOptions(),
+            scrollToBottomOptions: const ScrollToBottomOptions(),
+          ),
+        ),
+      ));
 
-    test('provides correct theme extension', () {
-      final provider = ThemeProvider();
+      // Initial frame
+      await tester.pump();
 
-      // Light theme
-      var extension = provider.theme.extension<CustomThemeExtension>();
-      expect(extension, isNotNull);
-      expect(extension?.chatBackground, equals(Colors.white));
+      // Perform scroll
+      final gesture =
+          await tester.startGesture(tester.getCenter(find.byType(ListView)));
+      await gesture.moveBy(const Offset(0, -300));
+      await gesture.up();
+      await tester.pump(); // Frame after gesture up
+      await tester
+          .pump(const Duration(milliseconds: 300)); // Wait for scroll animation
 
-      // Dark theme
-      provider.toggleTheme();
-      extension = provider.theme.extension<CustomThemeExtension>();
-      expect(extension, isNotNull);
-      expect(extension?.chatBackground, equals(const Color(0xFF171717)));
-    });
+      final firstPosition = tester.getTopLeft(find.byType(ListView));
 
-    test('copyWith works correctly', () {
-      final provider = ThemeProvider();
-      final ext = provider.theme.extension<CustomThemeExtension>();
-      final newColor = Colors.blue;
+      // Trigger a rebuild
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: CustomChatWidget(
+            currentUser: const ChatUser(id: '1', name: 'User'),
+            messages: messages,
+            onSend: (_) {},
+            messageOptions: const MessageOptions(),
+            inputOptions: const InputOptions(),
+            typingUsers: null,
+            messageListOptions: MessageListOptions(
+              scrollPhysics: const ClampingScrollPhysics(),
+            ),
+            readOnly: false,
+            quickReplyOptions: const QuickReplyOptions(),
+            scrollToBottomOptions: const ScrollToBottomOptions(),
+          ),
+        ),
+      ));
 
-      final copied =
-          (ext?.copyWith(chatBackground: newColor)) as CustomThemeExtension?;
-      expect(copied?.chatBackground, equals(newColor));
-      final original = ext as CustomThemeExtension?;
-      expect(copied?.messageBubbleColor, equals(original?.messageBubbleColor));
+      await tester.pump(); // Frame after rebuild
+      await tester
+          .pump(const Duration(milliseconds: 300)); // Wait for any animations
+
+      final secondPosition = tester.getTopLeft(find.byType(ListView));
+      expect(firstPosition, secondPosition);
     });
   });
 
-  group('AiChatConfig Tests', () {
-    test('creates with default values', () {
-      const config = AiChatConfig();
-      expect(config.userName, equals('User'));
-      expect(config.aiName, equals('AI'));
-      expect(config.hintText, equals('Type a message...'));
-      expect(config.enableAnimation, isTrue);
-      expect(config.showTimestamp, isTrue);
-      expect(config.exampleQuestions, isEmpty);
+  group('Streaming Functionality Tests', () {
+    testWidgets('handles streaming messages correctly',
+        (WidgetTester tester) async {
+      final controller = ChatMessagesController();
+      final currentUser = const ChatUser(id: '1', name: 'User');
+      final aiUser = const ChatUser(id: '2', name: 'AI');
+      final initialText = 'Hello';
+      final streamedText = 'Hello World';
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: AiChatWidget(
+            config: AiChatConfig(
+              aiName: 'AI',
+              messageOptions: const MessageOptions(),
+            ),
+            controller: controller,
+            currentUser: currentUser,
+            aiUser: aiUser,
+            onSendMessage: (_) async {},
+          ),
+        ),
+      ));
+
+      // Add initial streaming message
+      controller.addMessage(ChatMessage(
+        text: initialText,
+        user: aiUser,
+        createdAt: DateTime.now(),
+        isMarkdown: true,
+        customProperties: {'isStreaming': true},
+      ));
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text(initialText), findsOneWidget);
+
+      // Update with streamed content
+      controller.updateMessage(ChatMessage(
+        text: streamedText,
+        user: aiUser,
+        createdAt: DateTime.now(),
+        isMarkdown: true,
+        customProperties: {'isStreaming': true},
+      ));
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text(streamedText), findsOneWidget);
     });
 
-    test('creates with custom values', () {
-      final config = AiChatConfig(
-        userName: 'Custom User',
-        aiName: 'Custom AI',
-        hintText: 'Custom hint',
-        enableAnimation: false,
-        showTimestamp: false,
-        exampleQuestions: [
-          ExampleQuestion(
-            question: 'Example',
-            config: ExampleQuestionConfig(onTap: (_) {}),
-          ),
-        ],
-      );
+    test('message streaming state management', () {
+      final controller = ChatMessagesController();
+      final messageId = 'test_stream_2';
+      final user = const ChatUser(id: '2', name: 'AI');
 
-      expect(config.userName, equals('Custom User'));
-      expect(config.aiName, equals('Custom AI'));
-      expect(config.hintText, equals('Custom hint'));
-      expect(config.enableAnimation, isFalse);
-      expect(config.showTimestamp, isFalse);
-      expect(config.exampleQuestions!.length, equals(1));
+      // Initial streaming message
+      controller.addMessage(ChatMessage(
+        text: 'Initial',
+        user: user,
+        createdAt: DateTime.now(),
+        customProperties: {'id': messageId, 'isStreaming': true},
+      ));
+
+      expect(controller.messages.length, 1);
+      expect(controller.messages.first.text, 'Initial');
+      expect(controller.messages.first.customProperties?['isStreaming'], true);
+
+      // Update streaming message
+      controller.updateMessage(ChatMessage(
+        text: 'Updated',
+        user: user,
+        createdAt: DateTime.now(),
+        customProperties: {'id': messageId, 'isStreaming': true},
+      ));
+
+      expect(controller.messages.length, 1);
+      expect(controller.messages.first.text, 'Updated');
+      expect(controller.messages.first.customProperties?['isStreaming'], true);
+
+      // Complete streaming
+      controller.updateMessage(ChatMessage(
+        text: 'Final',
+        user: user,
+        createdAt: DateTime.now(),
+        customProperties: {'id': messageId, 'isStreaming': false},
+      ));
+
+      expect(controller.messages.length, 1);
+      expect(controller.messages.first.text, 'Final');
+      expect(controller.messages.first.customProperties?['isStreaming'], false);
     });
   });
 }

@@ -1,5 +1,6 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 /// A widget that animates text appearing character by character
 class AnimatedTextMessage extends StatefulWidget {
@@ -10,6 +11,7 @@ class AnimatedTextMessage extends StatefulWidget {
     required this.animate,
     required this.isUser,
     this.isStreaming = false,
+    this.isMarkdown = false,
     this.textBuilder,
   });
 
@@ -18,6 +20,7 @@ class AnimatedTextMessage extends StatefulWidget {
   final bool animate;
   final bool isUser;
   final bool isStreaming;
+  final bool isMarkdown;
   final Widget Function(String text, TextStyle style)? textBuilder;
 
   @override
@@ -27,10 +30,7 @@ class AnimatedTextMessage extends StatefulWidget {
 class _AnimatedTextMessageState extends State<AnimatedTextMessage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _animation;
-  String _displayText = '';
-  int _currentIndex = 0;
-  Timer? _timer;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -38,67 +38,60 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
     _controller = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
-    )..forward();
-    _animation = CurvedAnimation(
+    );
+    _fadeAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOut,
     );
 
-    if (widget.animate && !widget.isUser) {
-      _startAnimation();
+    if (widget.animate) {
+      _controller.forward();
     } else {
-      _displayText = widget.text;
       _controller.value = 1.0;
     }
   }
 
   @override
-  void didUpdateWidget(AnimatedTextMessage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.text != oldWidget.text) {
-      if (widget.animate && !widget.isUser) {
-        _startAnimation();
-      } else {
-        _displayText = widget.text;
-        _controller.value = 1.0;
-      }
-    }
-  }
-
-  void _startAnimation() {
-    _displayText = '';
-    _currentIndex = 0;
-    _controller
-      ..reset()
-      ..forward();
-
-    const duration = Duration(milliseconds: 30);
-    _timer?.cancel();
-    _timer = Timer.periodic(duration, (timer) {
-      if (_currentIndex < widget.text.length) {
-        setState(() {
-          _displayText += widget.text[_currentIndex];
-          _currentIndex++;
-        });
-      } else {
-        timer.cancel();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => FadeTransition(
-        opacity: _animation,
-        child: widget.textBuilder?.call(_displayText, widget.style) ??
-            Text(
-              _displayText,
-              style: widget.style,
-            ),
+  Widget build(BuildContext context) {
+    // Handle markdown streaming text
+    if (widget.isMarkdown && widget.isStreaming) {
+      return StreamingText(
+        text: widget.text,
+        style: widget.style,
+        typingSpeed: const Duration(milliseconds: 30),
       );
+    }
+
+    // Handle regular streaming text
+    if (widget.isStreaming) {
+      return StreamingText(
+        text: widget.text,
+        style: widget.style,
+        typingSpeed: const Duration(milliseconds: 30),
+      );
+    }
+
+    // Handle regular text with fade animation
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: widget.textBuilder?.call(widget.text, widget.style) ??
+          (widget.isMarkdown
+              ? MarkdownBody(
+                  data: widget.text,
+                  styleSheet: MarkdownStyleSheet(
+                    p: widget.style,
+                    code: widget.style.copyWith(
+                      fontFamily: 'monospace',
+                      backgroundColor: Colors.grey.withOpacity(0.2),
+                    ),
+                  ),
+                )
+              : Text(widget.text, style: widget.style)),
+    );
+  }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
