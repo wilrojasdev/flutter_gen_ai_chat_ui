@@ -83,7 +83,7 @@ class AiChatWidgetState extends State<AiChatWidget>
 
   void _scrollListener() {
     if (_scrollController.hasClients) {
-      final bool shouldShowButton =
+      final shouldShowButton =
           _scrollController.position.pixels > 100; // Show after scrolling 100px
       if (shouldShowButton != _showScrollToBottom) {
         setState(() {

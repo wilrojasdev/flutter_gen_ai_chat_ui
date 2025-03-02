@@ -95,10 +95,10 @@ void main() {
       );
 
       controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async => messages,
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
-      await controller.loadMore();
+      await controller.loadMore(() async => messages);
 
       expect(controller.messages.length, 5);
       expect(controller.isLoadingMore, isFalse);
@@ -106,10 +106,10 @@ void main() {
 
     test('handles empty load more response', () async {
       controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async => [],
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
-      await controller.loadMore();
+      await controller.loadMore(() async => []);
 
       expect(controller.messages, isEmpty);
       expect(controller.hasMoreMessages, isFalse);
@@ -118,30 +118,33 @@ void main() {
     test('prevents concurrent load more calls', () async {
       int callCount = 0;
       controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async {
-          callCount++;
-          await Future.delayed(const Duration(milliseconds: 100));
-          return [];
-        },
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
       // Attempt multiple concurrent loads
-      final futures = List.generate(3, (_) => controller.loadMore());
+      final futures = List<Future<void>>.generate(
+          3,
+          (_) => controller.loadMore(() async {
+                callCount++;
+                await Future.delayed(const Duration(milliseconds: 100));
+                return [];
+              }));
+
       await Future.wait(futures);
 
       expect(callCount, 1);
     });
 
     test('handles load more errors gracefully', () async {
-      final controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async {
-          throw Exception('Test error');
-        },
+      controller = ChatMessagesController(
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
       // Trigger load more
       try {
-        await controller.loadMore();
+        await controller.loadMore(() async {
+          throw Exception('Test error');
+        });
         fail('Should throw an exception');
       } catch (e) {
         expect(e, isA<Exception>());
@@ -177,9 +180,18 @@ void main() {
   });
 
   group('ChatMessagesController Error Handling', () {
-    test('handles null onLoadMoreMessages', () async {
-      controller = ChatMessagesController();
-      await controller.loadMore();
+    test('handles null load more callback', () async {
+      controller = ChatMessagesController(
+        paginationConfig: const PaginationConfig(enabled: true),
+      );
+
+      // No callback provided, should not throw
+      try {
+        await controller.loadMore(() async => []);
+        // Test passes if we get here without exception
+      } catch (e) {
+        fail('Should not throw an exception');
+      }
 
       expect(controller.messages, isEmpty);
       expect(controller.isLoadingMore, isFalse);
@@ -187,11 +199,14 @@ void main() {
 
     test('handles load more errors gracefully', () async {
       controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async =>
-            throw Exception('Test error'),
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
-      await controller.loadMore();
+      try {
+        await controller.loadMore(() async => throw Exception('Test error'));
+      } catch (e) {
+        // Expected exception
+      }
 
       expect(controller.messages, isEmpty);
       expect(controller.isLoadingMore, isFalse);

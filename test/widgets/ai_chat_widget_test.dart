@@ -186,13 +186,13 @@ void main() {
       // Show loading
       await tester.pumpWidget(buildTestWidget(true));
       await tester.pump();
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
       // Hide loading
       await tester.pumpWidget(buildTestWidget(false));
       await tester.pump();
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });

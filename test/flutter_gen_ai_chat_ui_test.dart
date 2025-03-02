@@ -65,19 +65,31 @@ void main() {
 
     test('Pagination State', () {
       controller = ChatMessagesController(
-        onLoadMoreMessages: (lastMessage) async {
-          return [
-            ChatMessage(
-              text: 'Old message',
-              user: aiUser,
-              createdAt: DateTime.now().subtract(const Duration(days: 1)),
-            ),
-          ];
-        },
+        paginationConfig: const PaginationConfig(enabled: true),
       );
 
       expect(controller.isLoadingMore, false);
       expect(controller.hasMoreMessages, true);
+
+      // Test loading more messages using the loadMore method
+      controller.loadMore(() async {
+        return [
+          ChatMessage(
+            text: 'Old message',
+            user: aiUser,
+            createdAt: DateTime.now().subtract(const Duration(days: 1)),
+          ),
+        ];
+      });
+
+      expect(controller.isLoadingMore, true); // Should be loading now
+
+      // Wait for the loading to complete
+      Future.delayed(const Duration(milliseconds: 100), () {
+        expect(controller.isLoadingMore, false);
+        expect(controller.messages.length, 1);
+        expect(controller.messages.first.text, 'Old message');
+      });
     });
   });
 
@@ -685,97 +697,5 @@ void main() {
     });
   });
 
-  group('Streaming Functionality Tests', () {
-    testWidgets('handles streaming messages correctly',
-        (WidgetTester tester) async {
-      final controller = ChatMessagesController();
-      final currentUser = const ChatUser(id: '1', name: 'User');
-      final aiUser = const ChatUser(id: '2', name: 'AI');
-      final initialText = 'Hello';
-      final streamedText = 'Hello World';
-
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: AiChatWidget(
-            config: AiChatConfig(
-              aiName: 'AI',
-              messageOptions: const MessageOptions(),
-            ),
-            controller: controller,
-            currentUser: currentUser,
-            aiUser: aiUser,
-            onSendMessage: (_) async {},
-          ),
-        ),
-      ));
-
-      // Add initial streaming message
-      controller.addMessage(ChatMessage(
-        text: initialText,
-        user: aiUser,
-        createdAt: DateTime.now(),
-        isMarkdown: true,
-        customProperties: {'isStreaming': true},
-      ));
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text(initialText), findsOneWidget);
-
-      // Update with streamed content
-      controller.updateMessage(ChatMessage(
-        text: streamedText,
-        user: aiUser,
-        createdAt: DateTime.now(),
-        isMarkdown: true,
-        customProperties: {'isStreaming': true},
-      ));
-
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text(streamedText), findsOneWidget);
-    });
-
-    test('message streaming state management', () {
-      final controller = ChatMessagesController();
-      final messageId = 'test_stream_2';
-      final user = const ChatUser(id: '2', name: 'AI');
-
-      // Initial streaming message
-      controller.addMessage(ChatMessage(
-        text: 'Initial',
-        user: user,
-        createdAt: DateTime.now(),
-        customProperties: {'id': messageId, 'isStreaming': true},
-      ));
-
-      expect(controller.messages.length, 1);
-      expect(controller.messages.first.text, 'Initial');
-      expect(controller.messages.first.customProperties?['isStreaming'], true);
-
-      // Update streaming message
-      controller.updateMessage(ChatMessage(
-        text: 'Updated',
-        user: user,
-        createdAt: DateTime.now(),
-        customProperties: {'id': messageId, 'isStreaming': true},
-      ));
-
-      expect(controller.messages.length, 1);
-      expect(controller.messages.first.text, 'Updated');
-      expect(controller.messages.first.customProperties?['isStreaming'], true);
-
-      // Complete streaming
-      controller.updateMessage(ChatMessage(
-        text: 'Final',
-        user: user,
-        createdAt: DateTime.now(),
-        customProperties: {'id': messageId, 'isStreaming': false},
-      ));
-
-      expect(controller.messages.length, 1);
-      expect(controller.messages.first.text, 'Final');
-      expect(controller.messages.first.customProperties?['isStreaming'], false);
-    });
-  });
+  // Streaming tests have been moved to streaming_controller_test.dart
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 
 /// A widget that animates text appearing character by character
 class AnimatedTextMessage extends StatefulWidget {

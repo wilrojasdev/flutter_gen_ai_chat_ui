@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
-import '../models/chat/models.dart';
+
 import '../models/ai_chat_config.dart';
+import '../models/chat/models.dart';
 
 /// Controller for managing chat messages and their states.
 ///
@@ -17,9 +18,7 @@ class ChatMessagesController extends ChangeNotifier {
     this.paginationConfig = const PaginationConfig(),
   }) {
     if (initialMessages != null && initialMessages.isNotEmpty) {
-      _messages = List.from(paginationConfig.reverseOrder
-          ? initialMessages
-          : initialMessages.reversed);
+      _messages = List.from(initialMessages);
       _messageCache = {for (var m in _messages) _getMessageId(m): m};
       _showWelcomeMessage = false;
     }
@@ -41,7 +40,9 @@ class ChatMessagesController extends ChangeNotifier {
   /// Whether there are more messages to load.
   bool get hasMoreMessages => _hasMoreMessages;
 
-  /// List of all chat messages, ordered from newest to oldest.
+  /// List of all chat messages.
+  /// If paginationConfig.reverseOrder is true, newest messages are first (index 0).
+  /// If paginationConfig.reverseOrder is false, oldest messages are first (index 0).
   List<ChatMessage> get messages => _messages;
 
   /// Whether to show the welcome message.
@@ -62,9 +63,11 @@ class ChatMessagesController extends ChangeNotifier {
     final messageId = _getMessageId(message);
     if (!_messageCache.containsKey(messageId)) {
       if (paginationConfig.reverseOrder) {
+        // In reverse order, new messages go at the beginning (index 0)
         _messages.insert(0, message);
       } else {
-        _messages.insert(0, message);
+        // In chronological order, new messages go at the end
+        _messages.add(message);
       }
       _messageCache[messageId] = message;
       notifyListeners();
@@ -72,18 +75,22 @@ class ChatMessagesController extends ChangeNotifier {
   }
 
   /// Adds multiple messages to the chat at once.
+  ///
+  /// In reverse order mode, the expected behavior with pagination is:
+  /// - Newest messages (initial) appear at the top of the list (index 0)
+  /// - When loading more messages, older ones appear at the bottom
+  ///
+  /// In chronological order mode:
+  /// - Oldest messages (initial) appear at the top of the list (index 0)
+  /// - When loading more messages, newer ones appear at the bottom
   void addMessages(List<ChatMessage> messages) {
-    bool hasNewMessages = false;
-    final messagesToAdd = messages;
+    var hasNewMessages = false;
 
-    for (final message in messagesToAdd) {
+    for (final message in messages) {
       final messageId = _getMessageId(message);
       if (!_messageCache.containsKey(messageId)) {
-        if (paginationConfig.reverseOrder) {
-          _messages.add(message);
-        } else {
-          _messages.insert(0, message);
-        }
+        // For pagination, we always append at the end regardless of order mode
+        _messages.add(message);
         _messageCache[messageId] = message;
         hasNewMessages = true;
       }
@@ -120,9 +127,19 @@ class ChatMessagesController extends ChangeNotifier {
 
   /// Replaces all existing messages with a new list.
   void setMessages(List<ChatMessage> messages) {
-    _messages =
-        List.from(paginationConfig.reverseOrder ? messages : messages.reversed);
-    _messageCache = {for (var m in messages) _getMessageId(m): m};
+    // Make a defensive copy of the messages
+    _messages = List<ChatMessage>.from(messages);
+
+    // Ensure the ordering is correct based on pagination configuration
+    if (paginationConfig.reverseOrder) {
+      // For reverse mode, sort by newest first
+      _messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else {
+      // For chronological mode, sort by oldest first
+      _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+
+    _messageCache = {for (var m in _messages) _getMessageId(m): m};
     _currentPage = 1;
     notifyListeners();
   }
@@ -150,13 +167,18 @@ class ChatMessagesController extends ChangeNotifier {
       _isLoadingMore = true;
       notifyListeners();
 
-      await Future.delayed(paginationConfig.loadingDelay);
+      // Simulate network delay if specified
+      if (paginationConfig.loadingDelay.inMilliseconds > 0) {
+        await Future.delayed(paginationConfig.loadingDelay);
+      }
 
+      // Get more messages from the callback
       final moreMessages = await loadCallback();
 
       if (moreMessages.isEmpty) {
         _hasMoreMessages = false;
       } else {
+        // Add the messages
         addMessages(moreMessages);
         _currentPage++;
       }

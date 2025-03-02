@@ -5,6 +5,7 @@ import 'custom_styling_example.dart';
 import 'detailed_example.dart';
 import 'markdown_example.dart';
 import 'pagination_example.dart';
+import 'pagination_showcase_example.dart';
 import 'streaming_example.dart';
 import 'simple_chat_screen.dart';
 
@@ -76,6 +77,7 @@ class _ExamplesNavigatorState extends State<ExamplesNavigator> {
     const DetailedExample(),
     const MarkdownExample(),
     const PaginationExample(),
+    const PaginationShowcaseExample(),
     const StreamingExample(),
   ];
 
@@ -85,6 +87,7 @@ class _ExamplesNavigatorState extends State<ExamplesNavigator> {
     'Detailed Example',
     'Markdown Example',
     'Pagination Example',
+    'Pagination Showcase',
     'Streaming Example',
   ];
 

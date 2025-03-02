@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown/flutter_markdown.dart'
+    show MarkdownBody, MarkdownStyleSheet;
 import 'package:url_launcher/url_launcher.dart';
 
 /// A comprehensive example demonstrating markdown support in the chat UI.

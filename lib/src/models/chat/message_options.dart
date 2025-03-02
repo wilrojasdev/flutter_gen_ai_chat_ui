@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../ai_chat_config.dart';
 
 /// Options for customizing message appearance and behavior
 class MessageOptions {
@@ -55,8 +56,20 @@ class MessageListOptions {
   /// Widget to show while loading more messages
   final Widget? loadingWidget;
 
-  /// Callback when loading more messages
+  /// Callback when loading earlier messages via button
   final Future<void> Function()? onLoadEarlier;
+
+  /// Pagination configuration for message loading
+  final PaginationConfig paginationConfig;
+
+  /// Whether more messages are currently loading
+  final bool isLoadingMore;
+
+  /// Whether there are more messages to load
+  final bool hasMoreMessages;
+
+  /// Callback when automatic loading more messages is triggered by scroll
+  final Future<void> Function()? onLoadMore;
 
   const MessageListOptions({
     this.scrollController,
@@ -64,6 +77,10 @@ class MessageListOptions {
     this.dateSeparatorBuilder,
     this.loadingWidget,
     this.onLoadEarlier,
+    this.paginationConfig = const PaginationConfig(),
+    this.isLoadingMore = false,
+    this.hasMoreMessages = true,
+    this.onLoadMore,
   });
 
   MessageListOptions copyWith({
@@ -72,6 +89,10 @@ class MessageListOptions {
     Widget Function(DateTime)? dateSeparatorBuilder,
     Widget? loadingWidget,
     Future<void> Function()? onLoadEarlier,
+    PaginationConfig? paginationConfig,
+    bool? isLoadingMore,
+    bool? hasMoreMessages,
+    Future<void> Function()? onLoadMore,
   }) =>
       MessageListOptions(
         scrollController: scrollController ?? this.scrollController,
@@ -79,6 +100,10 @@ class MessageListOptions {
         dateSeparatorBuilder: dateSeparatorBuilder ?? this.dateSeparatorBuilder,
         loadingWidget: loadingWidget ?? this.loadingWidget,
         onLoadEarlier: onLoadEarlier ?? this.onLoadEarlier,
+        paginationConfig: paginationConfig ?? this.paginationConfig,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+        hasMoreMessages: hasMoreMessages ?? this.hasMoreMessages,
+        onLoadMore: onLoadMore ?? this.onLoadMore,
       );
 }
 

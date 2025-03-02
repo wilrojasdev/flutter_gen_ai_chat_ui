@@ -248,104 +248,157 @@ class PaginationConfig {
     this.cacheExtent = 1000.0,
     this.keepAliveMessages = true,
     this.reverseOrder = true,
+    this.autoLoadOnScroll = true,
+    this.distanceToTriggerLoadPixels = 200.0,
+    this.enableHapticFeedback = true,
+    this.loadMoreDebounceTime = const Duration(milliseconds: 300),
+    this.earlierMessagesPosition = EarlierMessagesPosition.top,
   });
 
-  /// Whether pagination is enabled
+  /// Whether pagination is enabled. Defaults to true.
   final bool enabled;
 
-  /// Number of messages to load per page
+  /// The number of messages to load per page. Defaults to 20.
   final int messagesPerPage;
 
-  /// Delay between loading pages
+  /// The delay before loading more messages after triggering. Defaults to 500ms.
   final Duration loadingDelay;
 
-  /// Scroll threshold to trigger loading (0.0 to 1.0)
+  /// The scroll threshold as a ratio (0.0 to 1.0) to trigger loading more messages.
+  /// A value of 0.9 means loading will trigger when the user has scrolled 90% of the way.
+  /// Only used when autoLoadOnScroll is true and distanceToTriggerLoadPixels is null.
   final double scrollThreshold;
 
-  /// Custom builder for the load earlier button
-  final Widget Function(BuildContext context, VoidCallback onLoad)?
+  /// Custom builder for the "load earlier messages" button.
+  final Widget Function(void Function() onLoad, bool isLoading)?
       loadEarlierBuilder;
 
-  /// Custom builder for the no more messages indicator
-  final Widget Function(BuildContext context)? noMoreMessagesBuilder;
+  /// Custom builder for the "no more messages" indicator.
+  final Widget Function()? noMoreMessagesBuilder;
 
-  /// Custom builder for the loading indicator
-  final Widget Function(BuildContext context)? loadingBuilder;
+  /// Custom builder for the loading indicator.
+  final Widget Function()? loadingBuilder;
 
-  /// Custom builder for error states
-  final Widget Function(
-      BuildContext context, String error, VoidCallback onRetry)? errorBuilder;
-
-  /// Style for the load earlier button
+  /// Custom style for the "load earlier messages" button.
   final ButtonStyle? loadEarlierButtonStyle;
 
-  /// Icon for the load earlier button
-  final Widget loadEarlierIcon;
+  /// Icon for the "load earlier messages" button. Defaults to history icon.
+  final Icon loadEarlierIcon;
 
-  /// Text for the load earlier button
+  /// Text for the "load earlier messages" button. Defaults to "Load Earlier Messages".
   final String loadEarlierText;
 
-  /// Text shown when there are no more messages
+  /// Text for the "no more messages" indicator. Defaults to "No more messages".
   final String noMoreMessagesText;
 
-  /// Text shown while loading messages
+  /// Text for the loading indicator. Defaults to "Loading more messages...".
   final String loadingText;
 
-  /// Text shown for retry button
+  /// Text for retry button when loading fails. Defaults to "Retry loading messages".
   final String retryText;
 
-  /// Cache extent for ListView
+  /// Custom builder for error state.
+  final Widget Function(String errorMessage, void Function() retry)?
+      errorBuilder;
+
+  /// The extent to which the list will cache off-screen items for smoother scrolling.
+  /// A higher value means more items will be cached but uses more memory.
+  /// Defaults to 1000.0.
   final double cacheExtent;
 
-  /// Whether to keep messages alive when scrolled out of view
+  /// Whether to keep messages alive when they are offscreen to prevent rebuilding.
+  /// Improves performance but uses more memory. Defaults to true.
   final bool keepAliveMessages;
 
-  /// Whether to show messages in reverse order (newest first)
+  /// Whether to display messages in reverse order (newest first).
+  /// In a chat UI, this is typically true where new messages appear at the bottom.
+  /// Defaults to true.
   final bool reverseOrder;
 
+  /// Whether to automatically load more messages when the user scrolls to the
+  /// threshold. When false, a button will be shown instead.
+  /// Defaults to true.
+  final bool autoLoadOnScroll;
+
+  /// The distance in pixels from the edge of the list that triggers loading more messages.
+  /// If set, overrides the scrollThreshold percentage.
+  /// Defaults to 200.0 pixels.
+  final double distanceToTriggerLoadPixels;
+
+  /// Whether to provide haptic feedback when loading more messages.
+  /// Defaults to true.
+  final bool enableHapticFeedback;
+
+  /// The debounce time for loading more messages to prevent multiple consecutive loads.
+  /// Defaults to 300ms.
+  final Duration loadMoreDebounceTime;
+
+  /// Where to position earlier messages in the list.
+  /// Defaults to EarlierMessagesPosition.top.
+  final EarlierMessagesPosition earlierMessagesPosition;
+
+  /// Creates a copy of this configuration with the given fields replaced with new values.
   PaginationConfig copyWith({
     bool? enabled,
     int? messagesPerPage,
     Duration? loadingDelay,
     double? scrollThreshold,
-    Widget Function(BuildContext context, VoidCallback onLoad)?
-        loadEarlierBuilder,
-    Widget Function(BuildContext context)? noMoreMessagesBuilder,
-    Widget Function(BuildContext context)? loadingBuilder,
-    Widget Function(BuildContext context, String error, VoidCallback onRetry)?
-        errorBuilder,
+    Widget Function(void Function() onLoad, bool isLoading)? loadEarlierBuilder,
+    Widget Function()? noMoreMessagesBuilder,
+    Widget Function()? loadingBuilder,
     ButtonStyle? loadEarlierButtonStyle,
-    Widget? loadEarlierIcon,
+    Icon? loadEarlierIcon,
     String? loadEarlierText,
     String? noMoreMessagesText,
     String? loadingText,
     String? retryText,
+    Widget Function(String errorMessage, void Function() retry)? errorBuilder,
     double? cacheExtent,
     bool? keepAliveMessages,
     bool? reverseOrder,
-  }) {
-    return PaginationConfig(
-      enabled: enabled ?? this.enabled,
-      messagesPerPage: messagesPerPage ?? this.messagesPerPage,
-      loadingDelay: loadingDelay ?? this.loadingDelay,
-      scrollThreshold: scrollThreshold ?? this.scrollThreshold,
-      loadEarlierBuilder: loadEarlierBuilder ?? this.loadEarlierBuilder,
-      noMoreMessagesBuilder:
-          noMoreMessagesBuilder ?? this.noMoreMessagesBuilder,
-      loadingBuilder: loadingBuilder ?? this.loadingBuilder,
-      errorBuilder: errorBuilder ?? this.errorBuilder,
-      loadEarlierButtonStyle:
-          loadEarlierButtonStyle ?? this.loadEarlierButtonStyle,
-      loadEarlierIcon: loadEarlierIcon ?? this.loadEarlierIcon,
-      loadEarlierText: loadEarlierText ?? this.loadEarlierText,
-      noMoreMessagesText: noMoreMessagesText ?? this.noMoreMessagesText,
-      loadingText: loadingText ?? this.loadingText,
-      retryText: retryText ?? this.retryText,
-      cacheExtent: cacheExtent ?? this.cacheExtent,
-      keepAliveMessages: keepAliveMessages ?? this.keepAliveMessages,
-      reverseOrder: reverseOrder ?? this.reverseOrder,
-    );
-  }
+    bool? autoLoadOnScroll,
+    double? distanceToTriggerLoadPixels,
+    bool? enableHapticFeedback,
+    Duration? loadMoreDebounceTime,
+    EarlierMessagesPosition? earlierMessagesPosition,
+  }) =>
+      PaginationConfig(
+        enabled: enabled ?? this.enabled,
+        messagesPerPage: messagesPerPage ?? this.messagesPerPage,
+        loadingDelay: loadingDelay ?? this.loadingDelay,
+        scrollThreshold: scrollThreshold ?? this.scrollThreshold,
+        loadEarlierBuilder: loadEarlierBuilder ?? this.loadEarlierBuilder,
+        noMoreMessagesBuilder:
+            noMoreMessagesBuilder ?? this.noMoreMessagesBuilder,
+        loadingBuilder: loadingBuilder ?? this.loadingBuilder,
+        loadEarlierButtonStyle:
+            loadEarlierButtonStyle ?? this.loadEarlierButtonStyle,
+        loadEarlierIcon: loadEarlierIcon ?? this.loadEarlierIcon,
+        loadEarlierText: loadEarlierText ?? this.loadEarlierText,
+        noMoreMessagesText: noMoreMessagesText ?? this.noMoreMessagesText,
+        loadingText: loadingText ?? this.loadingText,
+        retryText: retryText ?? this.retryText,
+        errorBuilder: errorBuilder ?? this.errorBuilder,
+        cacheExtent: cacheExtent ?? this.cacheExtent,
+        keepAliveMessages: keepAliveMessages ?? this.keepAliveMessages,
+        reverseOrder: reverseOrder ?? this.reverseOrder,
+        autoLoadOnScroll: autoLoadOnScroll ?? this.autoLoadOnScroll,
+        distanceToTriggerLoadPixels:
+            distanceToTriggerLoadPixels ?? this.distanceToTriggerLoadPixels,
+        enableHapticFeedback: enableHapticFeedback ?? this.enableHapticFeedback,
+        loadMoreDebounceTime: loadMoreDebounceTime ?? this.loadMoreDebounceTime,
+        earlierMessagesPosition:
+            earlierMessagesPosition ?? this.earlierMessagesPosition,
+      );
+}
+
+/// Defines where earlier messages are positioned in the list.
+enum EarlierMessagesPosition {
+  /// Earlier messages are at the top of the list (standard chat behavior).
+  top,
+
+  /// Earlier messages are at the bottom of the list (reverse chat behavior).
+  bottom,
 }
 
 /// Configuration for loading states in the chat

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_streaming_text_markdown/flutter_streaming_text_markdown.dart';
 
@@ -38,6 +40,8 @@ class CustomChatWidget extends StatefulWidget {
 class _CustomChatWidgetState extends State<CustomChatWidget> {
   late ScrollController _scrollController;
   bool _showScrollToBottom = false;
+  Timer? _scrollDebounce;
+  bool _isNearEdge = false;
 
   @override
   void initState() {
@@ -47,13 +51,81 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
     _scrollController.addListener(_handleScroll);
   }
 
+  @override
+  void didUpdateWidget(CustomChatWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Update the controller if it changed
+    if (oldWidget.messageListOptions.scrollController !=
+        widget.messageListOptions.scrollController) {
+      _scrollController.removeListener(_handleScroll);
+      _scrollController =
+          widget.messageListOptions.scrollController ?? ScrollController();
+      _scrollController.addListener(_handleScroll);
+    }
+  }
+
   void _handleScroll() {
-    if (_scrollController.hasClients) {
-      final shouldShow = _scrollController.position.pixels > 100;
+    if (!_scrollController.hasClients) return;
+
+    // Debounce scroll events to avoid excessive rebuilds
+    _scrollDebounce?.cancel();
+    _scrollDebounce = Timer(
+        widget.messageListOptions.paginationConfig.loadMoreDebounceTime, () {
+      if (!mounted) return;
+
+      final position = _scrollController.position.pixels;
+      final maxScroll = _scrollController.position.maxScrollExtent;
+
+      // Update scroll to bottom button visibility
+      final shouldShow = position > 100;
       if (shouldShow != _showScrollToBottom) {
         setState(() => _showScrollToBottom = shouldShow);
       }
-    }
+
+      // Check if we should load more messages
+      final paginationConfig = widget.messageListOptions.paginationConfig;
+      if (!paginationConfig.enabled || !paginationConfig.autoLoadOnScroll) {
+        return;
+      }
+
+      // Determine if we are near the edge for loading more messages
+      bool shouldLoadMore;
+      if (paginationConfig.reverseOrder) {
+        // In reverse mode: Check if we're near the top
+        if (paginationConfig.distanceToTriggerLoadPixels > 0) {
+          shouldLoadMore = maxScroll > 0 &&
+              (maxScroll - position) <=
+                  paginationConfig.distanceToTriggerLoadPixels;
+        } else {
+          shouldLoadMore = maxScroll > 0 &&
+              (maxScroll - position) / maxScroll <=
+                  (1.0 - paginationConfig.scrollThreshold);
+        }
+      } else {
+        // In chronological mode: Check if we're near the top
+        if (paginationConfig.distanceToTriggerLoadPixels > 0) {
+          shouldLoadMore =
+              position <= paginationConfig.distanceToTriggerLoadPixels;
+        } else {
+          shouldLoadMore = maxScroll > 0 &&
+              position / maxScroll <= paginationConfig.scrollThreshold;
+        }
+      }
+
+      // If we should load more and weren't previously near the edge,
+      // call the load more callback
+      if (shouldLoadMore && !_isNearEdge) {
+        _isNearEdge = true;
+        // Provide haptic feedback if enabled
+        if (paginationConfig.enableHapticFeedback) {
+          HapticFeedback.lightImpact();
+        }
+        widget.messageListOptions.onLoadMore?.call();
+      } else if (!shouldLoadMore && _isNearEdge) {
+        _isNearEdge = false;
+      }
+    });
   }
 
   @override
@@ -63,38 +135,14 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
         Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                key: const PageStorageKey('chat_messages'),
-                controller: _scrollController,
-                reverse: true,
-                physics: widget.messageListOptions.scrollPhysics ??
-                    const BouncingScrollPhysics(),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: widget.messages.length +
-                    (widget.typingUsers?.isNotEmpty == true ? 1 : 0),
-                cacheExtent: 1000, // Cache more items for smoother scrolling
-                itemBuilder: (context, index) {
-                  if (index == widget.messages.length &&
-                      widget.typingUsers?.isNotEmpty == true) {
-                    return _buildTypingIndicator();
-                  }
-
-                  final message = widget.messages[index];
-                  final isUser = message.user.id == widget.currentUser.id;
-                  final messageId = message.customProperties?['id']
-                          as String? ??
-                      '${message.user.id}_${message.createdAt.millisecondsSinceEpoch}_${message.text.hashCode}';
-
-                  return RepaintBoundary(
-                    child: KeyedSubtree(
-                      key: ValueKey(messageId),
-                      child: _buildMessageBubble(message, isUser),
-                    ),
-                  );
-                },
-              ),
+              child: _buildMessageList(),
             ),
+            if (widget.quickReplyOptions.quickReplies != null &&
+                widget.quickReplyOptions.quickReplies!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: _buildQuickReplies(),
+              ),
           ],
         ),
         if (_showScrollToBottom) _buildScrollToBottomButton(),
@@ -102,92 +150,214 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, bool isUser) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final messageId = message.customProperties?['id'] as String? ??
-        '${message.user.id}_${message.createdAt.millisecondsSinceEpoch}_${message.text.hashCode}';
+  Widget _buildMessageList() {
+    final paginationConfig = widget.messageListOptions.paginationConfig;
 
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 350),
-      curve: Curves.easeOutCubic,
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: Transform.translate(
-          offset: Offset(0, 20 * (1 - value)),
+    // Build loading header/footer if needed
+    Widget? loadingWidget;
+    Widget? noMoreMessagesWidget;
+
+    if (widget.messageListOptions.isLoadingMore) {
+      loadingWidget = paginationConfig.loadingBuilder?.call() ??
+          _buildDefaultLoadingIndicator();
+    } else if (!widget.messageListOptions.hasMoreMessages &&
+        widget.messages.isNotEmpty) {
+      noMoreMessagesWidget = paginationConfig.noMoreMessagesBuilder?.call() ??
+          _buildNoMoreMessagesIndicator();
+    }
+
+    // Build the list with header/footer as needed
+    return ListView.builder(
+      key: const PageStorageKey('chat_messages'),
+      controller: _scrollController,
+      reverse: paginationConfig.reverseOrder,
+      physics: widget.messageListOptions.scrollPhysics ??
+          const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: widget.messages.length +
+          (widget.typingUsers?.isNotEmpty == true ? 1 : 0) +
+          (loadingWidget != null ? 1 : 0) +
+          (noMoreMessagesWidget != null ? 1 : 0),
+      cacheExtent: paginationConfig.cacheExtent,
+      itemBuilder: (context, index) {
+        // Handle loading indicator at the start (chronological) or end (reverse)
+        if (paginationConfig.reverseOrder) {
+          // In reverse mode, older messages are at the end
+          if (loadingWidget != null &&
+              index ==
+                  widget.messages.length +
+                      (widget.typingUsers?.isNotEmpty == true ? 1 : 0)) {
+            return loadingWidget;
+          }
+
+          if (noMoreMessagesWidget != null &&
+              index ==
+                  widget.messages.length +
+                      (widget.typingUsers?.isNotEmpty == true ? 1 : 0)) {
+            return noMoreMessagesWidget;
+          }
+        } else {
+          // In chronological mode, older messages are at the beginning
+          if (loadingWidget != null && index == 0) {
+            return loadingWidget;
+          }
+
+          if (noMoreMessagesWidget != null && index == 0) {
+            return noMoreMessagesWidget;
+          }
+        }
+
+        // Handle typing indicator
+        if (index == widget.messages.length &&
+            widget.typingUsers?.isNotEmpty == true) {
+          return _buildTypingIndicator();
+        }
+
+        // Adjust index for header/footer
+        var messageIndex = index;
+        if (!paginationConfig.reverseOrder &&
+            (loadingWidget != null || noMoreMessagesWidget != null)) {
+          messageIndex = index - 1;
+        }
+
+        // Render message bubble
+        if (messageIndex < widget.messages.length) {
+          final message = widget.messages[messageIndex];
+          final isUser = message.user.id == widget.currentUser.id;
+          final messageId = message.customProperties?['id'] as String? ??
+              '${message.user.id}_${message.createdAt.millisecondsSinceEpoch}_${message.text.hashCode}';
+
+          return RepaintBoundary(
+            child: KeyedSubtree(
+              key: ValueKey(messageId),
+              child: _buildMessageBubble(message, isUser),
+            ),
+          );
+        }
+
+        return null;
+      },
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMessage message, bool isUser) {
+    // Check for custom message builder from the message itself
+    if (message.customBuilder != null) {
+      return message.customBuilder!(context, message);
+    }
+
+    // Default bubble implementation based on available MessageOptions properties
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
+        child: Card(
+          color: isUser ? Colors.blue[100] : Colors.grey[100],
+          margin: EdgeInsets.only(
+            top: 8,
+            bottom: 8,
+            right: isUser ? 8 : 60,
+            left: isUser ? 60 : 8,
+          ),
+          elevation: 1.0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              mainAxisAlignment:
-                  isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            padding: widget.messageOptions.padding ?? const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (!isUser && message.user.avatar != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: CircleAvatar(
-                      backgroundImage: NetworkImage(message.user.avatar!),
-                      radius: 16,
+                // Display user name if needed
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    message.user.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isUser ? Colors.blue[800] : Colors.grey[800],
                     ),
-                  ),
-                Flexible(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isUser
-                          ? theme.primaryColor.withOpacity(0.1)
-                          : isDarkMode
-                              ? Colors.grey[800]
-                              : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: message.customBuilder != null
-                        ? message.customBuilder!(context, message)
-                        : message.isMarkdown == true
-                            ? MarkdownBody(
-                                data: message.text,
-                                selectable: true,
-                                styleSheet: MarkdownStyleSheet(
-                                  p: TextStyle(
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              )
-                            : message.customProperties?['isStreaming'] == true
-                                ? StreamingTextMarkdown(
-                                    key: ValueKey(messageId),
-                                    text: message.text,
-                                    typingSpeed:
-                                        const Duration(milliseconds: 50),
-                                    fadeInEnabled: true,
-                                    styleSheet: MarkdownStyleSheet(
-                                      p: TextStyle(
-                                        color: isDarkMode
-                                            ? Colors.white
-                                            : Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  )
-                                : SelectableText(
-                                    message.text,
-                                    style: TextStyle(
-                                      color: isDarkMode
-                                          ? Colors.white
-                                          : Colors.black87,
-                                      fontSize: 16,
-                                    ),
-                                  ),
                   ),
                 ),
+                // Handle markdown or plain text
+                message.isMarkdown
+                    ? Markdown(
+                        key: ValueKey('markdown_${message.text.hashCode}'),
+                        data: message.text,
+                        selectable: true,
+                      )
+                    : Text(
+                        message.text,
+                        style: widget.messageOptions.textStyle,
+                      ),
+                // Show timestamp if needed
+                if (widget.messageOptions.showTime)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _defaultTimestampFormat(message.createdAt),
+                      style: widget.messageOptions.timeTextStyle ??
+                          TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[500],
+                          ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  String _defaultTimestampFormat(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}m';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours}h';
+    } else {
+      return '${dateTime.month}/${dateTime.day}';
+    }
+  }
+
+  Widget _buildQuickReplies() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: widget.quickReplyOptions.quickReplies!.map((quickReply) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ElevatedButton(
+              onPressed: () {
+                widget.quickReplyOptions.onQuickReplyTap?.call(quickReply);
+                widget.onSend(
+                  ChatMessage(
+                    text: quickReply,
+                    user: widget.currentUser,
+                    createdAt: DateTime.now(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[200],
+                foregroundColor: Colors.black87,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(quickReply),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -214,6 +384,47 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 3),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.messageListOptions.paginationConfig.loadingText,
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoMoreMessagesIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Center(
+        child: Text(
+          widget.messageListOptions.paginationConfig.noMoreMessagesText,
+          style: const TextStyle(
+            fontSize: 12,
+            fontStyle: FontStyle.italic,
+            color: Colors.grey,
+          ),
+        ),
       ),
     );
   }
@@ -251,6 +462,7 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
 
   @override
   void dispose() {
+    _scrollDebounce?.cancel();
     if (widget.messageListOptions.scrollController == null) {
       _scrollController.dispose();
     }
@@ -295,15 +507,16 @@ class _DotIndicatorState extends State<_DotIndicator>
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, -2 * _animation.value),
-          child: Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.grey,
-              shape: BoxShape.circle,
+        return Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Color.lerp(
+              Colors.grey[400],
+              Colors.grey[800],
+              _animation.value,
             ),
+            shape: BoxShape.circle,
           ),
         );
       },

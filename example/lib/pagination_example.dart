@@ -115,7 +115,7 @@ class _PaginationExampleState extends State<PaginationExample> {
     final initialMessages = _getLatestMessages();
     _controller = ChatMessagesController(
       initialMessages: initialMessages,
-      paginationConfig: PaginationConfig(
+      paginationConfig: const PaginationConfig(
         enabled: true,
         messagesPerPage: _messagesPerPage,
         loadingDelay: _loadingDelay,
@@ -339,7 +339,7 @@ class _PaginationExampleState extends State<PaginationExample> {
                     vertical: 12,
                   ),
                 ),
-                paginationConfig: PaginationConfig(
+                paginationConfig: const PaginationConfig(
                   enabled: true,
                   messagesPerPage: _messagesPerPage,
                   loadingDelay: _loadingDelay,
