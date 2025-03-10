@@ -1,0 +1,274 @@
+---
+description: Animations rules
+globs: 
+alwaysApply: false
+---
+# Animation Standards and Guidelines
+
+## Core Principles
+
+1. **Purpose-Driven Animations**
+   - Every animation should serve a functional purpose
+   - Animations should guide user attention and provide visual feedback
+   - Avoid animations that distract or delay user interactions
+
+2. **Consistency**
+   - Maintain consistent animation patterns across similar UI elements
+   - Use standardized durations and curves for similar animation types
+   - Ensure animations feel cohesive with the overall design language
+
+3. **Performance First**
+   - Prioritize performance over complexity
+   - Implement animations on the GPU where possible (using `AnimatedBuilder`, `TweenAnimationBuilder`, etc.)
+   - Avoid rebuilding large widget subtrees during animations
+
+## Standard Durations
+
+| Animation Type | Duration | Use Case |
+|----------------|----------|----------|
+| Micro Feedback | 100ms | Button presses, toggles |
+| Standard Motion | 200-300ms | Message appearance, transitions |
+| Complex Motion | 400-500ms | Welcome screens, complex state changes |
+| Page Transitions | 300ms | Navigation between views |
+
+## Recommended Curves
+
+| Curve | Use Case |
+|-------|----------|
+| `Curves.easeOutQuart` | Message appearance, content reveal |
+| `Curves.easeInOut` | State transitions, content shifts |
+| `Curves.easeOut` | General UI animations, fades, scaling |
+| `Curves.fastOutSlowIn` | Navigation transitions |
+| `Curves.elasticOut` | Attention-grabbing elements (with restraint) |
+
+## Animation Implementation Priority
+
+1. **Message Interactions** (High Priority)
+   - Message appearance/disappearance
+   - Typing indicators
+   - Status changes (sending, delivered, error)
+
+2. **Input Field Feedback** (High Priority)
+   - Send button activation
+   - Text field focus/unfocus
+   - Voice input transitions
+
+3. **Navigation & Structural Elements** (Medium Priority)
+   - Page transitions
+   - Modal/dialog appearance
+   - Panel expansions/collapses
+
+4. **Decorative Elements** (Low Priority)
+   - Background effects
+   - Idle state animations
+   - Purely aesthetic flourishes
+
+## Performance Guidelines
+
+1. **Measurement & Monitoring**
+   - Use `Timeline` events to track animation performance
+   - Test animations on low-end devices
+   - Establish performance budgets (e.g., maintain 60fps)
+
+2. **Memory Considerations**
+   - Dispose of animation controllers when not in use
+   - Use `RepaintBoundary` for complex animated widgets
+   - Limit the number of simultaneous animations (max 3-5 complex animations)
+
+3. **Optimization Techniques**
+   - Use `AnimatedWidget` or `ImplicitlyAnimatedWidget` for simple animations
+   - Leverage the framework's built-in animations where possible
+   - Avoid animations that cause layout recalculations
+
+## Implementation Examples
+
+### Message Appearance Animation
+
+```dart
+class MessageBubble extends StatefulWidget {
+  // Widget properties...
+  
+  @override
+  State<MessageBubble> createState() => _MessageBubbleState();
+}
+
+class _MessageBubbleState extends State<MessageBubble> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _opacityAnimation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 250), // Standard motion
+      vsync: this,
+    );
+    
+    _scaleAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutQuart,
+    ).drive(Tween<double>(begin: 0.95, end: 1.0));
+    
+    _opacityAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    ).drive(Tween<double>(begin: 0.0, end: 1.0));
+    
+    _controller.forward();
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacityAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: /* Message bubble content */,
+      ),
+    );
+  }
+}
+```
+
+### Typing Indicator Animation
+
+```dart
+class TypingIndicator extends StatefulWidget {
+  // Widget properties...
+  
+  @override
+  State<TypingIndicator> createState() => _TypingIndicatorState();
+}
+
+class _TypingIndicatorState extends State<TypingIndicator> with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _animations;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(3, (index) {
+      return AnimationController(
+        duration: const Duration(milliseconds: 400),
+        vsync: this,
+      );
+    });
+    
+    _animations = _controllers.map((controller) {
+      return controller.drive(Tween<double>(begin: 0.0, end: 1.0)
+        .chain(CurveTween(curve: Curves.easeOutQuart)));
+    }).toList();
+    
+    // Staggered start for a wave effect
+    for (var i = 0; i < _controllers.length; i++) {
+      Future.delayed(Duration(milliseconds: i * 150), () {
+        if (mounted) {
+          _controllers[i].repeat(reverse: true);
+        }
+      });
+    }
+  }
+  
+  @override
+  void dispose() {
+    for (final controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        return AnimatedBuilder(
+          animation: _animations[index],
+          builder: (context, child) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              height: 8 + (_animations[index].value * 4),
+              width: 8 + (_animations[index].value * 4),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.6 + (_animations[index].value * 0.4)),
+                shape: BoxShape.circle,
+              ),
+            );
+          },
+        );
+      }),
+    );
+  }
+}
+```
+
+## Accessibility Considerations
+
+1. **Reduced Motion Support**
+   - Honor system accessibility settings for reduced motion
+   - Provide alternative static representations where needed
+   - Implement a global animation scale factor to easily adjust all animations
+
+```dart
+// Check for reduced motion preference
+final bool reduceMotion = MediaQuery.of(context).platformBrightness == Brightness.dark;
+
+// Duration scaled based on accessibility preferences
+final Duration duration = reduceMotion 
+    ? const Duration(milliseconds: 100) // Minimal duration
+    : const Duration(milliseconds: 300); // Standard duration
+```
+
+## Implementation Checklist
+
+- [ ] Animation enhances UX rather than obstructing it
+- [ ] Animation performs well on target devices (test on low-end devices)
+- [ ] Animation respects accessibility settings
+- [ ] Animation controllers are properly disposed
+- [ ] Animation has appropriate duration and curve
+- [ ] Animation is consistent with similar elements
+- [ ] Animation degrades gracefully on slower devices
+
+## Global Animation Controller
+
+Consider implementing a global animation controller class to manage animations throughout the app:
+
+```dart
+class AnimationConfig {
+  // Singleton instance
+  static final AnimationConfig _instance = AnimationConfig._internal();
+  factory AnimationConfig() => _instance;
+  AnimationConfig._internal();
+  
+  // Global scale factor (could be reduced based on device performance or user preferences)
+  double scaleFactor = 1.0;
+  
+  // Whether animations are enabled
+  bool enableAnimations = true;
+  
+  // Get scaled duration
+  Duration getDuration(Duration baseDuration) {
+    if (!enableAnimations) return Duration.zero;
+    return Duration(milliseconds: (baseDuration.inMilliseconds * scaleFactor).round());
+  }
+  
+  // Standard durations
+  Duration get microDuration => getDuration(const Duration(milliseconds: 100));
+  Duration get standardDuration => getDuration(const Duration(milliseconds: 250));
+  Duration get complexDuration => getDuration(const Duration(milliseconds: 450));
+  
+  // Standard curves
+  Curve get standardCurve => Curves.easeOutQuart;
+  Curve get navigationCurve => Curves.fastOutSlowIn;
+  Curve get emphasizedCurve => Curves.elasticOut;
+}
+```
+
+By following these guidelines, we can ensure that animations throughout the Flutter Gen AI Chat UI are smooth, purposeful, and enhancing the user experience without causing performance issues. 

@@ -1,0 +1,38 @@
+---
+description: Design rules and standards
+globs: 
+alwaysApply: false
+---
+## Glassomorphism Dark Theme first design Guidelines
+
+1. **Core Aesthetic Principles**
+   - Implement translucent, frosted glass surfaces with 15-25% opacity
+   - Maintain subtle background blur effects (sigma: 10-15) on overlaid elements
+   - Apply thin, light borders (0.5-1.0 width) with 30-40% opacity
+
+2. **Color System**
+   - Primary: Deep purple (#7B61FF) with 90-100% opacity for key elements
+   - Background: Rich dark gradient (#121212 to #1E1E1E)
+   - Surface Elements: Semi-transparent (#2A2A2A at 70-85% opacity)
+   - Text: Primary (#FFFFFF), Secondary (#E0E0E0), Tertiary (#BBBBBB)
+   - Accent: Use accent colors at 85% opacity with subtle glow effects
+
+3. **Typography Hierarchy**
+   - Primary: Sans-serif with 16-18px size, 300-400 weight, 1.4-1.5 line height
+   - Code: Monospace at 14px with 120% line height and syntax highlighting
+   - Scale all text relative to device settings for accessibility
+   - Maintain 4.5:1 minimum contrast ratio for all text elements
+
+4. **Component Guidelines**
+   - Message Bubbles: 12-16px rounded corners with subtle backdrop filter
+   - Input Field: Semi-transparent with prominent focus state
+   - Buttons: Minimal design with hover state glow effect
+   - Elevation: Use z-index and subtle shadows instead of harsh drop shadows
+
+5. **Animation & Interaction**
+   - Implement smooth transitions (250-350ms) with ease-in-out curves
+   - Apply subtle hover states with 10% lightening effect
+   - Use minimal loading indicators with pulsing opacity animations
+   - Ensure tap/click targets minimum 44×44px for accessibility
+
+This standard prioritizes readability through high contrast text, generous spacing, and clear visual hierarchy while maintaining the sophisticated aesthetic of glassomorphism in a dark theme environment.

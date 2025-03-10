@@ -1,0 +1,127 @@
+---
+description: General rules to follow
+globs: 
+alwaysApply: true
+---
+## 1. Architecture & Design Patterns
+
+1. **Configuration First:** All customizations should be provided through the central `AiChatConfig` class. Avoid adding widget-level parameters.
+   ```dart
+   // Correct
+   AiChatWidget(config: AiChatConfig(inputOptions: InputOptions(...)))
+   
+   // Avoid
+   AiChatWidget(inputDecoration: InputDecoration(...))
+   ```
+
+2. **Controller Separation:** Message state management should be handled exclusively by `ChatMessagesController`. UI components should not maintain message state.
+
+3. **Reactive Pattern:** Use `ChangeNotifier` and `ListenableBuilder` for reactive UI updates. Avoid setState() for message-related changes when using the controller.
+
+4. **Component Modularity:** Break down large widgets into smaller, focused components with clear responsibilities.
+
+5. **Theme Extension:** Use the `CustomThemeExtension` system for theming. Avoid hardcoded colors in widgets.
+
+## 2. Code Style & Quality
+
+1. **Consistent Naming:**
+   - Controllers: `*Controller` suffix
+   - Configurations: `*Config` suffix
+   - Models: Descriptive nouns
+   - Widgets: Descriptive widget names with `Widget` suffix
+
+2. **Explicit Typing:** Use explicit types for public APIs and method signatures for better documentation and type safety.
+   ```dart
+   // Prefer
+   void handleSendMessage(ChatMessage message) { }
+   
+   // Avoid
+   handleSendMessage(message) { }
+   ```
+
+3. **Documentation:** All public classes, methods, and properties must have clear documentation comments.
+
+4. **Parameter Organization:** 
+   - Required parameters first
+   - Optional parameters after required ones
+   - Use named parameters for methods with many parameters
+
+5. **Immutable Models:** Prefer immutable models with `copyWith()` methods for modifications.
+
+## 3. Performance & Optimization
+
+1. **Efficient Rendering:** Use keys for list items and optimize rebuild scopes using `RepaintBoundary` for complex UI elements.
+
+2. **Pagination Best Practices:** 
+   - Use the built-in pagination system for large message lists
+   - Load messages in batches (20-30 items)
+   - Implement proper scroll position maintenance
+
+3. **Animation Efficiency:** 
+   - Use lightweight animations for frequent updates
+   - Apply animation only when needed via `enableAnimation` config
+   - Consider performance impact on lower-end devices
+
+4. **Memory Management:**
+   - Dispose controllers, animations, and focus nodes in widget disposal
+   - Use memory-efficient data structures for large message lists
+
+## 4. Testing & Quality Assurance
+
+1. **Test Coverage:** 
+   - Unit tests for controllers and utilities
+   - Widget tests for UI components
+   - Visual regression tests for theme and layout
+   - Performance tests for critical operations
+
+2. **Performance Benchmarks:** 
+   - Maintain and regularly run benchmarks for message rendering
+   - Test with large message loads (100+ messages)
+   - Verify animation performance
+
+3. **Error Handling:** Implement comprehensive error handling for all external operations (API calls, file operations).
+
+## 5. Feature Implementation
+
+1. **Markdown Support:** 
+   - Use the provided markdown widgets for rendering
+   - Support critical markdown features: headings, lists, code blocks, formatting
+   - Ensure proper styling in both light and dark themes
+
+2. **Text Streaming:** 
+   - Implement word-by-word streaming using `isStreaming` property
+   - Use customProperties to track streaming state
+   - Provide smooth animation for streaming text
+
+3. **Input Options:**
+   - Follow the `InputOptions` configuration structure
+   - Support all customization options defined in the docs
+   - Maintain backwards compatibility with migration paths
+
+## 6. Accessibility & Internationalization
+
+1. **Accessibility:**
+   - Support screen readers with semantic labels
+   - Provide sufficient contrast ratios
+   - Support keyboard navigation
+   - Test with accessibility tools
+
+2. **RTL Support:**
+   - Ensure all text widgets support RTL languages
+   - Use Directionality widgets where appropriate
+   - Test with RTL languages
+
+3. **Localization:** Support localized strings and date formats through the app's localization system.
+
+## 7. Deprecation & Migration
+
+1. **Gradual Deprecation:** Mark deprecated APIs with `@deprecated` and provide migration instructions.
+
+2. **Version Management:** Follow semantic versioning with proper CHANGELOG updates:
+   - Major version for breaking changes
+   - Minor version for new features
+   - Patch version for bug fixes
+
+3. **Documentation:** Update README and documentation with each significant change.
+
+By following these general rules, the Flutter Gen AI Chat UI project will maintain consistency, quality, and developer-friendly patterns throughout its evolution.
