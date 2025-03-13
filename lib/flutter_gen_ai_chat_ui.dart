@@ -13,7 +13,11 @@ export 'src/models/input_options.dart';
 export 'src/models/welcome_message_config.dart';
 // Theme
 export 'src/theme/custom_theme_extension.dart';
+// Utils
+export 'src/utils/glassmorphic_container.dart';
 // Widgets
 export 'src/widgets/ai_chat_widget.dart';
 export 'src/widgets/chat_input.dart';
 export 'src/widgets/custom_chat_widget.dart';
+export 'src/widgets/glassmorphic_container.dart';
+export 'src/widgets/loading_widget.dart';

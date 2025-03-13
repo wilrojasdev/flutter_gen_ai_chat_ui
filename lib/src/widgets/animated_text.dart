@@ -81,15 +81,27 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
           ),
     );
 
+    final isRtlText = FontHelper.isRTL(widget.text);
+    final textAlign = isRtlText ? TextAlign.right : TextAlign.left;
+    final textDirection = isRtlText ? TextDirection.rtl : TextDirection.ltr;
+
     Widget buildText(final String text, final TextStyle? style) {
       if (widget.textBuilder != null) {
         return widget.textBuilder!(text, style);
       }
-      return Text(text, style: style);
+      return Text(
+        text,
+        style: style,
+        textAlign: textAlign,
+        textDirection: textDirection,
+      );
     }
 
-    return Directionality(
-      textDirection: _detectTextDirection(widget.text),
+    // Instead of using Directionality, use Container with alignment to respect text direction
+    // while not affecting surrounding elements
+    return Container(
+      alignment: FontHelper.getAlignment(widget.text),
+      width: double.infinity,
       child: widget.isStreaming
           ? StreamingText(
               text: widget.text,
@@ -101,14 +113,6 @@ class _AnimatedTextMessageState extends State<AnimatedTextMessage>
               child: buildText(widget.text, textStyle),
             ),
     );
-  }
-
-  TextDirection _detectTextDirection(final String text) {
-    if (text.isEmpty) return TextDirection.ltr;
-    final arabicRegex = RegExp(
-      r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]',
-    );
-    return arabicRegex.hasMatch(text) ? TextDirection.rtl : TextDirection.ltr;
   }
 }
 
@@ -168,36 +172,57 @@ class _StreamingTextState extends State<StreamingText>
     super.dispose();
   }
 
-  Widget buildText(final String text, final TextStyle? style) {
-    if (widget.textBuilder != null) {
-      return widget.textBuilder!(text, style);
-    }
-    return Text(text, style: style);
-  }
-
   @override
   Widget build(final BuildContext context) => AnimatedBuilder(
         animation: _controller,
         builder: (final context, final child) {
           final newText = widget.text.substring(_previousText.length);
-          return Row(
+          final isRtlText = FontHelper.isRTL(widget.text);
+          final textAlign = FontHelper.getTextAlign(widget.text);
+          final textDirection =
+              isRtlText ? TextDirection.rtl : TextDirection.ltr;
+
+          // Use a Column instead of Row to avoid directional issues
+          return Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: FontHelper.getCrossAxisAlignment(widget.text),
             children: [
               if (_previousText.isNotEmpty)
-                Flexible(child: buildText(_previousText, widget.style)),
+                Container(
+                  alignment: FontHelper.getAlignment(widget.text),
+                  width: double.infinity,
+                  child: buildText(
+                      _previousText, widget.style, textAlign, textDirection),
+                ),
               if (newText.isNotEmpty)
-                Flexible(
+                Container(
+                  alignment: FontHelper.getAlignment(widget.text),
+                  width: double.infinity,
                   child: buildText(
                     newText,
                     widget.style?.copyWith(
                       color: widget.style?.color
                           ?.withAlpha((_fadeAnimation.value * 255).toInt()),
                     ),
+                    textAlign,
+                    textDirection,
                   ),
                 ),
             ],
           );
         },
       );
+
+  Widget buildText(final String text, final TextStyle? style,
+      final TextAlign textAlign, final TextDirection textDirection) {
+    if (widget.textBuilder != null) {
+      return widget.textBuilder!(text, style);
+    }
+    return Text(
+      text,
+      style: style,
+      textAlign: textAlign,
+      textDirection: textDirection,
+    );
+  }
 }

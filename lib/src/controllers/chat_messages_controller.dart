@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 import '../models/ai_chat_config.dart';
 import '../models/chat/models.dart';
@@ -13,19 +13,29 @@ class ChatMessagesController extends ChangeNotifier {
   ///
   /// [initialMessages] - Optional list of messages to initialize the chat with.
   /// [paginationConfig] - Configuration for pagination behavior.
+  /// [onLoadMoreMessages] - Callback for loading more messages (for backward compatibility).
   ChatMessagesController({
     final List<ChatMessage>? initialMessages,
     this.paginationConfig = const PaginationConfig(),
+    final Future<List<ChatMessage>> Function(ChatMessage? lastMessage)?
+        onLoadMoreMessages,
   }) {
     if (initialMessages != null && initialMessages.isNotEmpty) {
       _messages = List.from(initialMessages);
       _messageCache = {for (var m in _messages) _getMessageId(m): m};
       _showWelcomeMessage = false;
     }
+
+    // Store the callback for backward compatibility
+    _onLoadMoreMessagesCallback = onLoadMoreMessages;
   }
 
   /// Configuration for pagination behavior
   final PaginationConfig paginationConfig;
+
+  /// Callback for loading more messages (backward compatibility)
+  Future<List<ChatMessage>> Function(ChatMessage? lastMessage)?
+      _onLoadMoreMessagesCallback;
 
   List<ChatMessage> _messages = [];
   Map<String, ChatMessage> _messageCache = {};
@@ -33,6 +43,12 @@ class ChatMessagesController extends ChangeNotifier {
   bool _isLoadingMore = false;
   bool _hasMoreMessages = true;
   int _currentPage = 1;
+  ScrollController? _scrollController;
+
+  /// Sets the scroll controller for auto-scrolling
+  void setScrollController(ScrollController controller) {
+    _scrollController = controller;
+  }
 
   /// Whether more messages are currently being loaded.
   bool get isLoadingMore => _isLoadingMore;
@@ -63,14 +79,55 @@ class ChatMessagesController extends ChangeNotifier {
     final messageId = _getMessageId(message);
     if (!_messageCache.containsKey(messageId)) {
       if (paginationConfig.reverseOrder) {
-        // In reverse order, new messages go at the beginning (index 0)
+        // In reverse order (newest first), new messages go at the beginning (index 0)
+        // With ListView.builder(reverse: true), this puts newest messages at the bottom
         _messages.insert(0, message);
       } else {
-        // In chronological order, new messages go at the end
+        // In chronological order (oldest first), new messages go at the end
+        // With ListView.builder(reverse: false), this puts newest messages at the bottom
         _messages.add(message);
       }
       _messageCache[messageId] = message;
       notifyListeners();
+
+      // After adding a message, scroll to bottom
+      _scrollToBottomAfterRender();
+    }
+  }
+
+  /// Scroll to bottom after the message is rendered
+  void _scrollToBottomAfterRender() {
+    // Use a microtask to ensure the message is rendered first
+    // Then add a short delay to ensure layout is complete
+    Future.microtask(() {
+      // Add a small delay to ensure the rendering is complete
+      Future.delayed(const Duration(milliseconds: 100), scrollToBottom);
+    });
+  }
+
+  /// Scrolls to the bottom of the message list
+  void scrollToBottom() {
+    if (_scrollController?.hasClients == true) {
+      try {
+        if (paginationConfig.reverseOrder) {
+          // In reverse mode, "bottom" is actually the top (0.0)
+          _scrollController!.animateTo(
+            0.0,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        } else {
+          // In chronological mode, bottom is maxScrollExtent
+          _scrollController!.animateTo(
+            _scrollController!.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      } catch (e) {
+        // If we get an error (eg. because widget is disposing), just ignore it
+        // This prevents errors when scrolling during state changes
+      }
     }
   }
 
@@ -90,6 +147,7 @@ class ChatMessagesController extends ChangeNotifier {
       final messageId = _getMessageId(message);
       if (!_messageCache.containsKey(messageId)) {
         // For pagination, we always append at the end regardless of order mode
+        // This is appropriate for loading older messages in both modes
         _messages.add(message);
         _messageCache[messageId] = message;
         hasNewMessages = true;
@@ -123,6 +181,10 @@ class ChatMessagesController extends ChangeNotifier {
       _messageCache[messageId] = message;
     }
     notifyListeners();
+
+    // Also scroll to bottom when a message is updated
+    // This is important for streaming messages
+    _scrollToBottomAfterRender();
   }
 
   /// Replaces all existing messages with a new list.
@@ -133,15 +195,22 @@ class ChatMessagesController extends ChangeNotifier {
     // Ensure the ordering is correct based on pagination configuration
     if (paginationConfig.reverseOrder) {
       // For reverse mode, sort by newest first
+      // With ListView.builder(reverse: true), newest messages will appear at the bottom
       _messages.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     } else {
       // For chronological mode, sort by oldest first
+      // With ListView.builder(reverse: false), newest messages will appear at the bottom
       _messages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
     }
 
     _messageCache = {for (var m in _messages) _getMessageId(m): m};
     _currentPage = 1;
     notifyListeners();
+
+    // Scroll to bottom after setting messages
+    if (_messages.isNotEmpty) {
+      _scrollToBottomAfterRender();
+    }
   }
 
   /// Clears all messages and shows the welcome message.
@@ -158,7 +227,7 @@ class ChatMessagesController extends ChangeNotifier {
   /// Returns early if already loading or no more messages.
   /// The callback should return a list of messages to add.
   Future<void> loadMore(
-      Future<List<ChatMessage>> Function() loadCallback) async {
+      Future<List<ChatMessage>> Function()? loadCallback) async {
     if (_isLoadingMore || !_hasMoreMessages || !paginationConfig.enabled) {
       return;
     }
@@ -172,8 +241,17 @@ class ChatMessagesController extends ChangeNotifier {
         await Future.delayed(paginationConfig.loadingDelay);
       }
 
-      // Get more messages from the callback
-      final moreMessages = await loadCallback();
+      // Get more messages from the callback or use the backward compatibility one
+      final List<ChatMessage> moreMessages;
+      if (loadCallback != null) {
+        moreMessages = await loadCallback();
+      } else if (_onLoadMoreMessagesCallback != null) {
+        // Use the last message as a reference for pagination
+        final lastMessage = _messages.isNotEmpty ? _messages.last : null;
+        moreMessages = await _onLoadMoreMessagesCallback!(lastMessage);
+      } else {
+        moreMessages = [];
+      }
 
       if (moreMessages.isEmpty) {
         _hasMoreMessages = false;

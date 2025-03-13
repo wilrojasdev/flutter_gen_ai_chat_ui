@@ -61,31 +61,29 @@ class _LoadingWidgetState extends State<LoadingWidget> {
   @override
   Widget build(final BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
     final baseColor = widget.shimmerBaseColor ??
-        (isDark ? const Color(0xFF202020) : const Color(0xFFD8D8D8));
+        (isDark
+            ? Theme.of(context).colorScheme.surface.withOpacity(0.5)
+            : const Color(0xFFF7F7F8));
     final highlightColor = widget.shimmerHighlightColor ??
-        (isDark ? primaryColor.withAlpha(230) : primaryColor.withAlpha(179));
+        (isDark ? Theme.of(context).colorScheme.surface : Colors.white);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      padding: const EdgeInsets.all(16),
       child: Shimmer.fromColors(
         baseColor: baseColor,
         highlightColor: highlightColor,
-        period: const Duration(milliseconds: 1000),
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 400),
+          duration: const Duration(milliseconds: 500),
           child: Text(
             widget.texts[_currentIndex],
             key: ValueKey<String>(widget.texts[_currentIndex]),
             style: widget.textStyle ??
                 TextStyle(
-                  color: isDark ? Colors.white : Colors.black87,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.2,
-                  height: 1.4,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.1,
                 ),
             textAlign: TextAlign.center,
           ),

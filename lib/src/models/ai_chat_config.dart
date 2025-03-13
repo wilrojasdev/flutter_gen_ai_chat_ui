@@ -22,6 +22,7 @@ class AiChatConfig {
     this.enableAnimation = true,
     this.showTimestamp = true,
     this.exampleQuestions = const [],
+    this.persistentExampleQuestions = false,
     // Welcome message configuration
     this.welcomeMessageConfig,
     this.exampleQuestionConfig,
@@ -83,6 +84,9 @@ class AiChatConfig {
   /// List of example questions to show in the welcome message.
   final List<ExampleQuestion>? exampleQuestions;
 
+  /// Whether to show example questions persistently, even after welcome message disappears.
+  final bool persistentExampleQuestions;
+
   /// Configuration for the welcome message section
   final WelcomeMessageConfig? welcomeMessageConfig;
 
@@ -92,7 +96,7 @@ class AiChatConfig {
   /// Custom options for the input field.
   /// Use this to customize the input behavior and appearance.
   /// For example: alwaysShowSend, sendOnEnter, etc.
-  final InputOptions inputOptions;
+  final InputOptions? inputOptions;
 
   /// Custom options for message display.
   final MessageOptions? messageOptions;
@@ -165,6 +169,7 @@ class AiChatConfig {
     bool? enableAnimation,
     bool? showTimestamp,
     List<ExampleQuestion>? exampleQuestions,
+    bool? persistentExampleQuestions,
     WelcomeMessageConfig? welcomeMessageConfig,
     ExampleQuestionConfig? exampleQuestionConfig,
     InputOptions? inputOptions,
@@ -198,6 +203,8 @@ class AiChatConfig {
         enableAnimation: enableAnimation ?? this.enableAnimation,
         showTimestamp: showTimestamp ?? this.showTimestamp,
         exampleQuestions: exampleQuestions ?? this.exampleQuestions,
+        persistentExampleQuestions:
+            persistentExampleQuestions ?? this.persistentExampleQuestions,
         welcomeMessageConfig: welcomeMessageConfig ?? this.welcomeMessageConfig,
         exampleQuestionConfig:
             exampleQuestionConfig ?? this.exampleQuestionConfig,
@@ -247,7 +254,7 @@ class PaginationConfig {
     this.errorBuilder,
     this.cacheExtent = 1000.0,
     this.keepAliveMessages = true,
-    this.reverseOrder = true,
+    this.reverseOrder = false,
     this.autoLoadOnScroll = true,
     this.distanceToTriggerLoadPixels = 200.0,
     this.enableHapticFeedback = true,
@@ -311,8 +318,10 @@ class PaginationConfig {
   final bool keepAliveMessages;
 
   /// Whether to display messages in reverse order (newest first).
-  /// In a chat UI, this is typically true where new messages appear at the bottom.
-  /// Defaults to true.
+  /// Setting this to true will display newest messages at the top of the list.
+  /// Setting this to false will display oldest messages at the top and newest messages at the bottom,
+  /// which matches the behavior of platforms like ChatGPT and Claude.
+  /// Defaults to false.
   final bool reverseOrder;
 
   /// Whether to automatically load more messages when the user scrolls to the
@@ -409,6 +418,7 @@ class LoadingConfig {
     this.typingIndicatorColor,
     this.typingIndicatorSize = 24.0,
     this.typingIndicatorSpacing = 4.0,
+    this.showCenteredIndicator = false,
   });
 
   /// Whether the chat is in loading state
@@ -426,6 +436,11 @@ class LoadingConfig {
   /// Spacing between typing indicator dots
   final double typingIndicatorSpacing;
 
+  /// Whether to display the loading indicator in the center of the chat
+  /// When false (default), loading is shown as a typing indicator near the input box
+  /// When true, loading is shown in the center of the chat overlay
+  final bool showCenteredIndicator;
+
   /// Creates a copy with the given fields replaced with new values
   LoadingConfig copyWith({
     bool? isLoading,
@@ -433,6 +448,7 @@ class LoadingConfig {
     Color? typingIndicatorColor,
     double? typingIndicatorSize,
     double? typingIndicatorSpacing,
+    bool? showCenteredIndicator,
   }) =>
       LoadingConfig(
         isLoading: isLoading ?? this.isLoading,
@@ -441,6 +457,8 @@ class LoadingConfig {
         typingIndicatorSize: typingIndicatorSize ?? this.typingIndicatorSize,
         typingIndicatorSpacing:
             typingIndicatorSpacing ?? this.typingIndicatorSpacing,
+        showCenteredIndicator:
+            showCenteredIndicator ?? this.showCenteredIndicator,
       );
 }
 

@@ -17,23 +17,25 @@ class ChatUser {
 
   const ChatUser({
     required this.id,
-    required this.name,
+    String? name,
+    String? firstName,
     this.avatar,
     this.customProperties,
     this.role,
-  });
+  }) : name = name ?? firstName ?? id;
 
   /// Creates a copy of this user with the given fields replaced with new values
   ChatUser copyWith({
     String? id,
     String? name,
+    String? firstName,
     String? avatar,
     Map<String, dynamic>? customProperties,
     String? role,
   }) =>
       ChatUser(
         id: id ?? this.id,
-        name: name ?? this.name,
+        name: name ?? firstName ?? this.name,
         avatar: avatar ?? this.avatar,
         customProperties: customProperties ?? this.customProperties,
         role: role ?? this.role,

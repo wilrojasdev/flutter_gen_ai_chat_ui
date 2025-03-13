@@ -144,3 +144,23 @@
 - New loading state configurations in `AiChatConfig`
 - Improved error messages and assertions
 - Better documentation for input options and animations
+
+## 0.0.x - Unreleased
+
+### Added
+- Enhanced loading indicator functionality with two display modes:
+  - Bottom-aligned typing indicator (default) - shows loading near the input box like ChatGPT/Claude
+  - Centered overlay indicator (optional) - shows loading in the center of the chat area
+- Added `showCenteredIndicator` property to `LoadingConfig` to control loading indicator position
+- New loading example demonstrating both loading styles
+
+### Changed
+- Default message order now shows newest messages at the bottom (like ChatGPT/Claude)
+  - Changed default for `PaginationConfig.reverseOrder` from `true` to `false`
+  - Updated documentation and comments to reflect the change
+- Improved scroll-to-bottom behavior to work correctly in both chronological and reverse order modes
+- Enhanced loading indicator handling for better UX
+
+### Fixed
+- Scroll position detection for the scroll-to-bottom button
+- Message ordering when adding new messages
