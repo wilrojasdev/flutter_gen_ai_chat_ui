@@ -251,7 +251,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
           child: Container(
             width: widget.maxWidth ?? double.infinity,
             height: double.infinity,
-            padding: widget.padding ?? const EdgeInsets.all(16),
+            // padding: widget.padding ?? const EdgeInsets.all(8),
             child: Stack(
               fit: StackFit.expand,
               children: [
