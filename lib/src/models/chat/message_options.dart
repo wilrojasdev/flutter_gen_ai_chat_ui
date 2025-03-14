@@ -190,6 +190,16 @@ class MessageOptions {
   final bool enableQuickReply;
 
   /// Style options for message bubbles
+  ///
+  /// This property allows customizing the appearance of message bubbles,
+  /// including colors, border radius, and shadows.
+  ///
+  /// The [bubbleStyle] colors (userBubbleColor and aiBubbleColor) will be used
+  /// even when decoration or containerDecoration is provided.
+  ///
+  /// To completely customize the bubble appearance (overriding bubbleStyle):
+  /// 1. Set bubbleStyle to null
+  /// 2. Provide a custom decoration or containerDecoration
   final BubbleStyle? bubbleStyle;
 
   /// Whether to show user name
@@ -207,6 +217,17 @@ class MessageOptions {
   /// Callback when message is copied
   final Function(String)? onCopy;
 
+  /// Creates an instance of [MessageOptions].
+  ///
+  /// Note about decorations:
+  /// - If [bubbleStyle] is provided, its color settings will take precedence
+  ///   over [decoration] and [containerDecoration] colors.
+  /// - Use [bubbleStyle] for customizing bubble colors, radii, and shadows.
+  /// - Use [decoration] or [containerDecoration] for more advanced decorations
+  ///   like gradients and images, but be aware that [bubbleStyle] colors will
+  ///   still be applied.
+  /// - To fully bypass [bubbleStyle], set it to null and only use
+  ///   [decoration] or [containerDecoration].
   const MessageOptions({
     this.textStyle,
     this.padding,

@@ -96,19 +96,20 @@ class GlassmorphicContainer extends StatelessWidget {
         gradient: LinearGradient(
           begin: begin,
           end: end,
-          colors: colors.map((color) => color.withOpacity(opacity)).toList(),
+          colors:
+              colors.map((color) => color.withValues(alpha: opacity)).toList(),
         ),
         borderRadius: borderRadius,
         border: border
             ? Border.all(
-                color: borderColor.withOpacity(opacity),
+                color: borderColor.withValues(alpha: opacity),
                 width: borderWidth,
               )
             : null,
         boxShadow: shadow
             ? [
                 BoxShadow(
-                  color: shadowColor.withOpacity(opacity),
+                  color: shadowColor.withValues(alpha: opacity),
                   blurRadius: shadowBlur,
                   spreadRadius: shadowSpread,
                 ),

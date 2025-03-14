@@ -46,7 +46,7 @@ class ChatInput extends StatelessWidget {
       keyboardType: options.keyboardType,
       cursorColor: options.cursorColor,
       cursorHeight: options.cursorHeight,
-      cursorWidth: options.cursorWidth,
+      cursorWidth: options.cursorWidth ?? 2.0,
       cursorRadius: options.cursorRadius,
       showCursor: options.showCursor,
       enableSuggestions: options.enableSuggestions,
@@ -65,31 +65,46 @@ class ChatInput extends StatelessWidget {
       undoController: options.undoController,
       spellCheckConfiguration: options.spellCheckConfiguration,
       magnifierConfiguration: options.magnifierConfiguration,
-      onTapOutside: (event) => FocusScope.of(context).unfocus(),
+      onTapOutside: (event) {
+        if (options.unfocusOnTapOutside) {
+          FocusScope.of(context).unfocus();
+        }
+      },
     );
 
     // Apply custom height to text field if specified
     if (options.inputHeight != null) {
       textField = SizedBox(
-        height: options.inputHeight,
+        height: options.inputHeight!,
         child: textField,
       );
     }
 
     // Create input content with text field and send button
     Widget inputContent;
-    if (options.alwaysShowSend ||
-        (controller.text.isNotEmpty && !options.alwaysShowSend)) {
+    final shouldShowSendButton =
+        options.alwaysShowSend || controller.text.isNotEmpty;
+    if (shouldShowSendButton) {
       // Show text field with send button
       inputContent = Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        // Change to center alignment for better vertical alignment
+        crossAxisAlignment: CrossAxisAlignment.center,
         // Use app direction consistently
         textDirection: appDirection,
         children: [
           Flexible(
             child: textField,
           ),
-          options.effectiveSendButtonBuilder(onSend),
+          // Adjust send button to match text field height
+          Container(
+            // Match the height to align with text field
+            height: options.inputHeight ??
+                (options.decoration?.contentPadding?.vertical ?? 14) +
+                    24, // Base height approximation
+            // Center the button vertically
+            alignment: Alignment.center,
+            child: options.effectiveSendButtonBuilder(onSend),
+          ),
         ],
       );
     } else {
@@ -98,7 +113,8 @@ class ChatInput extends StatelessWidget {
     }
 
     // Calculate appropriate background color based on settings
-    final effectiveBackgroundColor = options.useScaffoldBackground
+    final useScaffoldBg = options.useScaffoldBackground ?? false;
+    final effectiveBackgroundColor = useScaffoldBg
         ? Theme.of(context).scaffoldBackgroundColor
         : options.containerBackgroundColor;
 
@@ -121,8 +137,12 @@ class ChatInput extends StatelessWidget {
           borderRadius: borderRadius ?? BorderRadius.zero,
           child: BackdropFilter(
             filter: ImageFilter.blur(
-              sigmaX: options.blurStrength * 10,
-              sigmaY: options.blurStrength * 10,
+              sigmaX: options.blurStrength != null
+                  ? options.blurStrength! * 10
+                  : 8.0,
+              sigmaY: options.blurStrength != null
+                  ? options.blurStrength! * 10
+                  : 8.0,
             ),
             child: Container(
               constraints: constraints,
@@ -173,14 +193,21 @@ class ChatInput extends StatelessWidget {
       );
     }
 
+    // Skip Material if useOuterMaterial is false
+    if (!options.useOuterMaterial) {
+      return result;
+    }
+
     // Optional Material styling
     return Material(
       color: options.materialColor,
-      elevation: options.materialElevation,
+      elevation: options.materialElevation ?? 0.0,
       shape: options.materialShape,
       shadowColor: Colors.black45,
       child: Padding(
-        padding: options.materialPadding,
+        padding: options.materialPadding != null
+            ? options.materialPadding!
+            : EdgeInsets.zero,
         child: result,
       ),
     );

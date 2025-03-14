@@ -92,20 +92,89 @@ class SettingsDrawer extends StatelessWidget {
                       icon: Icons.code_rounded,
                       color: colorScheme.secondary,
                     ),
+                    _buildAnimatedSettingTile(
+                      context: context,
+                      title: 'Welcome Message',
+                      subtitle: 'Show welcome message on startup',
+                      value: appState.showWelcomeMessage,
+                      onChanged: (value) {
+                        appState.toggleWelcomeMessage();
+                      },
+                      icon: Icons.chat_bubble_outline_rounded,
+                      color: Colors.green,
+                    ),
+                    _buildAnimatedSettingTile(
+                      context: context,
+                      title: 'Persistent Questions',
+                      subtitle:
+                          'Keep example questions visible after selection',
+                      value: appState.persistentExampleQuestions,
+                      onChanged: (value) {
+                        appState.togglePersistentExampleQuestions();
+                      },
+                      icon: Icons.question_answer_rounded,
+                      color: Colors.orange,
+                    ),
+                    const Divider(indent: 72, endIndent: 20),
+
+                    // UI Customization
+                    _buildSectionHeader(context, 'UI Customization'),
+                    _buildSliderSettingTile(
+                      context: context,
+                      title: 'Chat Width',
+                      subtitle: 'Maximum width of the chat interface',
+                      value: appState.chatMaxWidth,
+                      min: 600,
+                      max: 1200,
+                      divisions: 6,
+                      onChanged: (value) {
+                        appState.setChatMaxWidth(value);
+                      },
+                      icon: Icons.width_normal_rounded,
+                      color: colorScheme.primary,
+                    ),
+                    _buildSliderSettingTile(
+                      context: context,
+                      title: 'Font Size',
+                      subtitle: 'Size of text in messages',
+                      value: appState.fontSize,
+                      min: 12,
+                      max: 18,
+                      divisions: 6,
+                      onChanged: (value) {
+                        appState.setFontSize(value);
+                      },
+                      icon: Icons.format_size_rounded,
+                      color: colorScheme.secondary,
+                    ),
+                    _buildSliderSettingTile(
+                      context: context,
+                      title: 'Bubble Radius',
+                      subtitle: 'Roundness of message bubbles',
+                      value: appState.messageBorderRadius,
+                      min: 8,
+                      max: 24,
+                      divisions: 8,
+                      onChanged: (value) {
+                        appState.setMessageBorderRadius(value);
+                      },
+                      icon: Icons.rounded_corner,
+                      color: colorScheme.tertiary,
+                    ),
                     const Divider(indent: 72, endIndent: 20),
 
                     // Help section
                     _buildSectionHeader(context, 'Help & About'),
                     _buildInfoTile(
                       context: context,
-                      title: 'About this demo',
+                      title: 'About Dila Assistant',
                       subtitle: 'Learn more about Flutter Gen AI Chat UI',
                       icon: Icons.info_outline_rounded,
                       color: colorScheme.primary,
                       onTap: () {
                         showAboutDialog(
                           context: context,
-                          applicationName: 'Flutter Gen AI Chat UI Demo',
+                          applicationName: 'Dila Assistant Demo',
                           applicationVersion: '1.0.0',
                           applicationIcon: Container(
                             width: 48,
@@ -180,6 +249,44 @@ class SettingsDrawer extends StatelessWidget {
                         // TODO: Open documentation
                       },
                     ),
+                    _buildInfoTile(
+                      context: context,
+                      title: 'Reset All Settings',
+                      subtitle: 'Restore default settings',
+                      icon: Icons.restore_rounded,
+                      color: Colors.red,
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Reset Settings?'),
+                            content: const Text(
+                              'This will restore all settings to their default values. This action cannot be undone.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('CANCEL'),
+                              ),
+                              FilledButton(
+                                onPressed: () {
+                                  appState.resetToDefaults();
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Settings reset to defaults'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                                child: const Text('RESET'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -209,7 +316,7 @@ class SettingsDrawer extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        'Flutter UI',
+                        'Dila UI',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -286,7 +393,7 @@ class SettingsDrawer extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Customize your AI chat experience',
+            'Customize your Dila chat experience',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 14,
@@ -352,6 +459,78 @@ class SettingsDrawer extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSliderSettingTile({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required double value,
+    required double min,
+    required double max,
+    required int divisions,
+    required ValueChanged<double> onChanged,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color),
+            ),
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+            trailing: Text(
+              value.toStringAsFixed(0),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 72, right: 20, bottom: 8),
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: color,
+                inactiveTrackColor: color.withOpacity(0.2),
+                thumbColor: color,
+                overlayColor: color.withOpacity(0.2),
+              ),
+              child: Slider(
+                value: value,
+                min: min,
+                max: max,
+                divisions: divisions,
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

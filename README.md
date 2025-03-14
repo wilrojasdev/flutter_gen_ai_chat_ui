@@ -7,14 +7,12 @@ A modern, customizable chat UI for AI applications built with Flutter. Features 
 
 ## Table of Contents
 - [Features](#features)
-- [Quick Start](#quick-start)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
+- [Basic Usage](#basic-usage)
+- [Configuration Options](#configuration-options)
 - [Advanced Features](#advanced-features)
-- [Platform Support](#platform-specific-features)
-- [Examples](#examples--support)
-- [Contributing](#contributing)
+- [Platform Support](#platform-support)
+- [Examples](#examples)
 
 <table>
   <tr>
@@ -42,91 +40,191 @@ A modern, customizable chat UI for AI applications built with Flutter. Features 
 - 🌐 RTL language support
 - ⚡ High performance message handling
 - 📊 Improved pagination support
-- 🔄 Centralized configuration
+
+### AI-Specific Features
+- 👋 Customizable welcome message
+- ❓ Example questions component
+- 💬 Persistent example questions
+- 🔄 AI typing indicators
+- 📜 Streaming markdown rendering
 
 ### UI Components
 - 💬 Customizable message bubbles
-- ⌨️ Rich input field options
+- ⌨️ Multiple input field styles (minimal, glassmorphic, custom)
 - 🔄 Loading indicators with shimmer
 - ⬇️ Smart scroll management
-- 👋 Welcome message widget
-- ❓ Example questions component
 - 🎨 Enhanced theme customization
 - 📝 Better code block styling
 
-### Extensive Customization Options
-- 🎨 **Extensive Customization Options**: Customize every aspect of the chat UI.
-- 📝 **Rich Text Support**: Supports markdown, code blocks, and custom formatting.
-- 🔄 **Built-in Loading States**: Elegant loading indicators for AI responses.
-- 🌙 **Dark Mode Support**: Seamlessly adapts to your app's theme.
-- 📱 **Responsive Design**: Works on all screen sizes.
-- 🎭 **Custom User Avatars**: Support for user avatars and AI avatars.
-- 💬 **Typography Control**: Customize fonts, sizes, and text styling.
-- ✨ **Modern Glassmorphic Effects**: Create beautiful frosted glass inputs with blur effects that automatically adapt to your app's theme.
+## Installation
 
-## Quick Start
+Add this to your package's `pubspec.yaml` file:
+
+```yaml
+dependencies:
+  flutter_gen_ai_chat_ui: ^1.3.0
+```
+
+Then run:
+```bash
+flutter pub get
+```
+
+Import the package:
+```dart
+import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+```
+
+## Basic Usage
 
 ```dart
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
+import 'package:flutter/material.dart';
 
+class BasicChatScreen extends StatefulWidget {
+  @override
+  _BasicChatScreenState createState() => _BasicChatScreenState();
+}
+
+class _BasicChatScreenState extends State<BasicChatScreen> {
+  final _chatController = ChatMessagesController();
+  final _currentUser = ChatUser(id: 'user1', firstName: 'User');
+  final _aiUser = ChatUser(id: 'ai1', firstName: 'AI Assistant');
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('AI Chat')),
+      body: AiChatWidget(
+        // Required parameters
+        currentUser: _currentUser,
+        aiUser: _aiUser,
+        controller: _chatController,
+        onSendMessage: _handleSendMessage,
+        
+        // Optional parameters
+        inputOptions: InputOptions(
+          sendOnEnter: true,
+          alwaysShowSend: true,
+        ),
+        loadingConfig: LoadingConfig(
+          isLoading: _isLoading,
+        ),
+        exampleQuestions: [
+          ExampleQuestion(question: 'What is AI?'),
+          ExampleQuestion(question: 'How can you help me?'),
+        ],
+      ),
+    );
+  }
+
+  void _handleSendMessage(ChatMessage message) async {
+    // Handle user message
+    setState(() => _isLoading = true);
+    
+    // Simulate AI response after a delay
+    await Future.delayed(Duration(seconds: 1));
+    
+    // Add AI response
+    _chatController.addMessage(
+      ChatMessage(
+        text: "This is a response to: ${message.text}",
+        user: _aiUser,
+        createdAt: DateTime.now(),
+      ),
+    );
+    
+    setState(() => _isLoading = false);
+  }
+}
+```
+
+## Configuration Options
+
+### AiChatWidget Parameters
+
+#### Required Parameters
+```dart
 AiChatWidget(
-  config: AiChatConfig(
-    hintText: 'Type a message...',
-    enableAnimation: true,
-    inputOptions: InputOptions(
-      alwaysShowSend: true,
-      sendOnEnter: true,
-      margin: EdgeInsets.all(16),
-    ),
-    messageOptions: MessageOptions(
-      showTime: true,
-      containerColor: Colors.grey[200],
-    ),
-    // New in 1.3.0: Enhanced configuration options
-    paginationConfig: PaginationConfig(
-      enabled: true,
-      loadingIndicatorOffset: 100,
-    ),
-    loadingConfig: LoadingConfig(
-      isLoading: false,
-      typingIndicatorColor: Colors.blue,
-    ),
-  ),
-  currentUser: ChatUser(id: '1', firstName: 'User'),
-  aiUser: ChatUser(id: '2', firstName: 'AI'),
-  controller: ChatMessagesController(),
-  onSendMessage: (message) async {
-    // Handle message
+  // Required parameters
+  currentUser: ChatUser(...),  // The current user
+  aiUser: ChatUser(...),       // The AI assistant
+  controller: ChatMessagesController(),  // Message controller
+  onSendMessage: (message) {   // Message handler
+    // Handle user messages here
   },
+  
+  // ... optional parameters
 )
 ```
 
-## Advanced Input Field Customization
-
-The package provides multiple ways to customize the input field, from simple styling to complete custom implementations:
-
-### Disable the Outer Container
-
-You can now completely disable the outer container for full control over the input field styling:
+#### Optional Parameters
 
 ```dart
-inputOptions: InputOptions(
-  useOuterContainer: false, // Remove the outer Material container
-  decoration: InputDecoration(
-    // Your custom decoration
+AiChatWidget(
+  // ... required parameters
+  
+  // Message display options
+  messages: [],                // Optional list of messages (if not using controller)
+  messageOptions: MessageOptions(...),  // Message bubble styling
+  messageListOptions: MessageListOptions(...),  // Message list behavior
+  
+  // Input field customization
+  inputOptions: InputOptions(...),  // Input field styling and behavior
+  readOnly: false,             // Whether the chat is read-only
+  
+  // AI-specific features
+  exampleQuestions: [          // Suggested questions for users
+    ExampleQuestion(question: 'What is AI?'),
+  ],
+  persistentExampleQuestions: true,  // Keep questions visible after welcome
+  enableAnimation: true,       // Enable message animations
+  enableMarkdownStreaming: true,  // Enable streaming text
+  streamingDuration: Duration(milliseconds: 30),  // Stream speed
+  welcomeMessageConfig: WelcomeMessageConfig(...),  // Welcome message styling
+  
+  // Loading states
+  loadingConfig: LoadingConfig(  // Loading configuration
+    isLoading: false,
+    showCenteredIndicator: true,
   ),
+  
+  // Pagination
+  paginationConfig: PaginationConfig(  // Pagination configuration
+    enabled: true,
+    reverseOrder: true,  // Newest messages at bottom
+  ),
+  
+  // Layout
+  maxWidth: 800,             // Maximum width
+  padding: EdgeInsets.all(16),  // Overall padding
 )
 ```
 
-### Factory Constructors for Common Styles
+### Input Field Customization
 
-#### Minimal Input Field
+The package offers multiple ways to style the input field:
 
-For a clean, borderless input with no outer container:
+#### Default Input
 
 ```dart
-inputOptions: InputOptions.minimal(
-  hintText: 'Message...',
+InputOptions(
+  // Basic properties
+  sendOnEnter: true,
+  alwaysShowSend: true,
+  
+  // Styling
+  textStyle: TextStyle(...),
+  decoration: InputDecoration(...),
+)
+```
+
+#### Minimal Input
+
+```dart
+InputOptions.minimal(
+  hintText: 'Ask a question...',
   textColor: Colors.black,
   hintColor: Colors.grey,
   backgroundColor: Colors.white,
@@ -134,201 +232,169 @@ inputOptions: InputOptions.minimal(
 )
 ```
 
-#### Glassmorphic Input Field
-
-Create a beautiful frosted glass effect:
+#### Glassmorphic (Frosted Glass) Input
 
 ```dart
-inputOptions: InputOptions.glassmorphic(
+InputOptions.glassmorphic(
   colors: [Colors.blue.withOpacity(0.2), Colors.purple.withOpacity(0.2)],
   borderRadius: 24.0,
   blurStrength: 10.0,
-  useOuterContainer: true, // Keep the container for the blur effect
+  hintText: 'Ask me anything...',
+  textColor: Colors.white,
 )
 ```
 
-#### Custom Input Field
-
-For complete control over all aspects:
+#### Custom Input
 
 ```dart
-inputOptions: InputOptions.custom(
+InputOptions.custom(
   decoration: yourCustomDecoration,
   textStyle: yourCustomTextStyle,
-  sendButtonBuilder: (onSend) => YourCustomSendButton(onSend: onSend),
-  useOuterContainer: false,
+  sendButtonBuilder: (onSend) => CustomSendButton(onSend: onSend),
 )
 ```
 
-This flexibility allows developers to implement exactly the design they want, whether using the built-in styling or creating something completely custom.
-
-## Installation
-
-1. Add dependency:
-```yaml
-dependencies:
-  flutter_gen_ai_chat_ui: ^1.3.0
-```
-
-2. Import:
-```dart
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-```
-
-Optional: For speech recognition, add:
-```yaml
-dependencies:
-  speech_to_text: ^6.6.0
-```
-
-## What's New in 1.3.0
-
-### Breaking Changes
-1. All widget-level configurations now flow through `AiChatConfig`
-2. Improved input handling with standalone `InputOptions`
-3. Enhanced pagination with `PaginationConfig`
-4. Better loading states with `LoadingConfig`
-5. Centralized callbacks in `CallbackConfig`
-
-### New Features
-1. Enhanced markdown support with better code block styling
-2. Improved dark theme contrast and readability
-3. Better message bubble animations
-4. Fixed layout overflow issues
-5. Enhanced error handling
-
-### Migration Guide
-If you're upgrading from version 1.2.x:
+### Message Bubble Customization
 
 ```dart
-// Old way (deprecated)
-AiChatWidget(
-  enableAnimation: true,
-  loadingIndicator: MyLoadingWidget(),
-  inputDecoration: InputDecoration(...),
-)
-
-// New way (1.3.0+)
-AiChatWidget(
-  config: AiChatConfig(
-    enableAnimation: true,
-    loadingConfig: LoadingConfig(
-      loadingIndicator: MyLoadingWidget(),
-    ),
-    inputOptions: InputOptions(
-      inputDecoration: InputDecoration(...),
-    ),
+MessageOptions(
+  // Basic options
+  showTime: true,
+  showUserName: true,
+  
+  // Styling
+  bubbleStyle: BubbleStyle(
+    userBubbleColor: Colors.blue.withOpacity(0.1),
+    aiBubbleColor: Colors.white,
+    userNameColor: Colors.blue.shade700,
+    aiNameColor: Colors.purple.shade700,
+    bottomLeftRadius: 22,
+    bottomRightRadius: 22,
+    enableShadow: true,
   ),
 )
 ```
 
-## Configuration
+### Loading Configuration
 
-The new configuration system in 1.3.0 provides better organization and type safety:
-
-```dart
-AiChatConfig(
-  // Basic settings
-  userName: 'User',
-  aiName: 'AI',
-  hintText: 'Type a message...',
-  maxWidth: null,
-  
-  // Feature flags
-  enableAnimation: true,
-  showTimestamp: true,
-  
-  // Example questions
-  exampleQuestions: [
-    ExampleQuestion(question: 'What is AI?'),
-    ExampleQuestion(question: 'How does machine learning work?'),
-  ],
-  persistentExampleQuestions: true, // Keep suggestions visible after welcome message disappears
-  
-  // Specialized configs
-  inputOptions: InputOptions(...),
-  messageOptions: MessageOptions(...),
-  paginationConfig: PaginationConfig(...),
-  loadingConfig: LoadingConfig(...),
-  callbackConfig: CallbackConfig(...),
-  
-  // Welcome message
-  welcomeMessageConfig: WelcomeMessageConfig(...),
-)
-```
-
-### Input Customization
-```dart
-InputOptions(
-  // Basic options
-  sendOnEnter: true,
-  alwaysShowSend: true,
-  
-  // Styling
-  margin: EdgeInsets.all(16),
-  inputTextStyle: TextStyle(...),
-  inputDecoration: InputDecoration(...),
-  
-  // Advanced
-  maxLines: 5,
-  textCapitalization: TextCapitalization.sentences,
-  contextMenuBuilder: (context, editableTextState) => ...,
-)
-```
-
-### Pagination
-```dart
-PaginationConfig(
-  enabled: true,
-  loadingIndicatorOffset: 100,
-  loadMoreIndicator: ({isLoading}) => CustomLoadingWidget(),
-)
-```
-
-### Loading States
 ```dart
 LoadingConfig(
-  isLoading: false,
-  loadingIndicator: CustomLoadingWidget(),
-  typingIndicatorColor: Colors.blue,
-  typingIndicatorSize: 24.0,
+  isLoading: true,  // Whether the AI is currently generating a response
+  loadingIndicator: CustomLoadingWidget(),  // Custom loading indicator
+  typingIndicatorColor: Colors.blue,  // Color for the typing indicator
+  showCenteredIndicator: false,  // Show indicator in center or as typing
 )
+```
+
+### Pagination Configuration
+
+```dart
+PaginationConfig(
+  enabled: true,  // Enable pagination for large message histories
+  loadingIndicatorOffset: 100,  // How far from top to trigger loading
+  reverseOrder: true,  // Show newest messages at bottom
+)
+```
+
+## Advanced Features
+
+### Streaming Text
+
+To enable word-by-word text streaming:
+
+```dart
+AiChatWidget(
+  // ... other parameters
+  enableMarkdownStreaming: true,
+  streamingDuration: Duration(milliseconds: 30),
+  
+  onSendMessage: (message) async {
+    // Start with an empty message
+    final aiMessage = ChatMessage(
+      text: "",
+      user: aiUser,
+      createdAt: DateTime.now(),
+      isMarkdown: true,
+    );
+    
+    // Add to the chat
+    _chatController.addMessage(aiMessage);
+    
+    // Stream the response word by word
+    final response = "This is a **streaming** response with `code` and more...";
+    String accumulating = "";
+    
+    for (final word in response.split(" ")) {
+      await Future.delayed(Duration(milliseconds: 100));
+      accumulating += (accumulating.isEmpty ? "" : " ") + word;
+      
+      // Update the message with new text
+      _chatController.updateMessage(
+        aiMessage.copyWith(text: accumulating),
+      );
+    }
+  },
+)
+```
+
+### Welcome Message Configuration
+
+```dart
+// The welcome message is disabled by default and only appears 
+// when this configuration is provided
+WelcomeMessageConfig(
+  title: "Welcome to My AI Assistant",
+  containerPadding: EdgeInsets.all(24),
+  questionsSectionTitle: "Try asking me:",
+)
+```
+
+### Controller Methods
+
+```dart
+// Initialize controller
+final controller = ChatMessagesController();
+
+// Add a message
+controller.addMessage(ChatMessage(...));
+
+// Add multiple messages
+controller.addMessages([ChatMessage(...), ChatMessage(...)]);
+
+// Update a message (useful for streaming)
+controller.updateMessage(message.copyWith(text: newText));
+
+// Clear all messages
+controller.clearMessages();
+
+// Hide the welcome message
+controller.hideWelcomeMessage();
+
+// Show/hide welcome message programmatically
+controller.showWelcomeMessage = true;  // Show welcome message
+controller.showWelcomeMessage = false; // Hide welcome message
+
+// Manually scroll to bottom
+controller.scrollToBottom();
+
+// Load more messages (for pagination)
+controller.loadMore(() async {
+  return await fetchOlderMessages();
+});
 ```
 
 ## Platform Support
 
 ✅ Android
-- Material Design 3
-- Native permissions
-- Adaptive colors
-
 ✅ iOS
-- Cupertino animations
-- Privacy handling
-- Native feel
-
 ✅ Web
-- Responsive design
-- Keyboard support
-- Cross-browser
+✅ macOS
+✅ Windows
+✅ Linux
 
-✅ Desktop
-- Window management
-- Keyboard navigation
-- High DPI support
+## Examples
 
-## Examples & Support
-
-- 📘 [Example Directory](example)
-- 🐛 [Issue Tracker](https://github.com/hooshyar/flutter_gen_ai_chat_ui/issues)
-- 💡 [Contribution Guide](CONTRIBUTING.md)
-
-## Version Compatibility
-
-| Flutter Version | Package Version |
-|----------------|-----------------|
-| >=3.0.0        | ^1.3.0         |
-| >=2.5.0        | ^1.2.0         |
+Check the [example](example) directory for complete sample applications showcasing different features.
 
 ## License
 
@@ -336,61 +402,3 @@ LoadingConfig(
 
 ---
 ⭐ If you find this package helpful, please star the repository!
-
-## Backward Compatibility
-
-This package has been updated to maintain backward compatibility with older versions and DashChat. The following compatibility features have been added:
-
-### ChatUser Changes
-- Added support for `firstName` parameter as an alternative to `name`.
-- Made `name` parameter optional (falls back to `firstName` or `id`).
-
-### Controller Changes
-- Added support for `onLoadMoreMessages` parameter in the `ChatMessagesController` constructor.
-
-### Input Options
-- Added backward compatibility parameters:
-  - `textController`: Support for passing in a TextEditingController
-  - `inputTextDirection`: Support for specifying input direction
-  - `inputTextStyle`: Support for styling input (alias of `textStyle`)
-  - `inputDecoration`: Support for decorating input (alias of `decoration`)
-
-### Message Options
-- Added backward compatibility parameters:
-  - `containerColor`: Support for specifying message bubble background color
-  - Added logic to properly handle both new and old styling parameters
-
-### Widgets
-- Added `LoadingWidget` class for custom loading indicators
-- Updated message rendering to respect both old and new styling parameters
-- Made LoadingWidget reuse existing custom loading indicators
-
-These changes ensure smoother migration from older versions to the latest version with minimal code changes required.
-
-## Customization
-
-### Input Field Customization
-
-The package provides extensive options for customizing the chat input field, including a beautiful glassmorphic effect:
-
-```dart
-// Basic input customization
-InputOptions(
-  textStyle: TextStyle(fontSize: 16),
-  decoration: InputDecoration(
-    hintText: 'Type a message...',
-    filled: true,
-    fillColor: Colors.grey.shade100,
-  ),
-)
-
-// Glassmorphic input (frosted glass effect)
-InputOptions.glassmorphic(
-  colors: [Colors.blue.withOpacity(0.4), Colors.purple.withOpacity(0.4)],
-  borderRadius: 24.0,
-  blurStrength: 1.0,
-  textColor: Colors.white,
-)
-```
-
-The glassmorphic effect automatically adapts to your app's theme when no background color is specified. See the [Input Customization Guide](docs/input_customization.md) for more details.

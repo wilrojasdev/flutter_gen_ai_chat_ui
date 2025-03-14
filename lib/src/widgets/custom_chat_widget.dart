@@ -13,7 +13,7 @@ import 'message_content_text.dart';
 class CustomChatWidget extends StatefulWidget {
   final ChatUser currentUser;
   final List<ChatMessage> messages;
-  final Function(ChatMessage) onSend;
+  final void Function(ChatMessage) onSend;
   final MessageOptions messageOptions;
   final InputOptions inputOptions;
   final List<ChatUser>? typingUsers;
@@ -219,24 +219,35 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
           (noMoreMessagesWidget != null ? 1 : 0),
       cacheExtent: paginationConfig.cacheExtent,
       itemBuilder: (context, index) {
-        // Handle loading indicator at the start (chronological) or end (reverse)
+        // In reverse mode (newest at bottom), we want to show the loading indicator at index 0 (bottom of screen)
         if (paginationConfig.reverseOrder) {
-          // In reverse mode, older messages are at the end
+          // Handle typing indicator at the bottom position (index 0)
+          if (widget.typingUsers?.isNotEmpty == true && index == 0) {
+            return _buildTypingIndicator();
+          }
+
+          // Shift message index up by 1 if there's a typing indicator
+          if (widget.typingUsers?.isNotEmpty == true && index > 0) {
+            index = index - 1;
+          }
+
+          // Handle pagination loading indicators at the top (end of list)
           if (loadingWidget != null &&
               index ==
                   widget.messages.length +
-                      (widget.typingUsers?.isNotEmpty == true ? 1 : 0)) {
+                      (widget.typingUsers?.isNotEmpty == true ? 0 : 0)) {
             return loadingWidget;
           }
 
           if (noMoreMessagesWidget != null &&
               index ==
                   widget.messages.length +
-                      (widget.typingUsers?.isNotEmpty == true ? 1 : 0)) {
+                      (widget.typingUsers?.isNotEmpty == true ? 0 : 0)) {
             return noMoreMessagesWidget;
           }
         } else {
-          // In chronological mode, older messages are at the beginning
+          // In chronological mode (oldest at bottom)
+          // Pagination indicators at the beginning
           if (loadingWidget != null && index == 0) {
             return loadingWidget;
           }
@@ -244,24 +255,23 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
           if (noMoreMessagesWidget != null && index == 0) {
             return noMoreMessagesWidget;
           }
-        }
 
-        // Handle typing indicator
-        if (index == widget.messages.length &&
-            widget.typingUsers?.isNotEmpty == true) {
-          return _buildTypingIndicator();
-        }
+          // Typing indicator at the end
+          if (index == widget.messages.length &&
+              widget.typingUsers?.isNotEmpty == true) {
+            return _buildTypingIndicator();
+          }
 
-        // Adjust index for header/footer
-        var messageIndex = index;
-        if (!paginationConfig.reverseOrder &&
-            (loadingWidget != null || noMoreMessagesWidget != null)) {
-          messageIndex = index - 1;
+          // Adjust index for header items
+          if ((loadingWidget != null || noMoreMessagesWidget != null) &&
+              index > 0) {
+            index = index - 1;
+          }
         }
 
         // Render message bubble
-        if (messageIndex < widget.messages.length) {
-          final message = widget.messages[messageIndex];
+        if (index < widget.messages.length) {
+          final message = widget.messages[index];
           final isUser = message.user.id == widget.currentUser.id;
           final messageId = message.customProperties?['id'] as String? ??
               '${message.user.id}_${message.createdAt.millisecondsSinceEpoch}_${message.text.hashCode}';
@@ -297,8 +307,8 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
 
     // Premium design colors for a sophisticated look
     final defaultUserBubbleColor = isDark
-        ? primaryColor.withOpacity(0.18)
-        : primaryColor.withOpacity(0.06);
+        ? primaryColor.withValues(alpha: 0.18)
+        : primaryColor.withValues(alpha: 0.06);
     final defaultAiBubbleColor =
         isDark ? const Color(0xFF2D2D2D) : Colors.white;
 
@@ -339,11 +349,11 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
 
     // Enhanced text colors with precise opacity for readability
     final userTextColor = isDark
-        ? Colors.white.withOpacity(0.96)
-        : Colors.black.withOpacity(0.86);
+        ? Colors.white.withValues(alpha: 0.96)
+        : Colors.black.withValues(alpha: 0.86);
     final aiTextColor = isDark
-        ? Colors.white.withOpacity(0.96)
-        : Colors.black.withOpacity(0.86);
+        ? Colors.white.withValues(alpha: 0.96)
+        : Colors.black.withValues(alpha: 0.86);
 
     final textColor = isUser ? userTextColor : aiTextColor;
 
@@ -359,13 +369,51 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
     final boxShadow = bubbleStyle.enableShadow
         ? [
             BoxShadow(
-              color: Colors.black.withOpacity(isUser ? 0.04 : 0.06),
+              color: Colors.black.withValues(alpha: isUser ? 0.04 : 0.06),
               blurRadius: isUser ? 4 : 8,
               offset: Offset(0, isUser ? 1 : 2),
               spreadRadius: isUser ? 0 : 1,
             ),
           ]
         : null;
+
+    // Create a custom decoration that prioritizes bubbleStyle colors
+    BoxDecoration createBubbleDecoration() {
+      if (effectiveDecoration != null) {
+        // Start with the effective decoration
+        final decorator = BoxDecoration(
+          color: isUser ? userBubbleColor : aiBubbleColor,
+          borderRadius: effectiveDecoration.borderRadius ??
+              BorderRadius.only(
+                topLeft: Radius.circular(topLeftRadius),
+                topRight: Radius.circular(topRightRadius),
+                bottomLeft: Radius.circular(bottomLeftRadius),
+                bottomRight: Radius.circular(bottomRightRadius),
+              ),
+          gradient: effectiveDecoration.gradient,
+          image: effectiveDecoration.image,
+          boxShadow: effectiveDecoration.boxShadow ?? boxShadow,
+          border: effectiveDecoration.border ?? aiBorder,
+          backgroundBlendMode: effectiveDecoration.backgroundBlendMode,
+          shape: effectiveDecoration.shape,
+        );
+
+        return decorator;
+      } else {
+        // Use bubble style settings for decoration
+        return BoxDecoration(
+          color: isUser ? userBubbleColor : aiBubbleColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(topLeftRadius),
+            topRight: Radius.circular(topRightRadius),
+            bottomLeft: Radius.circular(bottomLeftRadius),
+            bottomRight: Radius.circular(bottomRightRadius),
+          ),
+          boxShadow: boxShadow,
+          border: aiBorder,
+        );
+      }
+    }
 
     // Enhanced bubble implementation with premium styling
     return Padding(
@@ -382,18 +430,7 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
               ),
               child: Container(
                 margin: widget.messageOptions.containerMargin ?? defaultMargin,
-                decoration: effectiveDecoration ??
-                    BoxDecoration(
-                      color: isUser ? userBubbleColor : aiBubbleColor,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(topLeftRadius),
-                        topRight: Radius.circular(topRightRadius),
-                        bottomLeft: Radius.circular(bottomLeftRadius),
-                        bottomRight: Radius.circular(bottomRightRadius),
-                      ),
-                      boxShadow: boxShadow,
-                      border: aiBorder,
-                    ),
+                decoration: createBubbleDecoration(),
                 child: Padding(
                   padding: widget.messageOptions.padding ??
                       EdgeInsets.symmetric(
@@ -601,8 +638,8 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
                 color:
                     isDark ? const Color(0xFF79C0FF) : const Color(0xFF0550AE),
                 backgroundColor: isDark
-                    ? const Color(0xFF0D1117).withOpacity(0.6)
-                    : const Color(0xFFF6F8FA).withOpacity(0.8),
+                    ? const Color(0xFF0D1117).withValues(alpha: 0.6)
+                    : const Color(0xFFF6F8FA).withValues(alpha: 0.8),
                 fontFamily: 'monospace',
                 letterSpacing: 0,
                 height: 1.5,
@@ -619,10 +656,9 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
-                    spreadRadius: -2,
                   ),
                 ],
               ),
@@ -862,7 +898,7 @@ class _CustomChatWidgetState extends State<CustomChatWidget> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 8,
                     spreadRadius: 1,
                     offset: const Offset(0, 2),

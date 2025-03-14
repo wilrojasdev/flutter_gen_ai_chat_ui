@@ -1,5 +1,72 @@
 # Changelog
 
+## 2.0.0 - [2023-06-10] API Streamlining & Dila Alignment
+
+### Breaking Changes
+- Overhauled API to align more closely with Dila patterns
+- Moved from centralized `AiChatConfig` to direct parameters in `AiChatWidget`
+- Streamlined redundant and deprecated properties
+- Reorganized configuration classes for better usability
+
+### Improvements
+- Enhanced documentation with comprehensive usage guide
+- Added detailed migration guide from 1.x to 2.0
+- Better IDE autocompletion support
+- More intuitive parameter naming
+- Cleaner code organization
+- Simplified configuration objects
+
+### Backward Compatibility
+- Added `@Deprecated` markers to guide migration
+- Maintained core functionality while improving API
+- Preserved configuration objects but made them more focused
+- See `docs/MIGRATION.md` for detailed migration guidance
+
+## 1.3.0 - [2023-03-12] Feature Enhancements & Refinements
+
+### New Features
+- Enhanced markdown support with better code block styling
+- Improved dark theme contrast and readability
+- Better message bubble animations
+- Fixed layout overflow issues
+- Enhanced error handling
+
+### Configuration Updates
+1. All widget-level configurations now flow through `AiChatConfig`
+2. Improved input handling with standalone `InputOptions`
+3. Enhanced pagination with `PaginationConfig`
+4. Better loading states with `LoadingConfig`
+5. Centralized callbacks in `CallbackConfig`
+
+## 1.2.0 - [2023-01-25] Improved UI & Performance
+
+### New Features
+- Improved message bubble design
+- Added glassmorphic input option
+- Enhanced streaming text animation
+- Better error recovery
+- Optimized performance for long chats
+
+## 1.1.0 - [2022-12-08] Core Feature Updates
+
+### Added
+- RTL language support
+- Improved markdown rendering
+- Message pagination
+- Better loading indicators
+- Customizable welcome message
+
+## 1.0.0 - [2022-11-15] Initial Release
+
+### Initial Features
+- Basic chat UI with AI-specific features
+- Dark/light mode support
+- Streaming text animation
+- Markdown support
+- Customizable styling
+- Message management
+- Simple welcome message
+
 ## [1.3.0] - 2024-03-21
 ### Breaking Changes
 - Consolidated all widget configurations into `AiChatConfig`
@@ -46,7 +113,7 @@
 - Streaming example updated to use flutter_streaming_text_markdown package.
 
 ### Changed
-- Reverted dash_chat_2 dependency to ^0.0.21 for compatibility.
+- Reverted Dila dependency to ^0.0.21 for compatibility.
 
 ### Fixed
 - Minor UI and linter issues.

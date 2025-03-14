@@ -14,16 +14,20 @@ class ChatMessagesController extends ChangeNotifier {
   /// [initialMessages] - Optional list of messages to initialize the chat with.
   /// [paginationConfig] - Configuration for pagination behavior.
   /// [onLoadMoreMessages] - Callback for loading more messages (for backward compatibility).
+  /// [showWelcomeMessage] - Whether to show the welcome message.
   ChatMessagesController({
     final List<ChatMessage>? initialMessages,
     this.paginationConfig = const PaginationConfig(),
     final Future<List<ChatMessage>> Function(ChatMessage? lastMessage)?
         onLoadMoreMessages,
+    bool showWelcomeMessage = false,
   }) {
     if (initialMessages != null && initialMessages.isNotEmpty) {
       _messages = List.from(initialMessages);
       _messageCache = {for (var m in _messages) _getMessageId(m): m};
       _showWelcomeMessage = false;
+    } else {
+      _showWelcomeMessage = showWelcomeMessage;
     }
 
     // Store the callback for backward compatibility
@@ -39,7 +43,7 @@ class ChatMessagesController extends ChangeNotifier {
 
   List<ChatMessage> _messages = [];
   Map<String, ChatMessage> _messageCache = {};
-  bool _showWelcomeMessage = true;
+  bool _showWelcomeMessage = false;
   bool _isLoadingMore = false;
   bool _hasMoreMessages = true;
   int _currentPage = 1;
@@ -63,6 +67,14 @@ class ChatMessagesController extends ChangeNotifier {
 
   /// Whether to show the welcome message.
   bool get showWelcomeMessage => _showWelcomeMessage;
+
+  /// Sets whether to show the welcome message
+  set showWelcomeMessage(bool value) {
+    if (_showWelcomeMessage != value) {
+      _showWelcomeMessage = value;
+      notifyListeners();
+    }
+  }
 
   /// Current page of pagination
   int get currentPage => _currentPage;
@@ -238,7 +250,7 @@ class ChatMessagesController extends ChangeNotifier {
 
       // Simulate network delay if specified
       if (paginationConfig.loadingDelay.inMilliseconds > 0) {
-        await Future.delayed(paginationConfig.loadingDelay);
+        await Future<void>.delayed(paginationConfig.loadingDelay);
       }
 
       // Get more messages from the callback or use the backward compatibility one

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'dart:math' as math;
 
 import '../controllers/chat_messages_controller.dart';
 import '../models/ai_chat_config.dart';
 import '../models/chat/models.dart';
 import '../models/example_question_config.dart';
 import '../models/input_options.dart';
+import '../models/welcome_message_config.dart';
 import '../theme/custom_theme_extension.dart';
 import 'chat_input.dart';
 import 'custom_chat_widget.dart';
@@ -13,50 +16,132 @@ import 'custom_chat_widget.dart';
 class AiChatWidget extends StatefulWidget {
   const AiChatWidget({
     super.key,
-    required this.config,
-    required this.controller,
+    // Required parameters similar to Dila
     required this.currentUser,
     required this.aiUser,
+    required this.controller,
     required this.onSendMessage,
+
+    // Optional parameters, similar to Dila's approach
+    this.messages,
+    this.inputOptions,
+    this.messageOptions,
+    this.messageListOptions,
+    this.typingUsers,
+    this.readOnly = false,
+    this.quickReplyOptions,
+    this.scrollToBottomOptions,
     this.scrollController,
-    @Deprecated('Use config.loadingConfig.loadingIndicator instead')
-    this.loadingIndicator,
-    @Deprecated('Use config.enableAnimation instead')
+
+    // Optional specific to AI functionality
+    this.welcomeMessageConfig,
+    this.exampleQuestions = const [],
+    this.persistentExampleQuestions = false,
     this.enableAnimation = true,
-    @Deprecated('Use config.welcomeMessageConfig.builder instead')
+    this.maxWidth,
+    this.loadingConfig,
+    this.paginationConfig,
+    this.padding,
+    this.enableMarkdownStreaming = true,
+    this.streamingDuration = const Duration(milliseconds: 30),
+    this.markdownStyleSheet,
+    this.aiName = 'AI',
+
+    // Legacy parameters, deprecated
+    @Deprecated('Use loadingConfig.loadingIndicator instead')
+    this.loadingIndicator,
+    @Deprecated('Use welcomeMessageConfig.builder instead')
     this.welcomeMessageBuilder,
-    @Deprecated('Use config.loadingConfig.isLoading instead')
-    this.isLoading = false,
+    @Deprecated('Use loadingConfig.isLoading instead') this.isLoading = false,
   });
 
-  /// The chat configuration.
-  final AiChatConfig config;
-
-  /// The current user.
+  /// The current user in the conversation
   final ChatUser currentUser;
 
-  /// The AI user.
+  /// The AI assistant in the conversation
   final ChatUser aiUser;
 
-  /// The chat messages controller.
+  /// Name of the AI assistant (for display)
+  final String aiName;
+
+  /// The controller for managing chat messages
   final ChatMessagesController controller;
 
-  /// Callback when a message is sent.
+  /// Callback when a message is sent
   final void Function(ChatMessage) onSendMessage;
 
-  /// Optional scroll controller for the chat list
+  /// Optional list of messages (if not using controller)
+  final List<ChatMessage>? messages;
+
+  /// Customization options for the input field
+  final InputOptions? inputOptions;
+
+  /// Customization options for messages
+  final MessageOptions? messageOptions;
+
+  /// Customization options for the message list
+  final MessageListOptions? messageListOptions;
+
+  /// Customization options for quick replies
+  final QuickReplyOptions? quickReplyOptions;
+
+  /// Customization options for the scroll-to-bottom button
+  final ScrollToBottomOptions? scrollToBottomOptions;
+
+  /// Users who are currently typing
+  final List<ChatUser>? typingUsers;
+
+  /// Whether the chat interface is in read-only mode
+  final bool readOnly;
+
+  /// Optional scroll controller
   final ScrollController? scrollController;
 
-  @Deprecated('Use config.loadingConfig.loadingIndicator instead')
-  final Widget? loadingIndicator;
+  /// Configuration for welcome messages.
+  /// When provided, the welcome message will be shown at the start of the conversation.
+  /// If this is null and exampleQuestions is empty, no welcome message will be displayed.
+  final WelcomeMessageConfig? welcomeMessageConfig;
 
-  @Deprecated('Use config.enableAnimation instead')
+  /// Example questions to show in the welcome message.
+  /// When non-empty, these will enable the welcome message at the start of the conversation
+  /// even if welcomeMessageConfig is null.
+  final List<ExampleQuestion> exampleQuestions;
+
+  /// Whether to show example questions persistently
+  final bool persistentExampleQuestions;
+
+  /// Whether to enable animations
   final bool enableAnimation;
 
-  @Deprecated('Use config.welcomeMessageConfig.builder instead')
+  /// Maximum width of the chat widget
+  final double? maxWidth;
+
+  /// Configuration for loading states
+  final LoadingConfig? loadingConfig;
+
+  /// Configuration for pagination
+  final PaginationConfig? paginationConfig;
+
+  /// Padding around the entire widget
+  final EdgeInsets? padding;
+
+  /// Whether to enable markdown streaming animations
+  final bool enableMarkdownStreaming;
+
+  /// Duration for streaming animations
+  final Duration streamingDuration;
+
+  /// Style sheet for markdown rendering
+  final MarkdownStyleSheet? markdownStyleSheet;
+
+  // Deprecated properties
+  @Deprecated('Use loadingConfig.loadingIndicator instead')
+  final Widget? loadingIndicator;
+
+  @Deprecated('Use welcomeMessageConfig.builder instead')
   final Widget Function()? welcomeMessageBuilder;
 
-  @Deprecated('Use config.loadingConfig.isLoading instead')
+  @Deprecated('Use loadingConfig.isLoading instead')
   final bool isLoading;
 
   @override
@@ -84,7 +169,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
     _animationController.forward();
 
     _textController =
-        widget.config.inputOptions?.textController ?? TextEditingController();
+        widget.inputOptions?.textController ?? TextEditingController();
     _inputFocusNode = FocusNode();
 
     _textController.addListener(() {
@@ -95,6 +180,16 @@ class _AiChatWidgetState extends State<AiChatWidget>
         });
       }
     });
+
+    // Set welcome message visibility based on configurations
+    final hasWelcomeConfig = widget.welcomeMessageConfig != null;
+    final hasExampleQuestions = widget.exampleQuestions.isNotEmpty;
+
+    // Only show welcome message if welcome config or example questions are provided
+    if ((hasWelcomeConfig || hasExampleQuestions) &&
+        widget.controller.messages.isEmpty) {
+      widget.controller.showWelcomeMessage = true;
+    }
   }
 
   void _scrollListener() {
@@ -131,12 +226,12 @@ class _AiChatWidgetState extends State<AiChatWidget>
   /// Returns the effective typing users list, including the AI user when loading
   /// if no other typing users are provided
   List<ChatUser> _getEffectiveTypingUsers() {
-    final isLoading = widget.config.loadingConfig.isLoading || widget.isLoading;
+    final isLoading =
+        (widget.loadingConfig?.isLoading ?? false) || widget.isLoading;
 
     // If we have explicitly set typing users, use those regardless of loading state
-    if (widget.config.typingUsers != null &&
-        widget.config.typingUsers!.isNotEmpty) {
-      return widget.config.typingUsers!;
+    if (widget.typingUsers != null && widget.typingUsers!.isNotEmpty) {
+      return widget.typingUsers!;
     }
 
     // If we're loading and don't have typing users, add the AI user as typing
@@ -154,34 +249,19 @@ class _AiChatWidgetState extends State<AiChatWidget>
         builder: (final context, final child) => Material(
           color: Colors.transparent,
           child: Container(
-            width: widget.config.maxWidth ?? double.infinity,
+            width: widget.maxWidth ?? double.infinity,
             height: double.infinity,
-            padding: widget.config.padding,
+            padding: widget.padding ?? const EdgeInsets.all(16),
             child: Stack(
               fit: StackFit.expand,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (widget.controller.showWelcomeMessage) ...[
-                      // Wrap in a container with finite height to prevent it from
-                      // taking too much space
-                      Container(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.4,
-                        ),
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: widget.welcomeMessageBuilder?.call() ??
-                              _buildWelcomeMessage(context),
-                        ),
-                      ),
-                    ],
                     // Show persistent example questions if enabled and welcome message is hidden
                     if (!widget.controller.showWelcomeMessage &&
-                        widget.config.persistentExampleQuestions &&
-                        widget.config.exampleQuestions != null &&
-                        widget.config.exampleQuestions!.isNotEmpty) ...[
+                        widget.persistentExampleQuestions &&
+                        widget.exampleQuestions.isNotEmpty) ...[
                       Container(
                         constraints: BoxConstraints(
                           maxHeight: MediaQuery.of(context).size.height * 0.15,
@@ -202,42 +282,41 @@ class _AiChatWidgetState extends State<AiChatWidget>
                           // Add padding at the bottom to prevent content from being hidden behind input
                           Padding(
                             padding: EdgeInsets.only(
-                                bottom: !widget.config.readOnly ? 80 : 0),
+                                bottom: !widget.readOnly ? 80 : 0),
                             child: CustomChatWidget(
                               controller: widget.controller,
                               currentUser: widget.currentUser,
-                              messages: widget.controller.messages,
+                              messages:
+                                  widget.messages ?? widget.controller.messages,
                               onSend: _handleSend,
-                              messageOptions: widget.config.messageOptions ??
+                              messageOptions: widget.messageOptions ??
                                   const MessageOptions(),
-                              inputOptions: widget.config.inputOptions ??
-                                  const InputOptions(),
+                              inputOptions:
+                                  widget.inputOptions ?? const InputOptions(),
                               typingUsers: _getEffectiveTypingUsers(),
-                              messageListOptions:
-                                  widget.config.messageListOptions ??
-                                      const MessageListOptions(),
-                              readOnly: widget.config.readOnly,
-                              quickReplyOptions:
-                                  widget.config.quickReplyOptions ??
-                                      const QuickReplyOptions(),
+                              messageListOptions: widget.messageListOptions ??
+                                  const MessageListOptions(),
+                              readOnly: widget.readOnly,
+                              quickReplyOptions: widget.quickReplyOptions ??
+                                  const QuickReplyOptions(),
                               scrollToBottomOptions:
-                                  widget.config.scrollToBottomOptions ??
+                                  widget.scrollToBottomOptions ??
                                       const ScrollToBottomOptions(),
                               typingIndicator:
-                                  (widget.config.loadingConfig.isLoading ||
+                                  ((widget.loadingConfig?.isLoading ?? false) ||
                                           widget.isLoading)
-                                      ? widget.config.loadingConfig
-                                              .loadingIndicator ??
+                                      ? widget.loadingConfig
+                                              ?.loadingIndicator ??
                                           widget.loadingIndicator
                                       : null,
                             ),
                           ),
-                          if ((widget.config.loadingConfig.isLoading ||
+                          if (((widget.loadingConfig?.isLoading ?? false) ||
                                   widget.isLoading) &&
-                              widget.config.loadingConfig.showCenteredIndicator)
+                              (widget.loadingConfig?.showCenteredIndicator ??
+                                  false))
                             Center(
-                              child: widget
-                                      .config.loadingConfig.loadingIndicator ??
+                              child: widget.loadingConfig?.loadingIndicator ??
                                   widget.loadingIndicator ??
                                   const CircularProgressIndicator(),
                             ),
@@ -246,33 +325,41 @@ class _AiChatWidgetState extends State<AiChatWidget>
                     ),
                   ],
                 ),
-                if (!widget.config.readOnly)
+                // Position welcome message as an overlay on top
+                if (widget.controller.showWelcomeMessage)
+                  Container(
+                    color: Colors.black.withOpacity(0.03),
+                    child: Center(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: widget.welcomeMessageBuilder?.call() ??
+                            _buildWelcomeMessage(context),
+                      ),
+                    ),
+                  ),
+                if (!widget.readOnly)
                   Positioned(
-                    left: widget.config.inputOptions?.positionedLeft ?? 0,
-                    right: widget.config.inputOptions?.positionedRight ?? 0,
-                    bottom: widget.config.inputOptions?.positionedBottom ?? 0.1,
-                    child: widget.config.inputOptions?.useOuterContainer ==
-                            false
+                    left: widget.inputOptions?.positionedLeft ?? 0,
+                    right: widget.inputOptions?.positionedRight ?? 0,
+                    bottom: widget.inputOptions?.positionedBottom ?? 0.1,
+                    child: widget.inputOptions?.useOuterContainer == false
                         ? _buildChatInput() // Render input directly without container
                         : Material(
                             elevation:
-                                widget.config.inputOptions?.materialElevation ??
-                                    0,
-                            color: widget.config.inputOptions
-                                        ?.useScaffoldBackground ==
+                                widget.inputOptions?.materialElevation ?? 0,
+                            color: widget.inputOptions?.useScaffoldBackground ==
                                     true
                                 ? Theme.of(context).scaffoldBackgroundColor
-                                : widget.config.inputOptions?.materialColor,
-                            shape: widget.config.inputOptions?.materialShape ??
+                                : widget.inputOptions?.materialColor,
+                            shape: widget.inputOptions?.materialShape ??
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(22),
                                   side: BorderSide.none,
                                 ),
                             clipBehavior: Clip.antiAlias,
                             child: Padding(
-                              padding:
-                                  widget.config.inputOptions?.materialPadding ??
-                                      const EdgeInsets.all(8.0),
+                              padding: widget.inputOptions?.materialPadding ??
+                                  const EdgeInsets.all(8.0),
                               child: _buildChatInput(),
                             ),
                           ),
@@ -287,13 +374,20 @@ class _AiChatWidgetState extends State<AiChatWidget>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
+    final screenSize = MediaQuery.of(context).size;
 
-    final welcomeConfig = widget.config.welcomeMessageConfig;
-    final defaultQuestionConfig = widget.config.exampleQuestionConfig;
+    final welcomeConfig = widget.welcomeMessageConfig;
+    // Get the first question's config as a default, if available
+    final defaultQuestionConfig = widget.exampleQuestions.isNotEmpty
+        ? widget.exampleQuestions.first.config
+        : null;
 
     return FadeTransition(
       opacity: _animationController,
       child: Container(
+        // Constrain width to prevent excessive horizontal stretching
+        width: math.min(500, screenSize.width * 0.9),
+        // Use margin to center the welcome message
         margin: welcomeConfig?.containerMargin ??
             const EdgeInsets.symmetric(
               horizontal: 16,
@@ -306,14 +400,15 @@ class _AiChatWidgetState extends State<AiChatWidget>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.08),
+                  color:
+                      Colors.black.withValues(alpha: isDarkMode ? 0.3 : 0.08),
                   blurRadius: 20,
                   spreadRadius: -4,
                   offset: const Offset(0, 8),
                 ),
               ],
               border: Border.all(
-                color: primaryColor.withOpacity(isDarkMode ? 0.2 : 0.15),
+                color: primaryColor.withValues(alpha: isDarkMode ? 0.2 : 0.15),
                 width: 1.5,
               ),
             ),
@@ -321,7 +416,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              welcomeConfig?.title ?? widget.config.aiName,
+              welcomeConfig?.title ?? widget.aiName,
               style: welcomeConfig?.titleStyle ??
                   TextStyle(
                     fontSize: 24,
@@ -331,7 +426,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
                     height: 1.3,
                   ),
             ),
-            if (widget.config.exampleQuestions?.isNotEmpty ?? false) ...[
+            if (widget.exampleQuestions.isNotEmpty) ...[
               const SizedBox(height: 20),
               Container(
                 padding: welcomeConfig?.questionsSectionPadding ??
@@ -341,10 +436,12 @@ class _AiChatWidgetState extends State<AiChatWidget>
                     ),
                 decoration: welcomeConfig?.questionsSectionDecoration ??
                     BoxDecoration(
-                      color: primaryColor.withOpacity(isDarkMode ? 0.15 : 0.08),
+                      color: primaryColor.withValues(
+                          alpha: isDarkMode ? 0.15 : 0.08),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: primaryColor.withOpacity(isDarkMode ? 0.3 : 0.2),
+                        color: primaryColor.withValues(
+                            alpha: isDarkMode ? 0.3 : 0.2),
                       ),
                     ),
                 child: Text(
@@ -359,13 +456,18 @@ class _AiChatWidgetState extends State<AiChatWidget>
                 ),
               ),
               const SizedBox(height: 16),
-              ...widget.config.exampleQuestions!.map(
-                (question) => _buildExampleQuestion(
-                  question,
-                  defaultQuestionConfig,
-                  isDarkMode,
-                  primaryColor,
-                ),
+              ...widget.exampleQuestions.map(
+                (question) {
+                  // Get the question's config or use the default
+                  final effectiveConfig =
+                      question.config ?? defaultQuestionConfig;
+                  return _buildExampleQuestion(
+                    question,
+                    effectiveConfig ?? const ExampleQuestionConfig(),
+                    isDarkMode,
+                    primaryColor,
+                  );
+                },
               ),
             ],
           ],
@@ -376,7 +478,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
 
   Widget _buildExampleQuestion(
     final ExampleQuestion question,
-    final ExampleQuestionConfig? config,
+    final ExampleQuestionConfig effectiveConfig,
     final bool isDarkMode,
     final Color primaryColor,
   ) {
@@ -388,22 +490,25 @@ class _AiChatWidgetState extends State<AiChatWidget>
           onTap: () => handleExampleQuestionTap(question.question),
           borderRadius: BorderRadius.circular(16),
           child: Container(
-            padding: config?.containerPadding ??
+            padding: effectiveConfig.containerPadding ??
                 const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
                 ),
-            decoration: config?.containerDecoration ??
+            decoration: effectiveConfig.containerDecoration ??
                 BoxDecoration(
-                  color: primaryColor.withOpacity(isDarkMode ? 0.12 : 0.06),
+                  color:
+                      primaryColor.withValues(alpha: isDarkMode ? 0.12 : 0.06),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: primaryColor.withOpacity(isDarkMode ? 0.3 : 0.15),
+                    color:
+                        primaryColor.withValues(alpha: isDarkMode ? 0.3 : 0.15),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withOpacity(isDarkMode ? 0.12 : 0.04),
+                      color: primaryColor.withValues(
+                          alpha: isDarkMode ? 0.12 : 0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                       spreadRadius: -2,
@@ -413,36 +518,37 @@ class _AiChatWidgetState extends State<AiChatWidget>
             child: Row(
               children: [
                 Icon(
-                  config?.iconData ?? Icons.chat_bubble_outline_rounded,
-                  size: config?.iconSize ?? 18,
-                  color: config?.iconColor ??
+                  effectiveConfig.iconData ?? Icons.chat_bubble_outline_rounded,
+                  size: effectiveConfig.iconSize ?? 18,
+                  color: effectiveConfig.iconColor ??
                       (isDarkMode
-                          ? Colors.white.withOpacity(0.8)
-                          : primaryColor.withOpacity(0.8)),
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : primaryColor.withValues(alpha: 0.8)),
                 ),
-                SizedBox(width: config?.spacing ?? 12),
+                SizedBox(width: effectiveConfig.spacing ?? 12),
                 Expanded(
                   child: Text(
                     question.question,
-                    style: config?.textStyle ??
+                    style: effectiveConfig.textStyle ??
                         TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                           color: isDarkMode
-                              ? Colors.white.withOpacity(0.9)
-                              : Colors.black.withOpacity(0.8),
+                              ? Colors.white.withValues(alpha: 0.9)
+                              : Colors.black.withValues(alpha: 0.8),
                           height: 1.4,
                         ),
                   ),
                 ),
                 SizedBox(width: 8),
                 Icon(
-                  config?.trailingIconData ?? Icons.arrow_forward_ios_rounded,
-                  size: config?.trailingIconSize ?? 14,
-                  color: config?.trailingIconColor ??
+                  effectiveConfig.trailingIconData ??
+                      Icons.arrow_forward_ios_rounded,
+                  size: effectiveConfig.trailingIconSize ?? 14,
+                  color: effectiveConfig.trailingIconColor ??
                       (isDarkMode
-                          ? Colors.white.withOpacity(0.5)
-                          : primaryColor.withOpacity(0.5)),
+                          ? Colors.white.withValues(alpha: 0.5)
+                          : primaryColor.withValues(alpha: 0.5)),
                 ),
               ],
             ),
@@ -457,18 +563,21 @@ class _AiChatWidgetState extends State<AiChatWidget>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
-    final defaultQuestionConfig = widget.config.exampleQuestionConfig;
+    // Get the first question's config as a default, if available
+    final defaultQuestionConfig = widget.exampleQuestions.isNotEmpty
+        ? widget.exampleQuestions.first.config
+        : null;
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
         color: isDarkMode
-            ? const Color(0xFF1E2026).withOpacity(0.9)
-            : Colors.white.withOpacity(0.9),
+            ? const Color(0xFF1E2026).withValues(alpha: 0.9)
+            : Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.06),
+            color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.06),
             blurRadius: 15,
             offset: const Offset(0, 5),
             spreadRadius: -5,
@@ -476,8 +585,8 @@ class _AiChatWidgetState extends State<AiChatWidget>
         ],
         border: Border.all(
           color: isDarkMode
-              ? Colors.white.withOpacity(0.1)
-              : Colors.black.withOpacity(0.05),
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
           width: 0.5,
         ),
       ),
@@ -501,16 +610,19 @@ class _AiChatWidgetState extends State<AiChatWidget>
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: widget.config.exampleQuestions!
-                    .map(
-                      (question) => _buildPersistentQuestionChip(
-                        question,
-                        defaultQuestionConfig,
-                        isDarkMode,
-                        primaryColor,
-                      ),
-                    )
-                    .toList(),
+                children: widget.exampleQuestions.map(
+                  (question) {
+                    // Get the question's config or use the default
+                    final effectiveConfig =
+                        question.config ?? defaultQuestionConfig;
+                    return _buildPersistentQuestionChip(
+                      question,
+                      effectiveConfig ?? const ExampleQuestionConfig(),
+                      isDarkMode,
+                      primaryColor,
+                    );
+                  },
+                ).toList(),
               ),
             ),
           ),
@@ -522,7 +634,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
   // New method for building question chips in a more compact form
   Widget _buildPersistentQuestionChip(
     ExampleQuestion question,
-    ExampleQuestionConfig? config,
+    ExampleQuestionConfig effectiveConfig,
     bool isDarkMode,
     Color primaryColor,
   ) {
@@ -557,7 +669,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
 
   // Update the _buildChatInput method
   Widget _buildChatInput() {
-    if (widget.config.readOnly) {
+    if (widget.readOnly) {
       return const SizedBox.shrink();
     }
 
@@ -568,7 +680,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
     final isDarkMode = theme.brightness == Brightness.dark;
 
     // Get the appropriate input options
-    final baseInputOptions = widget.config.inputOptions ?? const InputOptions();
+    final baseInputOptions = widget.inputOptions ?? const InputOptions();
 
     // Get default decoration
     final decoration = baseInputOptions.decoration;
@@ -603,6 +715,8 @@ class _AiChatWidgetState extends State<AiChatWidget>
       inputContainerHeight: baseInputOptions.inputContainerHeight,
       inputContainerConstraints: baseInputOptions.inputContainerConstraints,
       inputContainerWidth: baseInputOptions.inputContainerWidth,
+      useOuterContainer: baseInputOptions.useOuterContainer,
+      useOuterMaterial: baseInputOptions.useOuterMaterial,
       sendButtonBuilder: baseInputOptions.sendButtonBuilder,
       sendOnEnter: baseInputOptions.sendOnEnter,
       alwaysShowSend: baseInputOptions.alwaysShowSend,
@@ -642,7 +756,7 @@ class _AiChatWidgetState extends State<AiChatWidget>
     _textController.removeListener(() {});
 
     // Don't dispose if using external controller
-    if (widget.config.inputOptions?.textController == null) {
+    if (widget.inputOptions?.textController == null) {
       _textController.dispose();
     }
     _inputFocusNode.dispose();
