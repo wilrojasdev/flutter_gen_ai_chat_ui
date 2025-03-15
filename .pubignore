@@ -1,11 +1,21 @@
 # Files that should not be published
-example/lib/example_detailed.dart 
-
-# Development files
-.dart_tool/
-.packages
+.cursor/
 .flutter-plugins
 .flutter-plugins-dependencies
+files_list.md
+logger.txt
+context.md
+
+# Test files
+test/goldens/
+test/visual/failures/
+
+# Build artifacts
+build/
+.dart_tool/
+
+# Development files
+.packages
 pubspec.lock
 
 # IDE files
@@ -13,15 +23,9 @@ pubspec.lock
 .vscode/
 *.iml
 
-# Build files
-build/
-ios/Pods/
-android/.gradle/
-
 # Logs and temporary files
 *.log
 .DS_Store
-logger.txt
 
 # Test coverage
 coverage/

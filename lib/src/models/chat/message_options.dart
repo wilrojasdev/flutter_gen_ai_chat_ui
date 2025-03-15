@@ -215,7 +215,7 @@ class MessageOptions {
   final bool? showCopyButton;
 
   /// Callback when message is copied
-  final Function(String)? onCopy;
+  final void Function(String)? onCopy;
 
   /// Creates an instance of [MessageOptions].
   ///
@@ -269,7 +269,7 @@ class MessageOptions {
     TextStyle? userNameStyle,
     MarkdownStyleSheet? markdownStyleSheet,
     bool? showCopyButton,
-    Function(String)? onCopy,
+    void Function(String)? onCopy,
   }) =>
       MessageOptions(
         textStyle: textStyle ?? this.textStyle,
