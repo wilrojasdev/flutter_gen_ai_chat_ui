@@ -143,10 +143,7 @@ void main() {
             body: AiChatWidget(
               config: AiChatConfig(
                 aiName: 'AI',
-                inputOptions: const InputOptions(
-                  sendOnEnter: true,
-                  alwaysShowSend: true,
-                ),
+                inputOptions: const InputOptions(),
               ),
               controller: controller,
               currentUser: currentUser,
@@ -257,9 +254,7 @@ void main() {
           body: AiChatWidget(
             config: AiChatConfig(
               aiName: 'AI',
-              inputOptions: const InputOptions(
-                alwaysShowSend: true,
-              ),
+              inputOptions: const InputOptions(),
             ),
             controller: controller,
             currentUser: currentUser,
@@ -288,9 +283,7 @@ void main() {
           body: AiChatWidget(
             config: AiChatConfig(
               aiName: 'AI',
-              inputOptions: const InputOptions(
-                alwaysShowSend: true,
-              ),
+              inputOptions: const InputOptions(),
             ),
             controller: controller,
             currentUser: currentUser,
@@ -417,14 +410,12 @@ void main() {
     test('InputOptions Validation', () {
       const options = InputOptions(
         sendOnEnter: true,
-        alwaysShowSend: true,
         autocorrect: true,
         maxLines: 5,
         minLines: 1,
       );
 
       expect(options.sendOnEnter, true);
-      expect(options.alwaysShowSend, true);
       expect(options.autocorrect, true);
       expect(options.maxLines, 5);
       expect(options.minLines, 1);

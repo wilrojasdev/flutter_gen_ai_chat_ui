@@ -4,49 +4,53 @@ The Flutter Gen AI Chat UI package provides extensive customization options for 
 
 ## Basic Input Customization
 
-The `AiChatConfig` class accepts an `inputOptions` parameter that allows you to customize the input field:
+Pass the `inputOptions` parameter directly to the `AiChatWidget` to customize the input field:
 
 ```dart
 AiChatWidget(
-  config: AiChatConfig(
-    inputOptions: InputOptions(
-      // Basic styling
-      textStyle: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        color: Colors.black87,
-      ),
-      decoration: InputDecoration(
-        hintText: 'Type a message...',
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(25),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      
-      // Material container customization
-      materialElevation: 4.0,  // Lower elevation than default
-      materialColor: Colors.grey.shade50,  // Light background
-      materialPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-      
-      // Size control
-      inputHeight: 48.0,  // Fixed height for the text input field
-      inputContainerHeight: 64.0,  // Fixed height for the entire container
-      
-      // Behavior options
-      sendOnEnter: true,
-      alwaysShowSend: false,
-      
-      // Text field properties
-      maxLines: 5,
-      minLines: 1,
-      textCapitalization: TextCapitalization.sentences,
+  // Required parameters
+  currentUser: _currentUser,
+  aiUser: _aiUser,
+  controller: _controller,
+  onSendMessage: _handleSendMessage,
+  
+  // Input customization
+  inputOptions: InputOptions(
+    // Basic styling
+    textStyle: TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w400,
+      color: Colors.black87,
     ),
+    decoration: InputDecoration(
+      hintText: 'Type a message...',
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(25),
+        borderSide: BorderSide.none,
+      ),
+    ),
+    margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    
+    // Material container customization
+    materialElevation: 4.0,  // Lower elevation than default
+    materialColor: Colors.grey.shade50,  // Light background
+    materialPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+    
+    // Size control
+    inputHeight: 48.0,  // Fixed height for the text input field
+    inputContainerHeight: 64.0,  // Fixed height for the entire container
+    
+    // Behavior options
+    sendOnEnter: true,
+    unfocusOnTapOutside: false,
+    
+    // Text field properties
+    maxLines: 5,
+    minLines: 1,
+    textCapitalization: TextCapitalization.sentences,
   ),
-  // Other required parameters...
 )
 ```
 
@@ -423,78 +427,3 @@ InputOptions(
   inputHeight: 44.0,  // Compact input height
 )
 ```
-
-### Compact Input with Custom Width
-
-```dart
-InputOptions(
-  decoration: InputDecoration(
-    hintText: 'Message',
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-  ),
-  inputHeight: 40.0,  // Very compact input height
-  inputContainerWidth: InputContainerWidth.custom,
-  inputContainerConstraints: BoxConstraints(
-    minWidth: 200.0,
-    maxWidth: 400.0,
-  ),
-  margin: EdgeInsets.symmetric(horizontal: 24),
-)
-```
-
-## All Available Properties
-
-The `InputOptions` class provides many customization options:
-
-| Property | Description | Default |
-|----------|-------------|---------|
-| `textStyle` | Style for the input text | System default |
-| `decoration` | InputDecoration for the text field | Basic decoration |
-| `margin` | Margin around the input field | EdgeInsets.all(20) |
-| `containerDecoration` | BoxDecoration for the container | null |
-| `containerBackgroundColor` | Background color for blur effect | Colors.transparent |
-| `blurStrength` | Intensity of blur (0.5-2.0 recommended) | 1.0 |
-| `containerPadding` | Padding inside the container | null |
-| `clipBehavior` | Whether to apply ClipRRect | false |
-| `materialElevation` | Elevation of Material widget (shadow depth) | 8.0 |
-| `materialColor` | Background color of Material widget | Colors.transparent |
-| `materialPadding` | Padding around input in Material widget | EdgeInsets.symmetric(vertical: 8) |
-| `inputHeight` | Fixed height for the text input field | null |
-| `inputContainerHeight` | Fixed height for the entire input container | null |
-| `inputContainerConstraints` | Size constraints for the input container | null |
-| `inputContainerWidth` | How to determine the container's width | InputContainerWidth.fullWidth |
-| `sendButtonBuilder` | Builder for the send button | Default send icon |
-| `sendOnEnter` | Whether to send on Enter key | false |
-| `alwaysShowSend` | Always show send button | true |
-| `textCapitalization` | Text capitalization type | sentences |
-| `maxLines` | Maximum number of lines | 5 |
-| `minLines` | Minimum number of lines | 1 |
-| `cursorColor` | Color of the text cursor | Theme dependent |
-| `cursorWidth` | Width of the text cursor | 2.0 |
-
-## Best Practices
-
-1. **Match Your App's Theme**: Use colors that complement your app's color scheme.
-   
-2. **Adjust for Readability**: Ensure text remains readable against the glassmorphic background.
-   
-3. **Test on Different Backgrounds**: The effect will look different depending on what's behind it.
-   
-4. **Performance Considerations**: The blur effect is computationally intensive. Consider using a lower `blurStrength` for better performance on lower-end devices.
-   
-5. **Accessibility**: Ensure sufficient contrast for text against the background.
-
-6. **Material Elevation**: If using glassmorphic effect, consider using a higher materialElevation (10-12) to make the input appear to float. For more minimal designs, use lower or zero elevation.
-
-7. **Coordinate Shadow and Background**: Make sure your materialColor and materialElevation work well together - transparent colors show shadows better, while colored backgrounds may need lower elevation.
-
-8. **Responsive Design**: For web or large screen apps, consider using `inputContainerConstraints` with `InputContainerWidth.custom` to ensure the input doesn't stretch too wide on large screens.
-
-9. **Size Guidelines**: For most mobile devices, an `inputHeight` between 44-56 pixels provides a good balance between usability and aesthetics. For desktop or tablets, you might prefer 48-64 pixels.
-
-## Conclusion
-
-With these customization options, you can create beautiful, modern chat inputs that perfectly match your app's design. The glassmorphic effect adds a touch of sophistication and can be adjusted to work with any color scheme or design aesthetic. The material container properties provide additional flexibility to control the elevation, background, and spacing of your input field, while the size control options ensure your input field fits perfectly within your layout. 

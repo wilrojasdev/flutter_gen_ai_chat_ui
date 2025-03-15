@@ -185,10 +185,26 @@ class _AiChatWidgetState extends State<AiChatWidget>
     final hasWelcomeConfig = widget.welcomeMessageConfig != null;
     final hasExampleQuestions = widget.exampleQuestions.isNotEmpty;
 
+    // Debug check for example questions
+    debugPrint('AiChatWidget: Has welcome config: $hasWelcomeConfig');
+    debugPrint(
+        'AiChatWidget: Has example questions: $hasExampleQuestions (count: ${widget.exampleQuestions.length})');
+    if (hasExampleQuestions) {
+      for (var i = 0; i < widget.exampleQuestions.length; i++) {
+        debugPrint('  Question $i: ${widget.exampleQuestions[i].question}');
+      }
+    }
+    debugPrint(
+        'AiChatWidget: Current message count: ${widget.controller.messages.length}');
+
     // Only show welcome message if welcome config or example questions are provided
     if ((hasWelcomeConfig || hasExampleQuestions) &&
         widget.controller.messages.isEmpty) {
+      debugPrint('AiChatWidget: Setting showWelcomeMessage to true');
       widget.controller.showWelcomeMessage = true;
+    } else {
+      debugPrint(
+          'AiChatWidget: Not showing welcome message. Conditions not met.');
     }
   }
 
@@ -205,6 +221,11 @@ class _AiChatWidgetState extends State<AiChatWidget>
   }
 
   void _handleSend(final ChatMessage message) {
+    // Hide welcome message first, just like in example questions
+    if (widget.controller.showWelcomeMessage) {
+      widget.controller.hideWelcomeMessage();
+    }
+
     widget.onSendMessage(message);
   }
 
@@ -371,6 +392,9 @@ class _AiChatWidgetState extends State<AiChatWidget>
       );
 
   Widget _buildWelcomeMessage(final BuildContext context) {
+    debugPrint(
+        'AiChatWidget: Building welcome message with ${widget.exampleQuestions.length} questions');
+
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final primaryColor = theme.primaryColor;
@@ -381,6 +405,12 @@ class _AiChatWidgetState extends State<AiChatWidget>
     final defaultQuestionConfig = widget.exampleQuestions.isNotEmpty
         ? widget.exampleQuestions.first.config
         : null;
+
+    // Log if no questions to display
+    if (widget.exampleQuestions.isEmpty) {
+      debugPrint(
+          'AiChatWidget: No example questions to display in welcome message');
+    }
 
     return FadeTransition(
       opacity: _animationController,
@@ -719,7 +749,6 @@ class _AiChatWidgetState extends State<AiChatWidget>
       useOuterMaterial: baseInputOptions.useOuterMaterial,
       sendButtonBuilder: baseInputOptions.sendButtonBuilder,
       sendOnEnter: baseInputOptions.sendOnEnter,
-      alwaysShowSend: baseInputOptions.alwaysShowSend,
       autocorrect: baseInputOptions.autocorrect,
 
       // Use app direction instead of dynamic direction

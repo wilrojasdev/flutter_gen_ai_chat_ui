@@ -210,7 +210,6 @@ void main() {
             filled: true,
             fillColor: Colors.grey,
           ),
-          alwaysShowSend: true,
           sendOnEnter: true,
           maxLines: 3,
         );

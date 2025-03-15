@@ -175,28 +175,81 @@ class ChatMessagesController extends ChangeNotifier {
   ///
   /// Useful for updating streaming messages or editing existing ones.
   void updateMessage(final ChatMessage message) {
-    final customId = message.customProperties?['id'] as String?;
-    final messageId = customId ?? _getMessageId(message);
-    final index = _messages.indexWhere(
-      (final msg) => _getMessageId(msg) == messageId,
-    );
+    try {
+      // Get the message ID - first from customProperties, then calculate if not present
+      final customId = message.customProperties?['id'] as String?;
+      final messageId = customId ?? _getMessageId(message);
 
-    if (index != -1) {
-      _messages[index] = message;
-      _messageCache[messageId] = message;
-    } else {
-      if (paginationConfig.reverseOrder) {
-        _messages.insert(0, message);
+      // Check if the message exists
+      final index = _messages.indexWhere(
+        (final msg) => _getMessageId(msg) == messageId,
+      );
+
+      final isStreaming =
+          message.customProperties?['isStreaming'] as bool? ?? false;
+
+      // When updating streaming messages, make sure we maintain proper state transitions
+      if (index != -1 && isStreaming) {
+        // For streaming messages, preserve the original streaming state if present
+        final existingIsStreaming =
+            _messages[index].customProperties?['isStreaming'] as bool? ?? false;
+
+        // Only override the streaming state if explicitly set to false (indicating end of stream)
+        if (existingIsStreaming && isStreaming) {
+          // Keep streaming active - preserve existing ID and streaming flag
+          _messages[index] = message;
+          _messageCache[messageId] = message;
+        } else {
+          // End of streaming or non-streaming update - regular update
+          _messages[index] = message;
+          _messageCache[messageId] = message;
+        }
+      } else if (index != -1) {
+        // Regular non-streaming message update
+        _messages[index] = message;
+        _messageCache[messageId] = message;
       } else {
-        _messages.add(message);
+        // Add new message if not found - respecting list order
+        if (paginationConfig.reverseOrder) {
+          _messages.insert(0, message);
+        } else {
+          _messages.add(message);
+        }
+        _messageCache[messageId] = message;
       }
-      _messageCache[messageId] = message;
-    }
-    notifyListeners();
 
-    // Also scroll to bottom when a message is updated
-    // This is important for streaming messages
-    _scrollToBottomAfterRender();
+      // Notify listeners about the change
+      notifyListeners();
+
+      // Also scroll to bottom when a message is updated
+      // This is important for streaming messages
+      _scrollToBottomAfterRender();
+    } catch (e) {
+      debugPrint('Error updating message: $e');
+      // If updating fails, try to add as a new message instead
+      try {
+        final newId =
+            '${message.user.id}_${DateTime.now().millisecondsSinceEpoch}_${message.text.hashCode}';
+        final messageWithId = ChatMessage(
+          text: message.text,
+          user: message.user,
+          createdAt: message.createdAt,
+          isMarkdown: message.isMarkdown,
+          customProperties: {...?message.customProperties, 'id': newId},
+        );
+
+        if (paginationConfig.reverseOrder) {
+          _messages.insert(0, messageWithId);
+        } else {
+          _messages.add(messageWithId);
+        }
+        _messageCache[newId] = messageWithId;
+        notifyListeners();
+        _scrollToBottomAfterRender();
+      } catch (fallbackError) {
+        debugPrint('Failed to add message as fallback: $fallbackError');
+      }
+    }
   }
 
   /// Replaces all existing messages with a new list.

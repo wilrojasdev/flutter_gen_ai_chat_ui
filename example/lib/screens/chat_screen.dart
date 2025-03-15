@@ -81,7 +81,11 @@ class _ChatScreenState extends State<ChatScreen>
           'ai_msg_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
 
       // First delay to show the loading indicator
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      setState(() {
+        _isLoading = false;
+      });
 
       // Create a new AI message with empty text (we'll stream it)
       final aiMessage = ChatMessage(
@@ -89,58 +93,101 @@ class _ChatScreenState extends State<ChatScreen>
         user: _aiUser,
         createdAt: DateTime.now(),
         isMarkdown: true,
-        customProperties: {'id': messageId},
+        customProperties: {'isStreaming': true, 'id': messageId},
       );
 
       // Add the empty message to chat
       _chatController.addMessage(aiMessage);
 
       if (appState.isStreaming) {
-        // Stream the response word by word
-        final stream = _mockAiService.streamResponse(
-          message.text,
-          includeCodeBlock: appState.showCodeBlocks,
-        );
+        try {
+          // Stream the response word by word
+          final stream = _mockAiService.streamResponse(
+            message.text,
+            includeCodeBlock: appState.showCodeBlocks,
+          );
 
-        await for (final wordsSoFar in stream) {
-          // Update the message with each new word - preserve the ID
+          String accumulatedText = "";
+          await for (final wordsSoFar in stream) {
+            // Sometimes stream events can be empty or null - skip those
+            if (wordsSoFar == null || wordsSoFar.isEmpty) continue;
+
+            accumulatedText = wordsSoFar;
+
+            // Update the message with each new word - preserve the ID and streaming flag
+            _chatController.updateMessage(
+              ChatMessage(
+                text: accumulatedText,
+                user: _aiUser,
+                createdAt: aiMessage.createdAt,
+                isMarkdown: true,
+                // Preserve the custom properties with the stable ID
+                customProperties: {'isStreaming': true, 'id': messageId},
+              ),
+            );
+
+            // Small delay for visual effect if needed
+            // await Future.delayed(const Duration(milliseconds: 10));
+          }
+
+          // Mark streaming as complete
           _chatController.updateMessage(
-            aiMessage.copyWith(
-              text: wordsSoFar,
-              // Preserve the custom properties with the stable ID
-              customProperties: {'id': messageId},
+            ChatMessage(
+              text: accumulatedText,
+              user: _aiUser,
+              createdAt: aiMessage.createdAt,
+              isMarkdown: true,
+              customProperties: {'isStreaming': false, 'id': messageId},
+            ),
+          );
+        } catch (streamingError) {
+          debugPrint('Error during streaming: $streamingError');
+          // Update message to show error state
+          _chatController.updateMessage(
+            ChatMessage(
+              text:
+                  "Sorry, there was an error generating the streaming response.",
+              user: _aiUser,
+              createdAt: aiMessage.createdAt,
+              isMarkdown: true,
+              customProperties: {'isStreaming': false, 'id': messageId},
             ),
           );
         }
       } else {
-        // Get full response
+        // Non-streaming mode - get the full response at once
         final response = await _mockAiService.getResponse(
           message.text,
           includeCodeBlock: appState.showCodeBlocks,
         );
 
-        // Update with complete response - preserve the ID
+        // Small delay to simulate processing time
+        await Future.delayed(const Duration(milliseconds: 300));
+
+        // Update with complete response
         _chatController.updateMessage(
-          aiMessage.copyWith(
+          ChatMessage(
             text: response,
-            // Preserve the custom properties with the stable ID
-            customProperties: {'id': messageId},
+            user: _aiUser,
+            createdAt: aiMessage.createdAt,
+            isMarkdown: true,
+            customProperties: {'id': messageId}, // No streaming flag needed
           ),
         );
       }
     } catch (e) {
-      // Handle errors
-      _chatController.addMessage(
-        ChatMessage(
-          text: "Sorry, I couldn't process that request. Error: $e",
-          user: _aiUser,
-          createdAt: DateTime.now(),
-        ),
-      );
-    } finally {
+      debugPrint('Error handling message: $e');
       setState(() {
         _isLoading = false;
       });
+
+      // Show error message to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -339,9 +386,6 @@ class _ChatScreenState extends State<ChatScreen>
       onSubmitted: (_) => _handleKeyboardSend(),
 
       // Keep essential properties
-      alwaysShowSend: true,
-
-      // Prevent keyboard from hiding after first character
       unfocusOnTapOutside: false,
 
       // Add bottom padding to position input properly without container

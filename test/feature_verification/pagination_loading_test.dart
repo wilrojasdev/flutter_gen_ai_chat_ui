@@ -242,14 +242,18 @@ void main() {
         bool messageSent = false;
         String sentMessageText = '';
 
+        final testController = TextEditingController();
+        final testFocusNode = FocusNode();
+
         // Act - with sendOnEnter enabled
         await tester.pumpWidget(MaterialApp(
           home: Scaffold(
             body: AiChatWidget(
               config: AiChatConfig(
                 aiName: 'Test AI',
-                inputOptions: const InputOptions(
+                inputOptions: InputOptions(
                   sendOnEnter: true,
+                  textController: testController,
                 ),
               ),
               controller: controller,
@@ -265,14 +269,47 @@ void main() {
 
         // Find the TextField and enter text
         await tester.enterText(find.byType(TextField), 'Enter message');
+        expect(testController.text, 'Enter message');
 
-        // Simulate pressing Enter (can be unreliable in widget tests)
+        // Simulate pressing Enter
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pump();
 
-        // Assert - Due to limitations in widget testing for keyboard events,
-        // we're mainly checking that the widget accepts the configuration
-        // It's difficult to reliably test actual Enter key behavior in widget tests
+        // Assert the message was sent
+        expect(messageSent, true);
+        expect(sentMessageText, 'Enter message');
+
+        // Clear and reset for next test
+        messageSent = false;
+        sentMessageText = '';
+
+        // Test with sendOnEnter disabled
+        await tester.pumpWidget(MaterialApp(
+          home: Scaffold(
+            body: AiChatWidget(
+              config: AiChatConfig(
+                aiName: 'Test AI',
+                inputOptions: const InputOptions(
+                  sendOnEnter: false,
+                ),
+              ),
+              controller: controller,
+              currentUser: currentUser,
+              aiUser: aiUser,
+              onSendMessage: (message) {
+                messageSent = true;
+                sentMessageText = message.text;
+              },
+            ),
+          ),
+        ));
+
+        await tester.enterText(find.byType(TextField), 'Do not send on enter');
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        // Message should not be sent when sendOnEnter is false
+        expect(messageSent, false);
       });
     });
   });

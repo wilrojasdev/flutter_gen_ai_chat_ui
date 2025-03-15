@@ -8,6 +8,7 @@ This document provides a comprehensive guide to using the Flutter Gen AI Chat UI
 - [Styling & Customization](#styling--customization)
 - [Advanced Features](#advanced-features)
 - [Best Practices](#best-practices)
+- [Proper Text Streaming Usage](#proper-text-streaming-usage)
 
 ## Basic Setup
 
@@ -15,7 +16,7 @@ This document provides a comprehensive guide to using the Flutter Gen AI Chat UI
 
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.3.0
+  flutter_gen_ai_chat_ui: ^2.0.1
 ```
 
 ### Step 2: Import the Package
@@ -48,6 +49,11 @@ class _ChatScreenState extends State<ChatScreen> {
         aiUser: _aiUser,
         controller: _chatController,
         onSendMessage: _handleSendMessage,
+        
+        // Optional parameters
+        loadingConfig: LoadingConfig(
+          isLoading: _isLoading,
+        ),
       ),
     );
   }
@@ -144,7 +150,6 @@ controller.loadMore(() async {
 // Default configuration
 InputOptions(
   sendOnEnter: true,
-  alwaysShowSend: true,
   textStyle: TextStyle(...),
   decoration: InputDecoration(...),
 )
@@ -160,16 +165,16 @@ InputOptions(
     // You can also clear the input and hide the keyboard
   },
   
-  // Control when the keyboard should hide (new in 1.3.0)
+  // Control when the keyboard should hide
   unfocusOnTapOutside: false, // Prevent keyboard from hiding when tapping outside
 )
 
-// Completely remove all containers (new in 1.3.0)
+// Completely remove all containers
 InputOptions(
   // Remove the outer container
   useOuterContainer: false,
   
-  // Also remove the Material widget (new)
+  // Also remove the Material widget
   useOuterMaterial: false,
   
   // Use decoration on the TextField itself for styling
@@ -251,15 +256,18 @@ The chat UI provides two types of loading indicators to let users know when the 
 When `showCenteredIndicator: false` (default), the loading indicator appears as a typing bubble at the bottom of the chat, above the input field:
 
 ```dart
-loadingConfig: LoadingConfig(
-  isLoading: _isLoading,
-  showCenteredIndicator: false,  // Default behavior
-  loadingIndicator: const LoadingWidget(
-    texts: [
-      'AI is thinking...',
-      'Generating response...',
-      'Almost there...'
-    ],
+AiChatWidget(
+  // Required parameters...
+  loadingConfig: LoadingConfig(
+    isLoading: _isLoading,
+    showCenteredIndicator: false,  // Default behavior
+    loadingIndicator: const LoadingWidget(
+      texts: [
+        'AI is thinking...',
+        'Generating response...',
+        'Almost there...'
+      ],
+    ),
   ),
 )
 ```
@@ -271,10 +279,13 @@ This creates a natural conversational flow where the AI appears to be typing at 
 When `showCenteredIndicator: true`, the loading indicator appears centered in the chat area:
 
 ```dart
-loadingConfig: LoadingConfig(
-  isLoading: _isLoading,
-  showCenteredIndicator: true,  // Centered overlay
-  loadingIndicator: CircularProgressIndicator(),
+AiChatWidget(
+  // Required parameters...
+  loadingConfig: LoadingConfig(
+    isLoading: _isLoading,
+    showCenteredIndicator: true,  // Centered overlay
+    loadingIndicator: CircularProgressIndicator(),
+  ),
 )
 ```
 
@@ -284,9 +295,15 @@ The package includes a built-in `LoadingWidget` with extensive customization opt
 
 ```dart
 // Default appearance - just text with shimmer effect
-loadingIndicator: LoadingWidget(
-  texts: ['AI is thinking...', 'Generating response...', 'Almost there...'],
-),
+AiChatWidget(
+  // Required parameters...
+  loadingConfig: LoadingConfig(
+    isLoading: _isLoading,
+    loadingIndicator: LoadingWidget(
+      texts: ['AI is thinking...', 'Generating response...', 'Almost there...'],
+    ),
+  ),
+)
 ```
 
 The widget automatically respects the current locale's text direction (RTL or LTR), aligning text appropriately without any additional configuration.
@@ -295,24 +312,30 @@ You can customize the basic text appearance:
 
 ```dart
 // Basic text customization
-loadingIndicator: LoadingWidget(
-  // Text messages to cycle through
-  texts: ['Processing...', 'Analyzing data...'],
-  
-  // How often to rotate text
-  interval: Duration(seconds: 1.5),
-  
-  // Customize text style
-  textStyle: TextStyle(
-    fontSize: 15, 
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0.2,
+AiChatWidget(
+  // Required parameters...
+  loadingConfig: LoadingConfig(
+    isLoading: _isLoading,
+    loadingIndicator: LoadingWidget(
+      // Text messages to cycle through
+      texts: ['Processing...', 'Analyzing data...'],
+      
+      // How often to rotate text
+      interval: Duration(seconds: 1.5),
+      
+      // Customize text style
+      textStyle: TextStyle(
+        fontSize: 15, 
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.2,
+      ),
+      
+      // Customize shimmer colors
+      shimmerBaseColor: Colors.grey.shade300,
+      shimmerHighlightColor: Colors.white,
+    ),
   ),
-  
-  // Customize shimmer colors
-  shimmerBaseColor: Colors.grey.shade300,
-  shimmerHighlightColor: Colors.white,
-),
+)
 ```
 
 ##### Advanced LoadingWidget Styling
@@ -478,31 +501,6 @@ LoadingWidget(
 
 4. **Custom Styling**: To make your loading indicators stand out, customize their appearance based on your app's theme.
 
-#### Important: Avoiding Multiple Indicators
-
-Do not use both the deprecated direct `loadingIndicator` parameter and the `loadingConfig.loadingIndicator`. Use only the `loadingConfig` approach:
-
-```dart
-// CORRECT
-AiChatWidget(
-  // Required parameters...
-  loadingConfig: LoadingConfig(
-    isLoading: _isLoading,
-    loadingIndicator: LoadingWidget(...),
-  ),
-)
-
-// INCORRECT - will cause duplicate indicators
-AiChatWidget(
-  // Required parameters...
-  loadingIndicator: LoadingWidget(...),  // Deprecated - don't use
-  loadingConfig: LoadingConfig(
-    isLoading: _isLoading,
-    loadingIndicator: LoadingWidget(...),
-  ),
-)
-```
-
 ### Welcome Message Configuration
 
 The welcome message is disabled by default and only appears when you provide a configuration:
@@ -539,7 +537,7 @@ Enable word-by-word streaming of AI responses:
 
 ```dart
 AiChatWidget(
-  // Other parameters...
+  // Required parameters...
   enableMarkdownStreaming: true,
   streamingDuration: Duration(milliseconds: 30),
 )
@@ -602,7 +600,7 @@ void main() {
 
 ```dart
 AiChatWidget(
-  // Other parameters...
+  // Required parameters...
   paginationConfig: PaginationConfig(
     enabled: true,
     loadingIndicatorOffset: 100,
@@ -626,7 +624,7 @@ Show suggested questions for users to ask:
 
 ```dart
 AiChatWidget(
-  // Other parameters...
+  // Required parameters...
   exampleQuestions: [
     ExampleQuestion(question: "What can you help me with?"),
     ExampleQuestion(question: "Tell me about your features"),
@@ -643,9 +641,12 @@ AiChatWidget(
 Always update loading state to provide user feedback:
 
 ```dart
-LoadingConfig(
-  isLoading: _isLoading,  // Update this via setState
-  typingIndicatorColor: Theme.of(context).colorScheme.primary,
+AiChatWidget(
+  // Required parameters...
+  loadingConfig: LoadingConfig(
+    isLoading: _isLoading,  // Update this via setState
+    typingIndicatorColor: Theme.of(context).colorScheme.primary,
+  ),
 )
 ```
 
@@ -656,17 +657,19 @@ Adapt your UI for both light and dark themes:
 ```dart
 final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-// In your AiChatWidget:
-messageOptions: MessageOptions(
-  bubbleStyle: BubbleStyle(
-    userBubbleColor: isDarkMode 
-      ? Colors.blueGrey.shade800
-      : Colors.blue.shade50,
-    aiBubbleColor: isDarkMode 
-      ? Colors.grey.shade800 
-      : Colors.white,
+AiChatWidget(
+  // Required parameters...
+  messageOptions: MessageOptions(
+    bubbleStyle: BubbleStyle(
+      userBubbleColor: isDarkMode 
+        ? Colors.blueGrey.shade800
+        : Colors.blue.shade50,
+      aiBubbleColor: isDarkMode 
+        ? Colors.grey.shade800 
+        : Colors.white,
+    ),
   ),
-),
+)
 ```
 
 ### 3. Optimize for Performance
@@ -674,10 +677,13 @@ messageOptions: MessageOptions(
 For large chat histories, use pagination:
 
 ```dart
-paginationConfig: PaginationConfig(
-  enabled: true,
-  reverseOrder: true,
-),
+AiChatWidget(
+  // Required parameters...
+  paginationConfig: PaginationConfig(
+    enabled: true,
+    reverseOrder: true,
+  ),
+)
 ```
 
 ### 4. Use Responsive Design
@@ -686,6 +692,7 @@ Make your chat UI adapt to different screen sizes:
 
 ```dart
 AiChatWidget(
+  // Required parameters...
   maxWidth: 800,  // Maximum width on large screens
   padding: EdgeInsets.symmetric(
     horizontal: MediaQuery.of(context).size.width > 600 ? 24 : 8,
@@ -700,6 +707,8 @@ Tailor the experience to match your app's style and functionality:
 
 ```dart
 AiChatWidget(
+  // Required parameters...
+  
   // Personalize welcome message
   welcomeMessageConfig: WelcomeMessageConfig(
     title: "Welcome to ${yourApp.name}",
@@ -717,4 +726,139 @@ AiChatWidget(
     ),
   ),
 )
-``` 
+```
+
+## Proper Text Streaming Usage
+
+To ensure your streaming text works correctly and avoid the "invalid stream" issue, follow these best practices:
+
+### 1. Use Stable Message IDs
+
+Always use a stable, unique ID for streaming messages to ensure proper updates:
+
+```dart
+// Generate a stable message ID
+final messageId = 'ai_msg_${DateTime.now().millisecondsSinceEpoch}';
+
+// Create initial empty message with the ID
+final aiMessage = ChatMessage(
+  text: "",
+  user: aiUser,
+  createdAt: DateTime.now(),
+  isMarkdown: true, // Set to true if you want markdown support
+  customProperties: {'isStreaming': true, 'id': messageId},
+);
+
+// Add the empty message to chat
+controller.addMessage(aiMessage);
+```
+
+### 2. Update the Message with the Same ID
+
+When updating streaming messages, always preserve the original message ID:
+
+```dart
+// Update the message with new content
+controller.updateMessage(
+  ChatMessage(
+    text: updatedText,
+    user: aiUser,
+    createdAt: aiMessage.createdAt, // Keep the same timestamp
+    isMarkdown: true,
+    customProperties: {'isStreaming': true, 'id': messageId}, // Keep the same ID
+  ),
+);
+```
+
+### 3. Mark the Stream as Complete
+
+When streaming is complete, update the message one last time to remove the streaming flag:
+
+```dart
+// Mark message as complete
+controller.updateMessage(
+  ChatMessage(
+    text: finalText,
+    user: aiUser,
+    createdAt: aiMessage.createdAt,
+    isMarkdown: true,
+    customProperties: {'isStreaming': false, 'id': messageId}, // Set streaming to false
+  ),
+);
+```
+
+### 4. Complete Example
+
+Here's a complete example of streaming text properly:
+
+```dart
+Future<void> streamAIResponse(String userPrompt, ChatUser aiUser) async {
+  // Generate a stable message ID
+  final messageId = 'ai_msg_${DateTime.now().millisecondsSinceEpoch}';
+  
+  // Create initial empty message
+  final aiMessage = ChatMessage(
+    text: "",
+    user: aiUser,
+    createdAt: DateTime.now(),
+    isMarkdown: true,
+    customProperties: {'isStreaming': true, 'id': messageId},
+  );
+  
+  // Add the empty message to chat
+  controller.addMessage(aiMessage);
+  
+  try {
+    // Stream the response word by word (example with an API)
+    final stream = yourAIService.streamResponse(userPrompt);
+    
+    String textSoFar = "";
+    await for (final word in stream) {
+      textSoFar += word;
+      
+      // Update the message with each new word
+      controller.updateMessage(
+        ChatMessage(
+          text: textSoFar,
+          user: aiUser,
+          createdAt: aiMessage.createdAt,
+          isMarkdown: true,
+          customProperties: {'isStreaming': true, 'id': messageId},
+        ),
+      );
+      
+      // Optional: add small delay between words for visual effect
+      await Future.delayed(const Duration(milliseconds: 50));
+    }
+    
+    // Mark message as complete when streaming is done
+    controller.updateMessage(
+      ChatMessage(
+        text: textSoFar,
+        user: aiUser,
+        createdAt: aiMessage.createdAt,
+        isMarkdown: true,
+        customProperties: {'isStreaming': false, 'id': messageId},
+      ),
+    );
+  } catch (e) {
+    // Handle errors gracefully
+    controller.updateMessage(
+      ChatMessage(
+        text: "Sorry, there was an error generating the response.",
+        user: aiUser,
+        createdAt: aiMessage.createdAt,
+        isMarkdown: true,
+        customProperties: {'isStreaming': false, 'id': messageId},
+      ),
+    );
+  }
+}
+```
+
+### 5. Common Issues to Avoid
+
+- **Changing the message ID**: Never change the 'id' value in customProperties during updates
+- **Forgetting error handling**: Always wrap streaming code in try/catch blocks
+- **Not marking completion**: Always set `isStreaming: false` when streaming is done
+- **Using different timestamps**: Keep the same createdAt value for all updates to the same message

@@ -57,7 +57,16 @@ class ChatInput extends StatelessWidget {
       selectionControls: options.selectionControls,
       onTap: options.onTap,
       onEditingComplete: options.onEditingComplete,
-      onSubmitted: options.onSubmitted,
+      onSubmitted: (text) {
+        // Implement sendOnEnter functionality
+        if (options.sendOnEnter && controller.text.trim().isNotEmpty) {
+          onSend();
+        }
+        // Forward to the original onSubmitted if provided
+        if (options.onSubmitted != null) {
+          options.onSubmitted!(text);
+        }
+      },
       onChanged: options.onChanged,
       inputFormatters: options.inputFormatters,
       mouseCursor: options.mouseCursor,
@@ -66,9 +75,9 @@ class ChatInput extends StatelessWidget {
       spellCheckConfiguration: options.spellCheckConfiguration,
       magnifierConfiguration: options.magnifierConfiguration,
       onTapOutside: (event) {
-        if (options.unfocusOnTapOutside) {
-          FocusScope.of(context).unfocus();
-        }
+        // Never unfocus the text field when tapping outside
+        // This helps prevent keyboard focus issues with the send button
+        // and ensures a more consistent typing experience
       },
     );
 
@@ -82,35 +91,28 @@ class ChatInput extends StatelessWidget {
 
     // Create input content with text field and send button
     Widget inputContent;
-    final shouldShowSendButton =
-        options.alwaysShowSend || controller.text.isNotEmpty;
-    if (shouldShowSendButton) {
-      // Show text field with send button
-      inputContent = Row(
-        // Change to center alignment for better vertical alignment
-        crossAxisAlignment: CrossAxisAlignment.center,
-        // Use app direction consistently
-        textDirection: appDirection,
-        children: [
-          Flexible(
-            child: textField,
-          ),
-          // Adjust send button to match text field height
-          Container(
-            // Match the height to align with text field
-            height: options.inputHeight ??
-                (options.decoration?.contentPadding?.vertical ?? 14) +
-                    24, // Base height approximation
-            // Center the button vertically
-            alignment: Alignment.center,
-            child: options.effectiveSendButtonBuilder(onSend),
-          ),
-        ],
-      );
-    } else {
-      // Show only text field
-      inputContent = textField;
-    }
+    // Display the send button
+    inputContent = Row(
+      // Change to center alignment for better vertical alignment
+      crossAxisAlignment: CrossAxisAlignment.center,
+      // Use app direction consistently
+      textDirection: appDirection,
+      children: [
+        Flexible(
+          child: textField,
+        ),
+        // Adjust send button to match text field height
+        Container(
+          // Match the height to align with text field
+          height: options.inputHeight ??
+              (options.decoration?.contentPadding?.vertical ?? 14) +
+                  24, // Base height approximation
+          // Center the button vertically
+          alignment: Alignment.center,
+          child: options.effectiveSendButtonBuilder(onSend),
+        ),
+      ],
+    );
 
     // Calculate appropriate background color based on settings
     final useScaffoldBg = options.useScaffoldBackground ?? false;

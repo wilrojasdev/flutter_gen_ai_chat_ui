@@ -7,6 +7,92 @@ import 'package:provider/provider.dart';
 import 'comprehensive/models/app_state.dart';
 import 'comprehensive/screens/chat_screen.dart' as comprehensive;
 
+/// Example demonstrating a fixed, always-visible send button
+/// that won't disrupt typing or cause focus issues
+class AlwaysVisibleSendButtonExample extends StatefulWidget {
+  const AlwaysVisibleSendButtonExample({super.key});
+
+  @override
+  State<AlwaysVisibleSendButtonExample> createState() =>
+      _AlwaysVisibleSendButtonExampleState();
+}
+
+class _AlwaysVisibleSendButtonExampleState
+    extends State<AlwaysVisibleSendButtonExample> {
+  final _chatController = ChatMessagesController();
+  final _currentUser = ChatUser(id: 'user1', firstName: 'User');
+  final _aiUser = ChatUser(id: 'ai1', firstName: 'AI Assistant');
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Always-Visible Send Button'),
+      ),
+      body: AiChatWidget(
+        // Required parameters
+        currentUser: _currentUser,
+        aiUser: _aiUser,
+        controller: _chatController,
+        onSendMessage: _handleSendMessage,
+
+        // Fix for always-visible send button that doesn't disrupt typing
+        inputOptions: InputOptions(
+          // Prevent focus issues
+          unfocusOnTapOutside: false,
+
+          // Use newline instead of send on the keyboard
+          textInputAction: TextInputAction.newline,
+
+          // Ensure consistent container height
+          inputContainerHeight: 60,
+
+          // Basic styling
+          decoration: InputDecoration(
+            hintText: 'Type a message...',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(24),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 10,
+            ),
+          ),
+        ),
+
+        // Loading indicator
+        loadingConfig: LoadingConfig(
+          isLoading: _isLoading,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSendMessage(ChatMessage message) async {
+    setState(() => _isLoading = true);
+
+    try {
+      // Simulate API call
+      await Future.delayed(const Duration(seconds: 1));
+
+      // Add AI response
+      _chatController.addMessage(
+        ChatMessage(
+          text: "This is a response to: ${message.text}",
+          user: _aiUser,
+          createdAt: DateTime.now(),
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+}
+
 void main() {
   runApp(const ExampleSelectionApp());
 }
@@ -87,6 +173,25 @@ class ExampleSelectionScreen extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const MinimalChatScreen(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Always-visible send button example
+                  _buildExampleCard(
+                    context,
+                    title: 'Always-Visible Send Button',
+                    description: 'Fixed send button that won\'t disrupt typing',
+                    icon: Icons.send_rounded,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const AlwaysVisibleSendButtonExample(),
                         ),
                       );
                     },

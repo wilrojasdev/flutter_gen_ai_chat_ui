@@ -22,7 +22,6 @@ class InputOptions {
   final InputDecoration? decoration;
   final int? maxLines;
   final int? minLines;
-  final bool alwaysShowSend;
   final bool sendOnEnter;
   final bool readOnly;
   final bool autocorrect;
@@ -109,7 +108,6 @@ class InputOptions {
     this.decoration,
     this.maxLines = 5,
     this.minLines = 1,
-    this.alwaysShowSend = false,
     this.sendOnEnter = true,
     this.readOnly = false,
     this.autocorrect = true,
@@ -157,7 +155,7 @@ class InputOptions {
     this.onSubmitted,
     this.onChanged,
     this.onTap,
-    this.unfocusOnTapOutside = true,
+    this.unfocusOnTapOutside = false,
     this.mouseCursor,
     this.contextMenuBuilder,
     this.undoController,
@@ -176,13 +174,11 @@ class InputOptions {
     Color? backgroundColor,
     double? borderRadius,
     TextEditingController? textController,
-    bool alwaysShowSend = true,
     bool sendOnEnter = true,
   }) {
     return InputOptions(
       textController: textController,
       useOuterContainer: false,
-      alwaysShowSend: alwaysShowSend,
       sendOnEnter: sendOnEnter,
       textStyle: textColor != null ? TextStyle(color: textColor) : null,
       decoration: InputDecoration(
@@ -214,7 +210,6 @@ class InputOptions {
     Color? hintColor,
     bool useOuterContainer = true,
     TextEditingController? textController,
-    bool alwaysShowSend = true,
     bool sendOnEnter = true,
   }) {
     final List<Color> effectiveColors = colors ??
@@ -226,7 +221,6 @@ class InputOptions {
     return InputOptions(
       textController: textController,
       useOuterContainer: useOuterContainer,
-      alwaysShowSend: alwaysShowSend,
       sendOnEnter: sendOnEnter,
       blurStrength: blurStrength,
       textStyle: textColor != null ? TextStyle(color: textColor) : null,
@@ -262,7 +256,6 @@ class InputOptions {
     Widget Function(VoidCallback onSend)? sendButtonBuilder,
     bool useOuterContainer = true,
     TextEditingController? textController,
-    bool alwaysShowSend = true,
     bool sendOnEnter = true,
   }) {
     return InputOptions(
@@ -271,7 +264,6 @@ class InputOptions {
       textStyle: textStyle,
       sendButtonBuilder: sendButtonBuilder,
       useOuterContainer: useOuterContainer,
-      alwaysShowSend: alwaysShowSend,
       sendOnEnter: sendOnEnter,
     );
   }
@@ -283,7 +275,6 @@ class InputOptions {
     InputDecoration? decoration,
     int? maxLines,
     int? minLines,
-    bool? alwaysShowSend,
     bool? sendOnEnter,
     bool? readOnly,
     bool? autocorrect,
@@ -346,7 +337,6 @@ class InputOptions {
       decoration: decoration ?? this.decoration,
       maxLines: maxLines ?? this.maxLines,
       minLines: minLines ?? this.minLines,
-      alwaysShowSend: alwaysShowSend ?? this.alwaysShowSend,
       sendOnEnter: sendOnEnter ?? this.sendOnEnter,
       readOnly: readOnly ?? this.readOnly,
       autocorrect: autocorrect ?? this.autocorrect,

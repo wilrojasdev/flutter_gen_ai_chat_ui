@@ -136,25 +136,38 @@ class _StreamingTextState extends State<StreamingText>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   String _previousText = '';
+  bool _isDisposed = false;
 
   @override
   void initState() {
     super.initState();
     _previousText = widget.text;
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _fadeAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeOut,
-      ),
-    );
-    _controller.forward();
+    _initializeController();
+  }
+
+  void _initializeController() {
+    try {
+      _controller = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 300),
+      );
+      _fadeAnimation = Tween<double>(
+        begin: 0,
+        end: 1,
+      ).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: Curves.easeOut,
+        ),
+      );
+      if (!_isDisposed) {
+        _controller.forward();
+      }
+    } catch (e) {
+      // Handle initialization error
+      debugPrint('Error initializing StreamingText controller: $e');
+      // Attempt recovery - will use non-animated fallback if this fails
+    }
   }
 
   @override
@@ -162,18 +175,45 @@ class _StreamingTextState extends State<StreamingText>
     super.didUpdateWidget(oldWidget);
     if (widget.text != oldWidget.text) {
       _previousText = oldWidget.text;
-      _controller.forward(from: 0);
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
+      try {
+        _controller.forward(from: 0);
+      } catch (e) {
+        // Handle animation error during update
+        debugPrint('Error during StreamingText update: $e');
+        // Attempt to reinitialize the controller
+        _disposeController();
+        _initializeController();
+      }
+    }
+  }
+
+  void _disposeController() {
+    try {
+      if (_controller.isAnimating) {
+        _controller.stop();
+      }
+      _controller.dispose();
+    } catch (e) {
+      // Ignore disposal errors
+      debugPrint('Error disposing StreamingText controller: $e');
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _isDisposed = true;
+    _disposeController();
     super.dispose();
   }
 
   @override
-  Widget build(final BuildContext context) => AnimatedBuilder(
+  Widget build(final BuildContext context) {
+    try {
+      // Try the original animation approach with word-by-word effect
+      return AnimatedBuilder(
         animation: _controller,
         builder: (final context, final child) {
           final newText = widget.text.substring(_previousText.length);
@@ -181,6 +221,13 @@ class _StreamingTextState extends State<StreamingText>
           final textAlign = FontHelper.getTextAlign(widget.text);
           final textDirection =
               isRtlText ? TextDirection.rtl : TextDirection.ltr;
+
+          // Fallback to plain text if there's no animation controller
+          if (!_controller.isAnimating &&
+              _controller.status != AnimationStatus.completed) {
+            return buildText(
+                widget.text, widget.style, textAlign, textDirection);
+          }
 
           // Use a Column instead of Row to avoid directional issues
           return Column(
@@ -212,6 +259,18 @@ class _StreamingTextState extends State<StreamingText>
           );
         },
       );
+    } catch (e) {
+      // Fallback if the animation approach fails
+      debugPrint('Error in StreamingText build: $e');
+
+      // Render text without animation as fallback
+      final isRtlText = FontHelper.isRTL(widget.text);
+      final textAlign = isRtlText ? TextAlign.right : TextAlign.left;
+      final textDirection = isRtlText ? TextDirection.rtl : TextDirection.ltr;
+
+      return buildText(widget.text, widget.style, textAlign, textDirection);
+    }
+  }
 
   Widget buildText(final String text, final TextStyle? style,
       final TextAlign textAlign, final TextDirection textDirection) {

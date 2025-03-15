@@ -77,8 +77,8 @@ void main() {
             hintText: 'Custom hint text',
             border: OutlineInputBorder(),
           ),
+          unfocusOnTapOutside: false,
           sendOnEnter: true,
-          alwaysShowSend: true,
         );
 
         // Act

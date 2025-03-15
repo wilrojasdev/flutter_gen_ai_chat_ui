@@ -265,8 +265,10 @@ class _ChatScreenState extends State<ChatScreen>
           ),
         ),
       ),
-      alwaysShowSend: true,
-      sendOnEnter: true,
+      unfocusOnTapOutside: false,
+      textInputAction: TextInputAction.newline,
+      inputContainerHeight: 64,
+      sendButtonPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     );
 
     // Welcome message configuration

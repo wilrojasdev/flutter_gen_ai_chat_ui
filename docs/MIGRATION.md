@@ -24,7 +24,6 @@ AiChatWidget(
     hintText: 'Type a message...',
     enableAnimation: true,
     inputOptions: InputOptions(
-      alwaysShowSend: true,
       sendOnEnter: true,
     ),
     messageOptions: MessageOptions(
@@ -63,7 +62,7 @@ AiChatWidget(
   // Optional parameters (previously in AiChatConfig)
   enableAnimation: true,
   inputOptions: InputOptions(
-    alwaysShowSend: true,
+    unfocusOnTapOutside: false,
     sendOnEnter: true,
     hintText: 'Type a message...',
   ),
@@ -197,7 +196,6 @@ AiChatWidget(
     streamingDuration: const Duration(milliseconds: 50),
     inputOptions: InputOptions(
       sendOnEnter: true,
-      alwaysShowSend: true,
       margin: const EdgeInsets.all(16),
     ),
     messageOptions: MessageOptions(
@@ -257,8 +255,8 @@ AiChatWidget(
   
   // Input configuration
   inputOptions: InputOptions(
+    unfocusOnTapOutside: false,
     sendOnEnter: true,
-    alwaysShowSend: true,
     hintText: 'Ask me anything...',
     margin: const EdgeInsets.all(16),
   ),

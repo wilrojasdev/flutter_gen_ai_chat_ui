@@ -58,38 +58,33 @@ A modern, customizable chat UI for AI applications built with Flutter. Features 
 
 ## Installation
 
-Add this to your package's `pubspec.yaml` file:
+Add this to your package's pubspec.yaml file:
 
 ```yaml
 dependencies:
-  flutter_gen_ai_chat_ui: ^1.3.0
+  flutter_gen_ai_chat_ui: ^2.0.1
 ```
 
 Then run:
+
 ```bash
 flutter pub get
-```
-
-Import the package:
-```dart
-import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
 ```
 
 ## Basic Usage
 
 ```dart
 import 'package:flutter_gen_ai_chat_ui/flutter_gen_ai_chat_ui.dart';
-import 'package:flutter/material.dart';
 
-class BasicChatScreen extends StatefulWidget {
+class ChatScreen extends StatefulWidget {
   @override
-  _BasicChatScreenState createState() => _BasicChatScreenState();
+  _ChatScreenState createState() => _ChatScreenState();
 }
 
-class _BasicChatScreenState extends State<BasicChatScreen> {
-  final _chatController = ChatMessagesController();
-  final _currentUser = ChatUser(id: 'user1', firstName: 'User');
-  final _aiUser = ChatUser(id: 'ai1', firstName: 'AI Assistant');
+class _ChatScreenState extends State<ChatScreen> {
+  final _controller = ChatMessagesController();
+  final _currentUser = ChatUser(id: 'user', firstName: 'User');
+  final _aiUser = ChatUser(id: 'ai', firstName: 'AI Assistant');
   bool _isLoading = false;
 
   @override
@@ -100,42 +95,43 @@ class _BasicChatScreenState extends State<BasicChatScreen> {
         // Required parameters
         currentUser: _currentUser,
         aiUser: _aiUser,
-        controller: _chatController,
+        controller: _controller,
         onSendMessage: _handleSendMessage,
         
         // Optional parameters
+        loadingConfig: LoadingConfig(isLoading: _isLoading),
         inputOptions: InputOptions(
+          hintText: 'Ask me anything...',
           sendOnEnter: true,
-          alwaysShowSend: true,
         ),
-        loadingConfig: LoadingConfig(
-          isLoading: _isLoading,
+        welcomeMessageConfig: WelcomeMessageConfig(
+          title: 'Welcome to AI Chat',
+          questionsSectionTitle: 'Try asking me:',
         ),
         exampleQuestions: [
-          ExampleQuestion(question: 'What is AI?'),
-          ExampleQuestion(question: 'How can you help me?'),
+          ExampleQuestion(question: "What can you help me with?"),
+          ExampleQuestion(question: "Tell me about your features"),
         ],
       ),
     );
   }
 
-  void _handleSendMessage(ChatMessage message) async {
-    // Handle user message
+  Future<void> _handleSendMessage(ChatMessage message) async {
     setState(() => _isLoading = true);
     
-    // Simulate AI response after a delay
-    await Future.delayed(Duration(seconds: 1));
-    
-    // Add AI response
-    _chatController.addMessage(
-      ChatMessage(
+    try {
+      // Your AI service logic here
+      await Future.delayed(Duration(seconds: 1)); // Simulating API call
+      
+      // Add AI response
+      _controller.addMessage(ChatMessage(
         text: "This is a response to: ${message.text}",
         user: _aiUser,
         createdAt: DateTime.now(),
-      ),
-    );
-    
-    setState(() => _isLoading = false);
+      ));
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 }
 ```
@@ -212,7 +208,6 @@ The package offers multiple ways to style the input field:
 InputOptions(
   // Basic properties
   sendOnEnter: true,
-  alwaysShowSend: true,
   
   // Styling
   textStyle: TextStyle(...),
@@ -251,6 +246,26 @@ InputOptions.custom(
   decoration: yourCustomDecoration,
   textStyle: yourCustomTextStyle,
   sendButtonBuilder: (onSend) => CustomSendButton(onSend: onSend),
+)
+```
+
+#### Always-Visible Send Button Without Focus Issues (version 2.0.2+)
+
+The send button is now hardcoded to always be visible by design, regardless of text content. This removes the need for an explicit setting and ensures a consistent experience across the package.
+
+By default:
+- The send button is always shown regardless of text input
+- Focus is maintained when tapping outside the input field
+- The keyboard's send button is disabled by default to prevent focus issues
+
+```dart
+// Configure input options to ensure a consistent typing experience
+InputOptions(
+  // Prevent losing focus when tapping outside
+  unfocusOnTapOutside: false,
+  
+  // Use newline for Enter key to prevent keyboard focus issues
+  textInputAction: TextInputAction.newline,
 )
 ```
 
