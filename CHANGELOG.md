@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.2 - [2023-03-15] Input Behavior Improvements
+
+### Changed
+- Made send button always visible by default at the package level
+- Completely removed the `alwaysShowSend` property as it's now redundant
+- Modified default input behavior to prevent focus issues when typing
+- Updated documentation to reflect the new send button behavior
+
 ## 2.0.0 - [2023-06-10] API Streamlining & Dila Alignment
 
 ### Breaking Changes
