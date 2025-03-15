@@ -7,337 +7,129 @@ import 'package:provider/provider.dart';
 import 'comprehensive/models/app_state.dart';
 import 'comprehensive/screens/chat_screen.dart' as comprehensive;
 
-/// Example demonstrating a fixed, always-visible send button
-/// that won't disrupt typing or cause focus issues
-class AlwaysVisibleSendButtonExample extends StatefulWidget {
-  const AlwaysVisibleSendButtonExample({super.key});
-
-  @override
-  State<AlwaysVisibleSendButtonExample> createState() =>
-      _AlwaysVisibleSendButtonExampleState();
+/// A simple example demonstrating the Flutter Gen AI Chat UI package
+/// This example shows the minimal setup required to use the package
+void main() {
+  runApp(const MyApp());
 }
 
-class _AlwaysVisibleSendButtonExampleState
-    extends State<AlwaysVisibleSendButtonExample> {
-  final _chatController = ChatMessagesController();
-  final _currentUser = ChatUser(id: 'user1', firstName: 'User');
-  final _aiUser = ChatUser(id: 'ai1', firstName: 'AI Assistant');
-  bool _isLoading = false;
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Always-Visible Send Button'),
+    return MaterialApp(
+      title: 'Flutter Gen AI Chat UI Example',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+        useMaterial3: true,
       ),
-      body: AiChatWidget(
-        // Required parameters
-        currentUser: _currentUser,
-        aiUser: _aiUser,
-        controller: _chatController,
-        onSendMessage: _handleSendMessage,
-
-        // Fix for always-visible send button that doesn't disrupt typing
-        inputOptions: InputOptions(
-          // Prevent focus issues
-          unfocusOnTapOutside: false,
-
-          // Use newline instead of send on the keyboard
-          textInputAction: TextInputAction.newline,
-
-          // Ensure consistent container height
-          inputContainerHeight: 60,
-
-          // Basic styling
-          decoration: InputDecoration(
-            hintText: 'Type a message...',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: BorderSide.none,
-            ),
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 10,
-            ),
-          ),
+      darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo,
+          brightness: Brightness.dark,
         ),
+      ),
+      themeMode: ThemeMode.system,
+      home: const SimpleChatScreen(),
+    );
+  }
+}
 
-        // Loading indicator
-        loadingConfig: LoadingConfig(
-          isLoading: _isLoading,
-        ),
+class SimpleChatScreen extends StatefulWidget {
+  const SimpleChatScreen({super.key});
+
+  @override
+  State<SimpleChatScreen> createState() => _SimpleChatScreenState();
+}
+
+class _SimpleChatScreenState extends State<SimpleChatScreen> {
+  // Create a controller to manage chat messages
+  final _controller = ChatMessagesController();
+
+  // Define users for the chat
+  final _currentUser = ChatUser(id: 'user123', firstName: 'You');
+  final _aiUser = ChatUser(id: 'ai123', firstName: 'AI Assistant');
+
+  // Track loading state
+  bool _isLoading = false;
+
+  // Some example questions for the welcome message
+  final _exampleQuestions = [
+    ExampleQuestion(question: "What can you help me with?"),
+    ExampleQuestion(question: "Tell me about Flutter"),
+    ExampleQuestion(question: "How does this UI work?"),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Add a welcome message to the chat
+    _controller.addMessage(
+      ChatMessage(
+        text: "👋 Hello! I'm your AI assistant. How can I help you today?",
+        user: _aiUser,
+        createdAt: DateTime.now(),
       ),
     );
   }
 
+  @override
+  void dispose() {
+    // Dispose the controller when the widget is disposed
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Handle sending a message
   Future<void> _handleSendMessage(ChatMessage message) async {
+    // Set loading state
     setState(() => _isLoading = true);
 
     try {
-      // Simulate API call
+      // Simulate API call with a delay
       await Future.delayed(const Duration(seconds: 1));
 
-      // Add AI response
-      _chatController.addMessage(
+      // Create an AI response
+      final response = "Thank you for your message: \"${message.text}\"\n\n"
+          "This is a demo response to show how the chat UI works. "
+          "In a real implementation, you would connect to an AI service here.";
+
+      // Add the AI response to the chat
+      _controller.addMessage(
         ChatMessage(
-          text: "This is a response to: ${message.text}",
+          text: response,
           user: _aiUser,
           createdAt: DateTime.now(),
         ),
       );
     } finally {
+      // Reset loading state
       setState(() => _isLoading = false);
     }
   }
-}
-
-void main() {
-  runApp(const ExampleSelectionApp());
-}
-
-/// App that allows selection between different example implementations
-class ExampleSelectionApp extends StatelessWidget {
-  const ExampleSelectionApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Gen AI Chat UI Examples',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const ExampleSelectionScreen(),
-    );
-  }
-}
-
-/// Screen for selecting between different examples
-class ExampleSelectionScreen extends StatelessWidget {
-  const ExampleSelectionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI Chat UI Examples'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Title
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                children: [
-                  const Text(
-                    'Flutter Gen AI Chat UI',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Select an example implementation',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Example options
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                children: [
-                  // Minimal example
-                  _buildExampleCard(
-                    context,
-                    title: 'Minimal Example',
-                    description:
-                        'Clean, simple implementation with basic features',
-                    icon: Icons.code,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const MinimalChatScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Always-visible send button example
-                  _buildExampleCard(
-                    context,
-                    title: 'Always-Visible Send Button',
-                    description: 'Fixed send button that won\'t disrupt typing',
-                    icon: Icons.send_rounded,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const AlwaysVisibleSendButtonExample(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Comprehensive example
-                  _buildExampleCard(
-                    context,
-                    title: 'Professional Example',
-                    description:
-                        'Full-featured implementation with professional design',
-                    icon: Icons.auto_awesome,
-                    isPrimary: true,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => _buildComprehensiveExample(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Build a card for an example option
-  Widget _buildExampleCard(
-    BuildContext context, {
-    required String title,
-    required String description,
-    required IconData icon,
-    required VoidCallback onTap,
-    bool isPrimary = false,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
-      elevation: 2,
-      color: isPrimary ? colorScheme.primaryContainer : null,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                size: 36,
-                color: isPrimary
-                    ? colorScheme.onPrimaryContainer
-                    : colorScheme.primary,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isPrimary
-                            ? colorScheme.onPrimaryContainer
-                            : colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: isPrimary
-                            ? colorScheme.onPrimaryContainer.withOpacity(0.8)
-                            : colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: isPrimary
-                    ? colorScheme.onPrimaryContainer.withOpacity(0.8)
-                    : colorScheme.onSurface.withOpacity(0.5),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// This function imports and returns the comprehensive example
-  Widget _buildComprehensiveExample() {
-    return ChangeNotifierProvider(
-      create: (_) => AppState(),
-      child: const comprehensive.ChatScreen(),
-    );
-  }
-}
-
-/// Simple chat screen implementation
-class MinimalChatScreen extends StatefulWidget {
-  const MinimalChatScreen({super.key});
-
-  @override
-  State<MinimalChatScreen> createState() => _MinimalChatScreenState();
-}
-
-class _MinimalChatScreenState extends State<MinimalChatScreen> {
-  // Controller for managing chat messages
-  final _chatController = ChatMessagesController();
-
-  // Define user identities
-  final _currentUser = ChatUser(id: 'user1', firstName: 'User');
-  final _aiUser = ChatUser(id: 'ai1', firstName: 'AI');
-
-  // Track loading state
-  bool _isLoading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minimal AI Chat'),
-        centerTitle: true,
+        title: const Text('Chat Example'),
         actions: [
+          // Add a button to reset the conversation
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Reset Chat',
             onPressed: () {
-              _chatController.clearMessages();
-              _chatController.showWelcomeMessage = true;
+              _controller.clearMessages();
+              // Re-add the welcome message
+              _controller.addMessage(
+                ChatMessage(
+                  text:
+                      "👋 Hello! I'm your AI assistant. How can I help you today?",
+                  user: _aiUser,
+                  createdAt: DateTime.now(),
+                ),
+              );
             },
           ),
         ],
@@ -346,117 +138,47 @@ class _MinimalChatScreenState extends State<MinimalChatScreen> {
         // Required parameters
         currentUser: _currentUser,
         aiUser: _aiUser,
-        controller: _chatController,
+        controller: _controller,
         onSendMessage: _handleSendMessage,
 
-        // Simple loading configuration
+        // Loading state
         loadingConfig: LoadingConfig(
           isLoading: _isLoading,
         ),
 
-        // Add some basic example questions
-        exampleQuestions: [
-          ExampleQuestion(question: 'What can you help me with?'),
-          ExampleQuestion(question: 'Tell me a fun fact'),
-          ExampleQuestion(question: 'Show me a code example'),
-          ExampleQuestion(question: 'What is Flutter?'),
-        ],
-
-        // Simple welcome message
-        welcomeMessageConfig: WelcomeMessageConfig(
-          title: 'Welcome to the Minimal AI Chat',
-          titleStyle: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-          containerPadding: const EdgeInsets.all(20),
-          containerDecoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                spreadRadius: 0,
-              ),
-            ],
-          ),
+        // Welcome message configuration
+        welcomeMessageConfig: const WelcomeMessageConfig(
+          title: "Welcome to Flutter Gen AI Chat UI",
+          questionsSectionTitle: "Try asking:",
         ),
 
-        // Add some basic markdown styling
-        markdownStyleSheet: MarkdownStyleSheet(
-          p: const TextStyle(fontSize: 16),
-          code: TextStyle(
-            backgroundColor: Colors.grey.shade200,
-            fontFamily: 'monospace',
-            fontSize: 14,
+        // Example questions to display in the welcome message
+        exampleQuestions: _exampleQuestions,
+
+        // Input configuration - notice the send button is always visible now
+        inputOptions: const InputOptions(
+          unfocusOnTapOutside:
+              false, // Prevents focus loss when tapping outside
+          sendOnEnter: true, // Enter key sends the message
+        ),
+
+        // Message styling
+        messageOptions: MessageOptions(
+          showUserName: true,
+          bubbleStyle: BubbleStyle(
+            userBubbleColor: Theme.of(context).colorScheme.primaryContainer,
+            aiBubbleColor: Theme.of(context).colorScheme.surfaceVariant,
           ),
         ),
       ),
     );
-  }
-
-  // Handle sending a message
-  void _handleSendMessage(ChatMessage message) async {
-    setState(() => _isLoading = true);
-
-    // Generate a response based on the user's message
-    final response = _generateResponse(message.text);
-
-    // Simulate AI response after a delay
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Add AI response
-    _chatController.addMessage(
-      ChatMessage(
-        text: response,
-        user: _aiUser,
-        createdAt: DateTime.now(),
-        isMarkdown: true, // Enable markdown for formatted responses
-      ),
-    );
-
-    setState(() => _isLoading = false);
-  }
-
-  // Generate a simple response based on user input
-  String _generateResponse(String input) {
-    final lowerInput = input.toLowerCase();
-
-    // Check for greetings
-    if (lowerInput.contains('hello') || lowerInput.contains('hi')) {
-      return "Hello! 👋 How can I help you today?";
-    }
-
-    // Check for questions about the assistant
-    if (lowerInput.contains('who are you') ||
-        lowerInput.contains('your name')) {
-      return "I'm a simple AI assistant created to demonstrate the Flutter Gen AI Chat UI package.";
-    }
-
-    // Check for help requests
-    if (lowerInput.contains('help') || lowerInput.contains('can you do')) {
-      return "I can help with some basic information and demonstrate how this chat UI works. Try asking me about Flutter or how this UI is built!";
-    }
-
-    // Check for Flutter questions
-    if (lowerInput.contains('flutter')) {
-      return "**Flutter** is Google's UI toolkit for building beautiful, natively compiled applications for mobile, web, desktop, and embedded devices from a single codebase. The Flutter Gen AI Chat UI package makes it easy to create AI chat interfaces in Flutter!";
-    }
-
-    // Check for code-related questions
-    if (lowerInput.contains('code') || lowerInput.contains('example')) {
-      return "Here's a simple Flutter code example:\n\n```dart\nContainer(\n  padding: EdgeInsets.all(16),\n  decoration: BoxDecoration(\n    color: Colors.blue[100],\n    borderRadius: BorderRadius.circular(12),\n  ),\n  child: Text('Hello, Flutter!'),\n)\n```";
-    }
-
-    // Default response
-    return "Thanks for your message! This is a simple demo of the Flutter Gen AI Chat UI package. Try asking about Flutter or requesting a code example.";
-  }
-
-  @override
-  void dispose() {
-    _chatController.dispose();
-    super.dispose();
   }
 }
+
+// For a more comprehensive example with advanced features:
+// - See the 'comprehensive' directory which demonstrates:
+//   - Streaming text responses
+//   - Dark/light theme switching
+//   - Custom message styling
+//   - Animation control
+//   - Markdown rendering with code blocks

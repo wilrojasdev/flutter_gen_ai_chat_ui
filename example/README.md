@@ -1,16 +1,46 @@
-# flutter_gen_ai_chat_ui_example
+# Flutter Gen AI Chat UI Example
 
-A new Flutter project.
+This project demonstrates how to use the Flutter Gen AI Chat UI package to build AI chat interfaces in Flutter.
 
-## Getting Started
+## Example Structure
 
-This project is a starting point for a Flutter application.
+The example contains:
 
-A few resources to get you started if this is your first Flutter project:
+1. **Simple Example (main.dart)**: 
+   - A minimal implementation showing the core features
+   - Demonstrates the always-visible send button
+   - Shows welcome messages and example questions
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. **Comprehensive Example (comprehensive/)**:
+   - Advanced implementation with streaming text
+   - Theme switching (dark/light mode)
+   - Markdown support with code blocks
+   - Custom styling options
+   - Animation controls
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Running the Example
+
+1. Clone the repository
+2. Navigate to the example directory
+3. Run the example:
+
+```bash
+cd example
+flutter pub get
+flutter run
+```
+
+## Key Features Demonstrated
+
+- 💬 Chat messages with user/AI bubbles
+- 👋 Welcome message with example questions
+- ⚡ Always-visible send button
+- 🔄 Loading indicators
+- 🎨 Theme-aware styling
+- ✨ Clean, minimal UI
+
+## Implementation Notes
+
+- The main example demonstrates the simplest way to use the package
+- No real AI connection is included - responses are simulated
+- In a real app, you would replace the simulated responses with calls to your AI service
