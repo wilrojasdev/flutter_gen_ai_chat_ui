@@ -16,10 +16,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# VS Code related
+.vscode/
 
 # Flutter/Dart/Pub related
 # Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
@@ -27,30 +25,23 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 build/
-
-# Logs
-*.log
-
-# Flutter specific
 .flutter-plugins
 .flutter-plugins-dependencies
-
-# Generated files
-.dart_tool/
 .packages
 
-# Build outputs
-build/
+# Logs and documentation
+*.log
+!docs/changes.log
+logger.txt
+context.md
+files_list.md
 
-# Other
-*.iml
-*.ipr
-*.iws
-.idea/
+# Cursor editor
+.cursor/
 
 # MacOS
 .DS_Store
 
-# Ignore logger and context files
-logger.txt
-context.md
+# Test coverage
+coverage/
+.test_coverage.dart

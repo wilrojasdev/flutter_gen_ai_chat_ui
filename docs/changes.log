@@ -1,0 +1,36 @@
+# Flutter Gen AI Chat UI Changes Log
+
+## [Unreleased]
+
+### Added
+- [FEATURE] [INPUT] Made send button always visible at the package level:
+  - Modified chat_input.dart to always show the send button regardless of text input
+  - Completely removed the alwaysShowSend property as it's no longer needed
+  - Disabled unfocus behavior when tapping outside the input field by default
+  - Modified textInputAction default to TextInputAction.newline to avoid keyboard send button issues
+  - This change ensures that the send button is always visible and doesn't cause focus issues
+
+### Changed
+- [IMPROVEMENT] [DOCS] Updated documentation to reflect changes in input options:
+  - Added explicit examples for consistently showing the send button
+  - Shows how to prevent keyboard focus issues when typing
+  - Updated README with clearer usage examples
+
+## [0.2.0] - 2023-07-10
+
+### Added
+- [FEATURE] [INPUT] Added material customization properties to InputOptions:
+  - materialElevation - Controls shadow depth of input container
+  - materialColor - Controls background color of input container
+  - materialPadding - Controls padding around input container
+
+## [0.3.0] - 2023-07-11
+
+### Added
+- [FEATURE] [INPUT] Added comprehensive size control to InputOptions:
+  - inputHeight - Explicit height control for text input field
+  - inputContainerHeight - Height control for entire input container
+  - inputContainerConstraints - Advanced size control with BoxConstraints
+  - inputContainerWidth - Enum to control width behavior (fullWidth, wrapContent, custom)
+- [DOC] [INPUT] Updated input_customization.md with documentation for all new sizing options
+- [DOC] [INPUT] Added example code showing how to use the new size control features 
