@@ -18,8 +18,8 @@ void main() {
     testWidgets('Should apply custom input decoration',
         (WidgetTester tester) async {
       // Arrange: Create config with custom input decoration
-      final inputOptions = InputOptions(
-        decoration: const InputDecoration(
+      const inputOptions = InputOptions(
+        decoration: InputDecoration(
           hintText: 'Custom hint text',
           border: OutlineInputBorder(),
           fillColor: Colors.grey,
@@ -27,7 +27,7 @@ void main() {
         ),
       );
 
-      final config = AiChatConfig(
+      const config = AiChatConfig(
         inputOptions: inputOptions,
       );
 
@@ -151,8 +151,7 @@ void main() {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color:
-                  Colors.black.withValues(red: 0, green: 0, blue: 0, alpha: 25),
+              color: Color.fromARGB(25, 0, 0, 0),
               blurRadius: 10,
             ),
           ],
@@ -198,8 +197,8 @@ void main() {
       // Arrange: Create config with glassmorphic input options
       final inputOptions = InputOptions.glassmorphic(
         colors: [
-          Colors.blue.withValues(red: 0, green: 0, blue: 255, alpha: 51),
-          Colors.purple.withValues(red: 128, green: 0, blue: 128, alpha: 51)
+          Color.fromARGB(51, 0, 0, 255),
+          Color.fromARGB(51, 128, 0, 128)
         ],
         borderRadius: 25.0,
         blurStrength: 5.0,

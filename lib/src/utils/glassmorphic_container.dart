@@ -39,20 +39,19 @@ class GlassmorphicDecoration {
       gradient: LinearGradient(
         begin: begin,
         end: end,
-        colors:
-            colors.map((color) => color.withValues(alpha: opacity)).toList(),
+        colors: colors.map((color) => color.withOpacity(opacity)).toList(),
       ),
       borderRadius: borderRadius,
       border: border
           ? Border.all(
-              color: borderColor.withValues(alpha: opacity),
+              color: borderColor.withOpacity(opacity),
               width: borderWidth,
             )
           : null,
       boxShadow: shadow
           ? [
               BoxShadow(
-                color: shadowColor.withValues(alpha: opacity),
+                color: shadowColor.withOpacity(opacity),
                 blurRadius: shadowBlur,
                 spreadRadius: shadowSpread,
               ),
